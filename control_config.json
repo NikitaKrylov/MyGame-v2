@@ -1,0 +1,13 @@
+{
+    "keyboard":{
+        "executeWeapon" : {
+            "mouse" : 1
+        }
+    },
+
+    "joystick":{
+        "executeWeapon" : {
+            "button" : 2
+        }
+    }
+}
