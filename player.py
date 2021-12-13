@@ -4,32 +4,47 @@ from animation import Animator
 from player_equipment import Equipment
 import pygame as pg
 from pygame.sprite import Group, Sprite
+from settings import IMAGES
 
 
 class Player(Sprite):
     mediator = None
     MAX_XP = None
     XP = MAX_XP
-    __animation = Animator
+    animation = Animator
     equipment = Equipment  # heal, ultimate and weapon inventory*
     ability = None
 
-    max_speed = 9.0
+    max_speed = 8.5
     xspeed = 0
     yspeed = 0
     accel = 0.45
 
-    def __init__(self, display_size, mediator, *args, **kwargs):
+    def __init__(self, display_size, mediator, shellGroup: Group, *args, **kwargs):
         super().__init__()
         self.mediator = mediator
-        self.width, self.height = 80, 150
-        self.surface = pg.Surface((self.width, self.height))
-        self.surface.fill('red')
+        self.animation = self.animation()
+        self.equipment = self.equipment(shellGroup)
+        self.display_size = display_size
 
-        self.rect = self.surface.get_rect(center=self.spawn(display_size))
-        # self.rect = pg.Rect(self.spawn(display_size),
-        #                     (self.width, self.height))
-        self.rects = []
+        self.images = {
+            "default": [pg.image.load(
+                IMAGES+'\player\space'+str(i)+'.png').convert_alpha() for i in range(1, 3)],
+            "left": [pg.image.load(
+                IMAGES+'\player\left'+str(i)+'.png').convert_alpha() for i in range(1, 3)],
+            "right": [pg.image.load(
+                IMAGES+'\player\\right'+str(i)+'.png').convert_alpha() for i in range(1, 3)]
+        }
+        self.acting_images = self.images['default']
+
+        self.rect = self.acting_images[0].get_rect(
+            center=self.spawn(display_size))
+        self.rects = [
+            pg.Rect(int(self.rect.left + self.rect.width/2.5), self.rect.top,
+                    int(self.rect.width/5), int(self.rect.height*0.9)),
+            pg.Rect(self.rect.left, int(self.rect.top +
+                    self.rect.height/2.5), self.rect.width, self.rect.height/4)
+        ]
         self.direction = pg.Vector2(0.0, 0.0)
 
     def spawn(self, dispaly_size):  # -> spawn pos
@@ -37,10 +52,28 @@ class Player(Sprite):
 
     def updatePosition(self, x_update=None, y_update=None):
         if not (x_update and y_update):
-            self.rect.centerx += self.direction.x * self.xspeed
-            self.rect.centery += self.direction.y * self.yspeed
+
+            if (self.rect.left + self.direction.x * self.xspeed > 0) and (self.rect.right + self.direction.x * self.xspeed < self.display_size[0]):
+                self.rect.centerx += self.direction.x * self.xspeed
+                for rect in self.rects:
+                    rect.centerx += self.direction.x * self.xspeed
+
+            if (self.rect.bottom + self.direction.y * self.yspeed < self.display_size[1] + 10) and (self.rect.top + self.direction.y * self.yspeed > 0):
+                self.rect.centery += self.direction.y * self.yspeed
+                for rect in self.rects:
+                    rect.centery += self.direction.y * self.yspeed
 
         return self.rect
+
+    def updateActingImage(self, threshold):
+        if self.direction.x > threshold:
+            self.acting_images = self.images['right']
+        elif self.direction.x < -threshold:
+            self.acting_images = self.images['left']
+        else:
+            self.acting_images = self.images['default']
+
+        self.rect = self.acting_images[0].get_rect(center=self.rect.center)
 
     def increaseAccel(self, axis):
         if axis == 0:
@@ -81,49 +114,46 @@ class Player(Sprite):
             self.direction.y = _direction
             self.yspeed = _speed
 
-    def updateAccel(self, axis):
-        pass
-
-    def updateAnimation(self):
-        pass
-
     def update(self, *args, **kwargs):
+        """Updating all player states"""
         self.updatePosition()
+        self.updateActingImage(threshold=.35)
+        self.animation.update(now=kwargs['now'], rate=80, frames_len=len(
+            self.acting_images), repeat=True)
 
     def draw(self, dispaly):
-        dispaly.blit(self.surface, self.rect)
+        dispaly.blit(
+            self.acting_images[self.animation.getIteration], self.rect)
+        # for rect in self.rects:
+        #     pg.draw.lines(dispaly, (0, 255, 0), True, [
+        #         rect.topleft, rect.topright, rect.bottomright, rect.bottomleft])
 
-    def getDamage(self):  # функция наносит урон игроку -> damage received, remaining HP
-        pass
+    def damage(self):
+        """player is getting damage -> damage received, remaining HP"""
+        return self.XP
 
-    def toDamage(self):
-        pass
-    
     def executeWeapon(self):
-        return print('Я сделал выстрел!')
+        return self.equipment.useWeapon(self.rect)
 
-    def useUltimate(self):
-        pass
-
-    def changeUltimate(self):
-        pass
-
-    def changeAmo(self):
-        pass
-
-    def changeWeapon(self):
-        pass
+    def changeWeapon(self, value=None, update=None):
+        return self.equipment.changeWeapon(value=value, update=update)
 
     def getHeal(self, object):  # -> new XP
         """Get size healing from object and use __heal method with healing parameters"""
         return self.__heal()
 
     def getRects(self):  # -> Rect
-        pass
+        return (self.rect, self.rects)
+
+    def collideGroup(self, group):
+        return
+
+    def collideSprite(self, sprite):
+        return
 
     def __heal(self, sizeH):  # -> new XP
         self.XP += sizeH
         pass
 
     def kill(self):
-        pass
+        return super().kill()

@@ -2,12 +2,14 @@
     "keyboard":{
         "executeWeapon" : {
             "mouse" : 1
-        }
+        },
+        "showMenu":[27]
     },
 
     "joystick":{
         "executeWeapon" : {
             "button" : 2
-        }
+        },
+        "showMenu":[5,6]
     }
 }

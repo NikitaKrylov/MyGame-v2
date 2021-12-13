@@ -1,4 +1,4 @@
-from enemy import FirstEnemyFactory, SecondEnemyFactory, ThirdEnemyFactory
+from enemy import AsteroidFactory, FirstFlightEnemyFactory
 
 
 class Level:
@@ -6,8 +6,10 @@ class Level:
     factories = []
     mediator = None
 
-    def __init__(self, mediator):
-        self.mediator = mediator
+    def __init__(self, mediator, shellGroup=None, enemyGroup=None):
+        self.aplication = mediator
+        self.shellGroup = shellGroup
+        self.enemyGroup = enemyGroup
 
     def start(self):
         return True
@@ -24,9 +26,9 @@ class Level:
             counter += ft.count()
         return counter
 
-    def update(self):
-        for ft in self.factories:
-            ft.update()
+    # def update(self, now):
+    #     for factory in self.factories:
+    #         factory.update()
 
     def __str__(self):
         return self.name
@@ -36,13 +38,27 @@ class Level1(Level):
     name = 'Layer1'
     factories = []
 
+    def __init__(self, mediator, shellGroup=None, enemyGroup=None):
+        super().__init__(mediator, shellGroup=shellGroup, enemyGroup=enemyGroup)
+        self.last_spawn_time = 0
+        self.spawn_rate = 1500
+        print('level ', self.enemyGroup)
+
     def start(self):
-        self.factory2 = SecondEnemyFactory()
-        self.factory3 = ThirdEnemyFactory()
-        self.factories = [self.factory2, self.factory3]
+        self.asteroidFactory = AsteroidFactory(
+            display_size=self.aplication.display_size, group=self.enemyGroup)
+        self.firstFlightFactory = FirstFlightEnemyFactory(
+            display_size=self.aplication.display_size, group=self.enemyGroup)
+
+        self.factories.append(self.asteroidFactory)
+        self.factories.append(self.firstFlightFactory)
+
         return super().start()
 
-    def spawn(self):
-        [self.factory2.createEnemy() for i in range(10)]
-        [self.factory3.createEnemy() for i in range(4)]
-        return super().spawn()
+    def update(self, now):
+        if now - self.last_spawn_time > self.spawn_rate:
+            self.last_spawn_time = now
+            self.asteroidFactory.createObject()
+        
+        if self.firstFlightFactory.count() < 1:
+            self.firstFlightFactory.createObject()

@@ -1,4 +1,5 @@
 import pygame as pg
+from pygame.display import update
 from pygame.sprite import DirtySprite
 from pygame.transform import threshold
 from player import Player
@@ -11,22 +12,26 @@ def sign(value):
 
 
 class ControlImplementation:
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, mediator, *args, **kwargs):
+        self.aplication = mediator
 
     def quit(self):
         return 'Игра завершена'
 
     def showMenu(self):
-        return 'Меню показано'
+        """Show and close menu"""
+        self.aplication.showMenu()
 
     def executeWeapon(self, player):
         return player.executeWeapon()
 
+    def changeWeapon(self, player, update=None, value=None):
+        return player.changeWeapon(value=value, update=update)
+
     def showSettings(self):
         return 'Настройки показаны'
 
-    def changePlayerDirection(self, player: Player, scancode: pg.key.ScancodeWrapper = None, *args, **kwargs):
+    def changePlayerDirection(self, player: Player, *args, **kwargs):
         pass
 
     def __str__(self):
@@ -51,7 +56,8 @@ class BaseController:  # Interface
     def quit(self, *args, **kwargs):
         return self.__implementation.quit()
 
-    def showMenu(self, *args, **kwargs):
+    def showMenu(self, event, *args, **kwargs):
+        """call aplication showMenu"""
         return self.__implementation.showMenu()
 
     def showSettings(self, *args, **kwargs):
@@ -64,6 +70,7 @@ class BaseController:  # Interface
         return self.__implementation
 
     def executeWeapon(self, player):
+        """call player execiteWeapon"""
         return self.__implementation.executeWeapon(player)
 
     def changeControl(self, previous: str, new: str):
@@ -74,8 +81,11 @@ class BaseController:  # Interface
         if event in config:
             return getattr(self, config[event])(*args, **kwargs)
 
-    def changePlayerDirection(self, player: Player, scancode: pg.key.ScancodeWrapper = None, *args, **kwargs):
+    def changePlayerDirection(self, player: Player, *args, **kwargs):
         pass
+
+    def changeWeapon(self, player, update=None, value=None):
+        self.__implementation.changeWeapon(player, update, value)
 
     def type(self):
         return self.name
@@ -88,9 +98,10 @@ class JoystickControle(BaseController):
     name = 'joystick'
     ball_threshold = 0.25
 
-    def __init__(self, controlIMPL: ControlImplementation, *args, **kwargs):
+    def __init__(self, controlIMPL: ControlImplementation, ball_threshold: float = 0.25, *args, **kwargs):
         super().__init__(controlIMPL, *args, **kwargs)
         self.config = self.config[self.name]
+        self.ball_threshold = ball_threshold
         pg.joystick.init()
         self.joysticks = [pg.joystick.Joystick(
             x) for x in range(pg.joystick.get_count())]
@@ -99,7 +110,7 @@ class JoystickControle(BaseController):
     def getAllContrillers(self):
         return self.joysticks
 
-    def changePlayerDirection(self, player: Player, scancode: pg.key.ScancodeWrapper = None, *args, **kwargs):
+    def changePlayerDirection(self, player: Player, *args, **kwargs):
         jx = round(self.joystick.get_axis(0), 2)
         jy = round(self.joystick.get_axis(1), 2)
 
@@ -125,10 +136,25 @@ class JoystickControle(BaseController):
             self.joystick = self.joysticks[value]
 
     def executeWeapon(self, player, event):
-        if self.config['executeWeapon']['button']:
-            if event.type == pg.JOYBUTTONDOWN:
-                if event.button == self.config['executeWeapon']['button']:
-                    return super().executeWeapon(player)
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button == self.config['executeWeapon']['button']:
+                return super().executeWeapon(player)
+
+    def showMenu(self, event, *args, **kwargs):
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button in self.config['showMenu']:
+                return super().showMenu(event, *args, **kwargs)
+
+    def changeWeapon(self, player, event):
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button in [9, 10]:
+                _update_value = 0
+                if event.button == 9:
+                    _update_value = -1
+                elif event.button == 10:
+                    _update_value = 1
+
+                return super().changeWeapon(player, update=_update_value)
 
 
 class KeyboardControle(BaseController):
@@ -139,37 +165,57 @@ class KeyboardControle(BaseController):
         self.config = self.config[self.name]
         print(self.config)
 
-    def changePlayerDirection(self, player: Player, scancode=None, *args, **kwargs):
-        if scancode:
+    def changePlayerDirection(self, player: Player, *args, **kwargs):
+        """Update player direction by axis"""
+        scancode = pg.key.get_pressed()
 
-            """                    X AXIS               """
-            if not (scancode[pg.K_a] or scancode[pg.K_d]):
-                # управляет изменением ускоренной скорости
-                player.decreaseAccel(0)
-            else:
-                if scancode[pg.K_a]:
-                    player.direction.x = -1
-                if scancode[pg.K_d]:
-                    player.direction.x = 1
+        """                    X AXIS               """
+        if not (scancode[pg.K_a] or scancode[pg.K_d]):
+            # управляет изменением ускоренной скорости
+            player.decreaseAccel(0)
+        else:
+            if scancode[pg.K_a]:
+                player.direction.x = -1
+            if scancode[pg.K_d]:
+                player.direction.x = 1
 
-                # управляет изменением ускоренной скорости
-                player.increaseAccel(0)
+            # управляет изменением ускоренной скорости
+            player.increaseAccel(0)
 
-            """                Y AXIS                   """
-            if not (scancode[pg.K_w] or scancode[pg.K_s]):
-                # управляет изменением ускоренной скорости
-                player.decreaseAccel(1)
-            else:
-                if scancode[pg.K_w]:
-                    player.direction.y = -1
-                if scancode[pg.K_s]:
-                    player.direction.y = 1
+        """                Y AXIS                   """
+        if not (scancode[pg.K_w] or scancode[pg.K_s]):
+            # управляет изменением ускоренной скорости
+            player.decreaseAccel(1)
+        else:
+            if scancode[pg.K_w]:
+                player.direction.y = -1
+            if scancode[pg.K_s]:
+                player.direction.y = 1
 
-                # управляет изменением ускоренной скорости
-                player.increaseAccel(1)
+            # управляет изменением ускоренной скорости
+            player.increaseAccel(1)
 
     def executeWeapon(self, player,  event):
-        if self.config['executeWeapon']['mouse']:
-            if event.type == pg.MOUSEBUTTONDOWN:
-                if event.button == self.config['executeWeapon']['mouse']:
-                    return super().executeWeapon(player)
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if event.button == self.config['executeWeapon']['mouse']:
+                return super().executeWeapon(player)
+
+    def showMenu(self, event, *args, **kwargs):
+        if event.type == pg.KEYDOWN:
+            if event.key in self.config['showMenu']:
+                return super().showMenu(event, *args, **kwargs)
+
+    def changeWeapon(self, player, event):
+        if event.type == pg.KEYDOWN:
+            if 49 <= event.key <= 57:
+                return super().changeWeapon(player=player, value=int(event.unicode))
+
+        elif event.type == pg.MOUSEBUTTONDOWN:
+            if event.button in [4, 5]:
+                _update_value = 0
+                if event.button == 4:
+                    _update_value = 1
+                elif event.button == 5:
+                    _update_value = -1
+
+                return super().changeWeapon(player=player, update=_update_value)
