@@ -41,7 +41,7 @@ class Level1(Level):
     def __init__(self, mediator, shellGroup=None, enemyGroup=None):
         super().__init__(mediator, shellGroup=shellGroup, enemyGroup=enemyGroup)
         self.last_spawn_time = 0
-        self.spawn_rate = 1500
+        self.spawn_rate = 2000
         print('level ', self.enemyGroup)
 
     def start(self):

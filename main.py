@@ -1,46 +1,23 @@
 from typing_extensions import runtime
-
+import pygame as pg
 from pygame import display
+from pygame import image
+from pygame import event
 from lavels import Level, Level1
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle, BaseController
-# from display import Display
-import pygame as pg
-from pygame.sprite import Group
+from pygame.sprite import Group, RenderUpdates
 import sys
 from pygame import Surface
 import ctypes
-from menu import ColoredSurface
+from menu import Menu
+from menu import Text
 
-
-class Groups:
-    def __init__(self):
-        self.enemyGroup = Group()
-        self.playerShell = Group()
-        self.objectsGroup = Group()
-        self._groups = [self.enemyGroup, self.playerShell, self.objectsGroup]
-
-    def collideAll(self):
-        pass
-
-    def update(self, *args, **kwargs):
-        for _group in self._groups:
-            _group.update(*args, **kwargs)
-
-    def draw(self, display, *args, **kwargs):
-        for _group in self._groups:
-            _group.draw(display)
-
-    def count(self):
-        _counter = 0
-        for _group in self._groups:
-            _counter += len(_group.sprites())
-        return _counter
+from sprite import Groups, spritecollide
+"""RenderUpdates - в методе draw возвращает изменения rect"""
 
 
 class BaseStrategy:
-    name = None
-
     def __init__(self, mediator):
         self.aplication = mediator
 
@@ -68,20 +45,19 @@ class GameStrategy(BaseStrategy):
         _now = pg.time.get_ticks()
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
-
-        self.aplication.display.fill((10, 9, 15))
-
         self.aplication.groups.update(
             now=_now, display_size=self.aplication.display_size)
-        self.aplication.groups.draw(self.aplication.display)
-
+        self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
-        self.aplication.player.draw(self.aplication.display)
-
         self.aplication.level.update(now=_now)
         # print(self.aplication.groups.enemyGroup)
 
         return super().update()
+
+    def draw(self, display):
+        display.fill((10, 9, 15))
+        self.aplication.groups.draw(display)
+        self.aplication.player.draw(display)
 
     def eventListen(self, event):
         self.aplication.controller.executeWeapon(
@@ -95,20 +71,18 @@ class GameStrategy(BaseStrategy):
 class MenuStrategy(BaseStrategy):
     def __init__(self, mediator):
         super().__init__(mediator)
-        width = self.aplication.display.get_width() / 1.5
-        height = self.aplication.display.get_height() / 1.5
-        self.bigBtn = ColoredSurface(
-            pos=self.aplication.display.get_rect().center,
-            size=(width, height),
-            center=True,
-            color=(100, 150, 230),
-            border_radius=15)
+        self.menu = Menu(self.aplication, self.aplication.display_size)
 
     def update(self):
-        self.bigBtn.draw(self.aplication.display)
+        # self.menu.update()
+        self.aplication.controller.menuUpdate()
         return super().update()
 
+    def draw(self, display):
+        self.menu.draw(display)
+
     def eventListen(self, event):
+        self.aplication.controller.menuExecute(event)
         return super().eventListen(event)
 
 
@@ -129,6 +103,7 @@ class Aplication:
 
     def __init__(self, level: Level, controllerType: str = 'keyboard', *args, **kwargs):
         pg.init()
+        pg.font.init()
         user32 = ctypes.windll.user32
 
         self.window_size = user32.GetSystemMetrics(
@@ -140,7 +115,8 @@ class Aplication:
         self.clock = pg.time.Clock()
         self.groups = Groups()
 
-        self.player = Player(self.display_size, self, self.groups.playerShell)
+        self.player = Player(self.display_size, self,
+                             self.groups.playerShell, self.groups.Particles)
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
@@ -159,7 +135,7 @@ class Aplication:
 
             else:
                 _controleImpl = self.controller.getImpl()
-                self.controller = self.controleRealization[controllerType](
+                self.controllaser = self.controleRealization[controllerType](
                     _controleImpl)
 
         return f'Controller was removed to {self.controller.type()}'
@@ -180,6 +156,7 @@ class Aplication:
                 self._actingStrategy.eventListen(event)
 
             self._actingStrategy.update()
+            self._actingStrategy.draw(self.display)
             pg.display.update()
             self.clock.tick(60)
 

@@ -7,11 +7,6 @@ from pygame.sprite import Group
 from settings import IMAGES
 
 
-class AbstractAmo(Sprite):
-    def __init__(self, *groups: AbstractGroup):
-        super().__init__(*groups)
-
-
 class ObjectInterface(Sprite):
     def __init__(self, *groups: AbstractGroup):
         super().__init__(*groups)
@@ -55,8 +50,9 @@ class AbstractUltimate:
 class AbstractGun(AbstaructWeapon):
     amo = BaseShell
 
-    def __init__(self, group):
+    def __init__(self, group, particle_group):
         super().__init__()
+        self.particle_group = particle_group
         self.group = group
 
     def execute(self):
@@ -66,30 +62,30 @@ class AbstractGun(AbstaructWeapon):
 class FirstGun(AbstractGun):
     amo = FirstShell
 
-    def __init__(self, group):
-        super().__init__(group)
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
         self.images = [pg.image.load(
             IMAGES+'\shell\lite\shell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
 
     def execute(self, rect):
         pos = [rect.centerx, int(rect.top+self.images[0].get_rect().height//2)]
-        self.group.add(self.amo(self.images, pos, True, [self.group]))
+        self.group.add(self.amo(self.images, pos, self.particle_group, [self.group]))
         return super().execute()
 
 
 class DubleGun(AbstractGun):
     amo = SecondShell
 
-    def __init__(self, group):
-        super().__init__(group)
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
         self.images = [pg.image.load(
             IMAGES+'\shell\\red\\redshell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
 
     def execute(self, rect):
         pos1 = [rect.left, rect.top+rect.height//2]
         pos2 = [rect.right, pos1[1]]
-        self.group.add(self.amo(self.images, pos1,True, [self.group]))
-        self.group.add(self.amo(self.images, pos2,True, [self.group]))
+        self.group.add(self.amo(self.images, pos1, self.particle_group,[self.group]))
+        self.group.add(self.amo(self.images, pos2, self.particle_group, [self.group]))
         return super().execute()
 
 # -------------------------------------------------------------------
@@ -102,10 +98,11 @@ class Equipment:
     _ultimate = None  # Ultimates
     _group = None  # player`s shell group
 
-    def __init__(self, group):
+    def __init__(self, group, particle_group):
         self._group = group
-        self._weapon_equipment.append(FirstGun(self._group))
-        self._weapon_equipment.append(DubleGun(self._group))
+        self._particle_group = particle_group
+        self._weapon_equipment.append(FirstGun(self._group, self._particle_group))
+        self._weapon_equipment.append(DubleGun(self._group, self._particle_group))
 
     def useUltimate(self):
         self._ultimate.use()

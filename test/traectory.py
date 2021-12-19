@@ -57,7 +57,7 @@ while True:
 
     display.fill((249, 255, 190))
     if len(cord_list) > 1:
-        # pg.draw.lines(display, (255, 0, 0), False, cord_list, width=2)
+        pg.draw.lines(display, (255, 0, 0), False, cord_list, width=2)
 
         if spr:
             spr.update(pg.time.get_ticks())

@@ -5,12 +5,11 @@ from player_equipment import Equipment
 import pygame as pg
 from pygame.sprite import Group, Sprite
 from settings import IMAGES
+from interface import HealthBar
 
 
 class Player(Sprite):
     mediator = None
-    MAX_XP = None
-    XP = MAX_XP
     animation = Animator
     equipment = Equipment  # heal, ultimate and weapon inventory*
     ability = None
@@ -18,13 +17,16 @@ class Player(Sprite):
     max_speed = 8.5
     xspeed = 0
     yspeed = 0
-    accel = 0.45
+    accel = 0.4
+    rect_color = (0, 255, 0)
 
-    def __init__(self, display_size, mediator, shellGroup: Group, *args, **kwargs):
+    def __init__(self, display_size, mediator, shellGroup: Group, particle_group, *args, **kwargs):
         super().__init__()
         self.mediator = mediator
+        self.health = HealthBar(
+            [10, 10], 100, 100, display_size[0]*0.45, display_size[1]*0.02, (233, 22, 22), background=(119, 119, 119))
         self.animation = self.animation()
-        self.equipment = self.equipment(shellGroup)
+        self.equipment = self.equipment(shellGroup, particle_group)
         self.display_size = display_size
 
         self.images = {
@@ -125,12 +127,9 @@ class Player(Sprite):
         dispaly.blit(
             self.acting_images[self.animation.getIteration], self.rect)
         # for rect in self.rects:
-        #     pg.draw.lines(dispaly, (0, 255, 0), True, [
-        #         rect.topleft, rect.topright, rect.bottomright, rect.bottomleft])
+        #     pg.draw.rect(dispaly, self.rect_color, rect, width=1)
 
-    def damage(self):
-        """player is getting damage -> damage received, remaining HP"""
-        return self.XP
+        self.health.draw(dispaly)
 
     def executeWeapon(self):
         return self.equipment.useWeapon(self.rect)
@@ -145,15 +144,11 @@ class Player(Sprite):
     def getRects(self):  # -> Rect
         return (self.rect, self.rects)
 
-    def collideGroup(self, group):
-        return
+    def getHealth(self):
+        return self.health.HP
 
-    def collideSprite(self, sprite):
-        return
-
-    def __heal(self, sizeH):  # -> new XP
-        self.XP += sizeH
-        pass
+    def damage(self, value):
+        self.health.damage(value)
 
     def kill(self):
         return super().kill()
