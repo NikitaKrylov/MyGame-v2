@@ -2,11 +2,11 @@ import pygame as pg
 
 
 class HealthBar:
-    def __init__(self, pos, XP, MAXXP, width, height, color, *args, **kwargs):
+    def __init__(self, pos, XP, MAXXP, size, color, *args, **kwargs):
         self.color = color
         self.HP = XP
         self.MAX_HP = MAXXP
-        self.width, self.height = width, height
+        self.width, self.height = size
         self.rectMAX = pg.Rect(pos[0], pos[1], self.width, self.height)
         self.rect = self.rectMAX.copy()
         self.background_color = kwargs.get(

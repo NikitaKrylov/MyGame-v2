@@ -1,3 +1,4 @@
+from pygame import key
 from enemy import AsteroidFactory, FirstFlightEnemyFactory
 
 
@@ -40,9 +41,13 @@ class Level1(Level):
 
     def __init__(self, mediator, shellGroup=None, enemyGroup=None):
         super().__init__(mediator, shellGroup=shellGroup, enemyGroup=enemyGroup)
-        self.last_spawn_time = 0
-        self.spawn_rate = 2000
-        print('level ', self.enemyGroup)
+        self.spawn_rates = {
+            'asteroid': 2000,
+            'flightEnemy': 7000
+        }
+        self.last_spawn_time = {i: 0 for i in self.spawn_rates.keys()}
+
+        print(self.last_spawn_time)
 
     def start(self):
         self.asteroidFactory = AsteroidFactory(
@@ -56,9 +61,13 @@ class Level1(Level):
         return super().start()
 
     def update(self, now):
-        if now - self.last_spawn_time > self.spawn_rate:
-            self.last_spawn_time = now
+        if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
+            self.last_spawn_time['asteroid'] = now
             self.asteroidFactory.createObject()
-        
-        if self.firstFlightFactory.count() < 1:
-            self.firstFlightFactory.createObject()
+
+        if now - self.last_spawn_time['flightEnemy'] > self.spawn_rates['flightEnemy']:
+            print('spawn')
+            self.last_spawn_time['flightEnemy'] = now
+            if self.firstFlightFactory.count() < 3:
+                self.firstFlightFactory.createObject()
+    

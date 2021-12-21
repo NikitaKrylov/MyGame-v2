@@ -114,7 +114,7 @@ class FirstFlightEnemy(AbstractEnemy):
         self.rects = [pg.Rect(self.rect.x, self.rect.y, self.rect.width, self.rect.height*0.55),
                       pg.Rect(self.rect.x+self.rect.width/3, self.rect.y, self.rect.width//3, self.rect.height)]
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
-                                   self.HP, self.MAX_HP, self.rect.width, self.rect.height*0.11, (233, 22, 22))
+                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (233, 22, 22))
 
     def update(self, *args, **kwargs):
         self.updatePosition()

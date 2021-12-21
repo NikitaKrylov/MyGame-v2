@@ -37,6 +37,7 @@ class Particle(Sprite):
                 self.kill()
 
         return super().update(*args, **kwargs)
+    
 
 
 class BaseShell(Sprite):
@@ -88,6 +89,7 @@ class FirstShell(BaseShell):
         self.speed = 23
 
     def kill(self):
+        """create particles when sprite die"""
         colors = [(170, 238, 255), (127, 233, 247), (180, 248, 255)]
         for i in range(9):
             vector = pygame.Vector2(1, 0).rotate(random.randint(1, 359))
@@ -111,6 +113,7 @@ class SecondShell(BaseShell):
         self.speed = 19
 
     def kill(self):
+        """create particles when sprite die"""
         colors = [(200, 20, 20), (180, 11, 11), (200, 0, 0)]
         for i in range(7):
             vector = pygame.Vector2(1, 0).rotate(random.randint(1, 359))
@@ -123,3 +126,4 @@ class SecondShell(BaseShell):
                 life_size=5,
                 size_rate=-0.5))
         return super().kill()
+

@@ -24,7 +24,7 @@ class Player(Sprite):
         super().__init__()
         self.mediator = mediator
         self.health = HealthBar(
-            [10, 10], 100, 100, display_size[0]*0.45, display_size[1]*0.02, (233, 22, 22), background=(119, 119, 119))
+            [10, 10], 100, 100, [display_size[0]*0.45, display_size[1]*0.02], (233, 22, 22), background=(119, 119, 119))
         self.animation = self.animation()
         self.equipment = self.equipment(shellGroup, particle_group)
         self.display_size = display_size

@@ -37,8 +37,7 @@ class ControlImplementation:
     def menuExecute(self):
         self.aplication._actingStrategy.menu.execute()
         
-    def menuUpdate(self):
-        self.aplication._actingStrategy.menu.update()
+    
         
 
     def __str__(self):
@@ -96,9 +95,6 @@ class BaseController:  # Interface
         
     def menuExecute(self, event, *args, **kwargs):
         self.__implementation.menuExecute()
-        
-    def menuUpdate(self, *args, **kwargs):
-        self.__implementation.menuUpdate()
 
     def type(self):
         return self.name
@@ -119,7 +115,6 @@ class JoystickControle(BaseController):
         self.joysticks = [pg.joystick.Joystick(
             x) for x in range(pg.joystick.get_count())]
         self.joystick = self.joysticks[0]
-        print(self.joysticks)
 
     def getAllContrillers(self):
         return self.joysticks
@@ -170,6 +165,10 @@ class JoystickControle(BaseController):
 
                 return super().changeWeapon(player, update=_update_value)
             
+    def menuExecute(self, event, *args, **kwargs):
+        pass
+        # return super().menuExecute(event, *args, **kwargs)
+            
 
 
 
@@ -179,7 +178,6 @@ class KeyboardControle(BaseController):
     def __init__(self, controlIMPL: ControlImplementation, *args, **kwargs):
         super().__init__(controlIMPL, *args, **kwargs)
         self.config = self.config[self.name]
-        print(self.config)
 
     def changePlayerDirection(self, player: Player, *args, **kwargs):
 
@@ -241,5 +239,3 @@ class KeyboardControle(BaseController):
         if event.type == pg.MOUSEBUTTONDOWN:
             return super().menuExecute(event, *args, **kwargs)
         
-    def menuUpdate(self, *args, **kwargs):
-        return super().menuUpdate()

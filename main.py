@@ -50,7 +50,6 @@ class GameStrategy(BaseStrategy):
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
         self.aplication.level.update(now=_now)
-        # print(self.aplication.groups.enemyGroup)
 
         return super().update()
 
@@ -74,8 +73,7 @@ class MenuStrategy(BaseStrategy):
         self.menu = Menu(self.aplication, self.aplication.display_size)
 
     def update(self):
-        # self.menu.update()
-        self.aplication.controller.menuUpdate()
+        self.menu.update()
         return super().update()
 
     def draw(self, display):
@@ -126,7 +124,7 @@ class Aplication:
         self.level = level(self, enemyGroup=self.groups.enemyGroup)
         self.level.start()
 
-    def setController(self, controllerType: str, *args, **kwargs):
+    def setControllerType(self, controllerType: str, *args, **kwargs):
         """set controller type by name (controllerType)"""
         if controllerType in self.controleRealization:
             if not self.controller:
@@ -135,10 +133,10 @@ class Aplication:
 
             else:
                 _controleImpl = self.controller.getImpl()
-                self.controllaser = self.controleRealization[controllerType](
+                self.controller = self.controleRealization[controllerType](
                     _controleImpl)
 
-        return f'Controller was removed to {self.controller.type()}'
+        return print(f'Controller was removed to {self.controller.type()}')
 
     def showMenu(self):
         """Show and close menu"""
@@ -166,16 +164,6 @@ class Aplication:
 
 if __name__ == '__main__':
     aplication = Aplication(Level1)
-    # aplication.setController('joystick')
+    # aplication.setControllerType('joystick')
     aplication.start()
 
-
-"""
-1. Нужно использовать паттерн комманда, чтобы вызывать меню игры и 1
-выполянять другие действия. 
-2. Использовать паттерн Bridge, чтобы сделать управление через несколько
-вариаций устройств
-2.2 Вынести максимально возможное количество функций программы в абстрактные 
-классы и функции
-2.3 Конкретизировать классы только способом взаимодействия с этими функциями
-"""

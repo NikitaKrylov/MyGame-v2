@@ -1,4 +1,3 @@
-from os import kill
 import pygame as pg
 from pygame.sprite import AbstractGroup, Group, groupcollide
 
@@ -42,10 +41,7 @@ class Groups:
 
     def draw(self, display, *args, **kwargs):
         for _group in self._groups:
-            rect_list = _group.draw(display)
-
-            if rect_list:
-                print(rect_list)
+            _group.draw(display)
 
     def count(self):
         _counter = 0
