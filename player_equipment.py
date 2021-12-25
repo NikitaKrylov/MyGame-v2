@@ -1,6 +1,6 @@
 import pygame as pg
 from animation import Animator
-from shell import FirstShell, SecondShell
+from shell import FirstShell, SecondShell, Rocket, BurnedShell
 from pygame.sprite import Sprite, AbstractGroup
 from shell import BaseShell
 from pygame.sprite import Group
@@ -69,7 +69,8 @@ class FirstGun(AbstractGun):
 
     def execute(self, rect):
         pos = [rect.centerx, int(rect.top+self.images[0].get_rect().height//2)]
-        self.group.add(self.amo(self.images, pos, self.particle_group, [self.group]))
+        self.group.add(self.amo(self.images, pos,
+                       self.particle_group, [self.group]))
         return super().execute()
 
 
@@ -84,16 +85,48 @@ class DubleGun(AbstractGun):
     def execute(self, rect):
         pos1 = [rect.left, rect.top+rect.height//2]
         pos2 = [rect.right, pos1[1]]
-        self.group.add(self.amo(self.images, pos1, self.particle_group,[self.group]))
-        self.group.add(self.amo(self.images, pos2, self.particle_group, [self.group]))
+        self.group.add(self.amo(self.images, pos1,
+                       self.particle_group, [self.group]))
+        self.group.add(self.amo(self.images, pos2,
+                       self.particle_group, [self.group]))
         return super().execute()
 
+
+class RocketLauncher(AbstractGun):
+    amo = Rocket
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        # self.images = [pg.image.load(
+        # IMAGES+'\shell\\racket\\racket'+str(i)+'.png').convert_alpha() for i in range(1, 7)]
+        self.images = [pg.image.load(
+            IMAGES+'\shell\\racket\\racket.png').convert_alpha()]
+
+    def execute(self, rect):
+        self.group.add(self.amo(self.images, rect.center,
+                       self.particle_group, [self.group]))
+        return super().execute()
+
+
+class BurnedLauncher(AbstractGun):
+    amo = BurnedShell
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        self.images = [pg.image.load(
+            IMAGES+'\shell\\orange\\orange.png').convert_alpha()]
+
+    def execute(self, rect):
+        pos = [rect.centerx,rect.top + self.images[0].get_height()//1.5]
+        self.group.add(self.amo(self.images, pos,
+                       self.particle_group, [self.group]))
+        return super().execute()
 # -------------------------------------------------------------------
 
 
 class Equipment:
     _weapon_equipment = []  # Weapons
-    weaponIndex = 1
+    weaponIndex = 0
     _heal_equipment = []  # Heals
     _ultimate = None  # Ultimates
     _group = None  # player`s shell group
@@ -101,8 +134,14 @@ class Equipment:
     def __init__(self, group, particle_group):
         self._group = group
         self._particle_group = particle_group
-        self._weapon_equipment.append(FirstGun(self._group, self._particle_group))
-        self._weapon_equipment.append(DubleGun(self._group, self._particle_group))
+        self._weapon_equipment.append(
+            FirstGun(self._group, self._particle_group))
+        self._weapon_equipment.append(
+            DubleGun(self._group, self._particle_group))
+        self._weapon_equipment.append(
+            RocketLauncher(self._group, self._particle_group))
+        self._weapon_equipment.append(
+            BurnedLauncher(self._group, self._particle_group))
 
     def useUltimate(self):
         self._ultimate.use()
@@ -136,3 +175,6 @@ class Equipment:
     def setUltimate(self, instance):
         self._ultimate = instance
         return self._ultimate
+
+    def countWeapons(self):
+        return len(self._weapon_equipment)

@@ -13,6 +13,9 @@ class Player(Sprite):
     animation = Animator
     equipment = Equipment  # heal, ultimate and weapon inventory*
     ability = None
+    
+    MAX_HP = 100
+    HP = MAX_HP
 
     max_speed = 8.5
     xspeed = 0
@@ -24,7 +27,7 @@ class Player(Sprite):
         super().__init__()
         self.mediator = mediator
         self.health = HealthBar(
-            [10, 10], 100, 100, [display_size[0]*0.45, display_size[1]*0.02], (233, 22, 22), background=(119, 119, 119))
+            [10, 10], self.MAX_HP, self.HP, [display_size[0]*0.45, display_size[1]*0.02], (228, 113, 116), background=(53, 64, 77), draw_text=True)
         self.animation = self.animation()
         self.equipment = self.equipment(shellGroup, particle_group)
         self.display_size = display_size
@@ -129,7 +132,8 @@ class Player(Sprite):
         # for rect in self.rects:
         #     pg.draw.rect(dispaly, self.rect_color, rect, width=1)
 
-        self.health.draw(dispaly)
+        self.health.draw(dispaly, border_radius=self.rect.height//2, border_top_right_radius=self.rect.height//2)
+        # self.health.draw(dispaly, border_bottom_right_radius=self.rect.height//2, border_top_right_radius=self.rect.height//2)
 
     def executeWeapon(self):
         return self.equipment.useWeapon(self.rect)
@@ -148,7 +152,12 @@ class Player(Sprite):
         return self.health.HP
 
     def damage(self, value):
-        self.health.damage(value)
+        if self.HP - value > 0:
+            self.HP -= value
+        else:
+            self.HP = 0
+            
+        self.health.updateHP(self.HP)
 
     def kill(self):
         return super().kill()

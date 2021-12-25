@@ -47,7 +47,6 @@ class Level1(Level):
         }
         self.last_spawn_time = {i: 0 for i in self.spawn_rates.keys()}
 
-        print(self.last_spawn_time)
 
     def start(self):
         self.asteroidFactory = AsteroidFactory(
@@ -66,7 +65,6 @@ class Level1(Level):
             self.asteroidFactory.createObject()
 
         if now - self.last_spawn_time['flightEnemy'] > self.spawn_rates['flightEnemy']:
-            print('spawn')
             self.last_spawn_time['flightEnemy'] = now
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()

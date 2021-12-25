@@ -1,8 +1,8 @@
-from typing_extensions import runtime
 import pygame as pg
 from pygame import display
 from pygame import image
 from pygame import event
+from pygame import draw
 from lavels import Level, Level1
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle, BaseController
@@ -10,9 +10,8 @@ from pygame.sprite import Group, RenderUpdates
 import sys
 from pygame import Surface
 import ctypes
-from menu import Menu
-from menu import Text
-
+from menu import Menu, Text
+from interface import Toolbar
 from sprite import Groups, spritecollide
 """RenderUpdates - в методе draw возвращает изменения rect"""
 
@@ -20,6 +19,9 @@ from sprite import Groups, spritecollide
 class BaseStrategy:
     def __init__(self, mediator):
         self.aplication = mediator
+
+    def draw(self, display, *args, **kwargs):
+        pass
 
     def update(self):
         """default update aplication function"""
@@ -37,14 +39,23 @@ class BaseStrategy:
         return self.__class__.__name__
 
 
-class GameStrategy(BaseStrategy):
-    def __init__(self, mediator):
-        super().__init__(mediator)
+class InventoryStrategy(BaseStrategy):
+    def draw(self, display, *args, **kwargs):
+        pass
 
+    def update(self):
+        pass
+
+    def eventListen(self, event):
+        return super().eventListen(event)
+
+
+class GameStrategy(BaseStrategy):
     def update(self):
         _now = pg.time.get_ticks()
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
+        self.aplication.toolbar.update()
         self.aplication.groups.update(
             now=_now, display_size=self.aplication.display_size)
         self.aplication.groups.collide(self.aplication.player)
@@ -57,6 +68,7 @@ class GameStrategy(BaseStrategy):
         display.fill((10, 9, 15))
         self.aplication.groups.draw(display)
         self.aplication.player.draw(display)
+        self.aplication.toolbar.draw(display)
 
     def eventListen(self, event):
         self.aplication.controller.executeWeapon(
@@ -118,6 +130,8 @@ class Aplication:
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
+        self.toolbar = Toolbar(self.display_size, self.player.equipment)
+
         self.menuStrategy = self.menuStrategy(self)
         self.gameStrategy = self.gameStrategy(self)
         self._actingStrategy = self.gameStrategy
@@ -164,6 +178,5 @@ class Aplication:
 
 if __name__ == '__main__':
     aplication = Aplication(Level1)
-    # aplication.setControllerType('joystick')
+    aplication.setControllerType('joystick')
     aplication.start()
-

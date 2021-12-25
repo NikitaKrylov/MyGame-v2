@@ -1,3 +1,4 @@
+from math import sin
 import pygame
 from pygame.sprite import Sprite, AbstractGroup
 from animation import Animator
@@ -6,13 +7,15 @@ import random
 
 
 class Particle(Sprite):
-    def __init__(self, pos, size, speed, color: list, vector, life_size=None,  size_rate=None, life_time=None, *groups: AbstractGroup):
+    def __init__(self, pos, size, speed, color: list, vector, life_size=None,  size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup):
         super().__init__(*groups)
         self.life_size = life_size
         self.size_rate = size_rate
         self.life_time = life_time
         self.direction = vector
         self.size = size
+        self.speed_rate = speed_rate
+        self.shape = shape
         self.speed = speed
         self.image = pygame.Surface((self.size, self.size))
         self.color = color
@@ -21,10 +24,12 @@ class Particle(Sprite):
 
     def update(self, *args, **kwargs):
         self.size += self.size_rate
-        self.speed -= 0.3
 
-        if self.speed <= 0:
-            self.kill()
+        if self.speed_rate:
+            self.speed += self.speed_rate
+
+            if self.speed <= 0:
+                self.kill()
 
         self.image = pygame.Surface((self.size, self.size))
         self.image.fill(self.color)
@@ -33,11 +38,19 @@ class Particle(Sprite):
         self.rect.y += self.direction.y * self.speed
 
         if self.life_size:
-            if self.life_size > self.size:
+            if self.size_rate < 0 and self.life_size > self.size:
+                self.kill()
+            elif self.size_rate > 0 and self.life_size <= self.size:
                 self.kill()
 
         return super().update(*args, **kwargs)
-    
+
+    def draw(self, display):
+        if self.shape == 'square':
+            display.blit(self.image, self.rect)
+        elif self.shape == 'circle':
+            pygame.draw.circle(display, self.color,
+                               self.rect.center, self.size//2)
 
 
 class BaseShell(Sprite):
@@ -80,6 +93,23 @@ class BaseShell(Sprite):
         return super().kill()
 
 
+class ParticleShell(Particle):
+    def __init__(self, pos, size, speed, color: list, vector, damage, life_size=None, size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup):
+        super().__init__(pos, size, speed, color, vector, life_size=life_size,
+                         size_rate=size_rate, speed_rate=speed_rate, life_time=life_time, shape=shape, *groups)
+        self.DAMAGE = damage
+        self.rects = [self.rect]
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        self.rects = [self.rect]
+
+    def getDamage(self):
+        damage = self.DAMAGE
+        self.kill()
+        return damage
+
+
 class FirstShell(BaseShell):
     def __init__(self, images: list, pos, *groups: AbstractGroup):
         super().__init__(images, pos, *groups)
@@ -100,6 +130,7 @@ class FirstShell(BaseShell):
                 color=random.choice(colors),
                 vector=vector,
                 life_size=5,
+                speed_rate=-0.3,
                 size_rate=-0.5))
         return super().kill()
 
@@ -124,6 +155,77 @@ class SecondShell(BaseShell):
                 color=random.choice(colors),
                 vector=vector,
                 life_size=5,
+                speed_rate=-0.3,
                 size_rate=-0.5))
         return super().kill()
 
+
+class Rocket(BaseShell):
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup):
+        super().__init__(images, pos, particle_group, *groups)
+        self.speed = 5
+        self.DAMAGE = 120
+
+    def update(self, *args, **kwargs):
+        colors = [(190, 192, 194), (164, 165, 166),
+                  (206, 206, 214), (129, 129, 130)]
+        for i in range(2):
+            vector = pygame.Vector2(0, -1).rotate(random.randint(-20, 20))
+            self.particle_group.add(Particle(
+                pos=[self.rect.centerx, self.rect.bottom],
+                size=random.randint(6, self.rect.width//2.5),
+                speed=random.randint(7, 11),
+                color=random.choice(colors),
+                vector=vector,
+                life_size=random.randint(18, 30),
+                size_rate=random.uniform(0.35, 0.6),
+                speed_rate=-0.3,
+                shape='circle'))
+        return super().update(*args, **kwargs)
+
+    def kill(self):
+        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
+        for i in range(70):
+            vector = pygame.Vector2(0, -1).rotate(random.randint(-20, 20))
+            self.particle_group.add(Particle(
+                pos=[random.randint(self.rect.left-self.rect.width//2, self.rect.right+self.rect.width//2), random.randint(
+                    self.rect.top - self.rect.height//2, self.rect.bottom + self.rect.height//2)],
+                size=random.randint(2, self.rect.width//2),
+                speed=random.randint(7,11),
+                color=random.choice(colors),
+                vector=vector,
+                life_size=random.randint(50, 100),
+                size_rate=random.uniform(2, 5),
+                speed_rate=-.3,
+                shape='circle'))
+
+        return super().kill()
+
+
+class BurnedShell(BaseShell):
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup):
+        super().__init__(images, pos, particle_group, *groups)
+        self.speed = 13
+        self.DAMAGE = 15
+        self.PARTICLE_DAMAGE = 10
+        self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.375, self.rect.y +
+                                  self.rect.height * 0.375, self.rect.width*0.25, self.rect.height*0.25)]
+
+    def kill(self):
+        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
+        group = self.groups()[0]
+
+        for i in range(random.randint(2, 6)):
+            group.add(ParticleShell(
+                pos=self.rect.center,
+                size=self.rect.width//5,
+                speed=random.randint(12, 16),
+                color=random.choice(colors),
+                vector=pygame.Vector2(1, 0).rotate(random.randint(1, 359)),
+                damage=self.PARTICLE_DAMAGE,
+                life_size=2,
+                size_rate=-0.4,
+                speed_rate=-0.3,
+                shape='square'
+            ))
+        return super().kill()

@@ -1,5 +1,6 @@
 import pygame as pg
 from pygame.sprite import AbstractGroup, Group, groupcollide
+from shell import ParticleShell
 
 
 class CustomGroup(Group):
@@ -19,7 +20,7 @@ class Groups:
         self.enemyGroup = CustomGroup()
         self.playerShell = Group()
         self.objectsGroup = Group()
-        self.Particles = Group()
+        self.Particles = CustomGroup()
         self._groups = [self.enemyGroup, self.playerShell,
                         self.objectsGroup, self.Particles]
 
@@ -29,7 +30,6 @@ class Groups:
             shell = spritecollide(enemy, self.playerShell)
             if shell:
                 enemy.damage(shell.getDamage())
-
         # player and enemy collision
         res = spritecollide(player, self.enemyGroup)
         if res:
