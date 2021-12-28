@@ -175,8 +175,16 @@ class Aplication:
     def close(self):
         self.__run = False
 
+    def restart(self):
+        pg.init()
+        self.groups.restart()
+        self.level.restart()
+        self.level.start()
+        self.player.restart()
+        
+        self.showMenu()
 
 if __name__ == '__main__':
     aplication = Aplication(Level1)
-    aplication.setControllerType('joystick')
+    # aplication.setControllerType('joystick')
     aplication.start()

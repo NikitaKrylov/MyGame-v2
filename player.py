@@ -10,10 +10,8 @@ from interface import HealthBar
 
 class Player(Sprite):
     mediator = None
-    animation = Animator
-    equipment = Equipment  # heal, ultimate and weapon inventory*
     ability = None
-    
+
     MAX_HP = 100
     HP = MAX_HP
 
@@ -21,15 +19,17 @@ class Player(Sprite):
     xspeed = 0
     yspeed = 0
     accel = 0.4
-    rect_color = (0, 255, 0)
 
     def __init__(self, display_size, mediator, shellGroup: Group, particle_group, *args, **kwargs):
         super().__init__()
+        self.HP = self.MAX_HP
         self.mediator = mediator
         self.health = HealthBar(
-            [10, 10], self.MAX_HP, self.HP, [display_size[0]*0.45, display_size[1]*0.02], (228, 113, 116), background=(53, 64, 77), draw_text=True)
-        self.animation = self.animation()
-        self.equipment = self.equipment(shellGroup, particle_group)
+            [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.45, display_size[1]*0.02], (228, 113, 116), background=(53, 64, 77), draw_text=True)
+        self.animation = Animator()
+        self.shellGroup = shellGroup
+        self.particle_group = particle_group
+        self.equipment = Equipment(self.shellGroup, self.particle_group)
         self.display_size = display_size
 
         self.images = {
@@ -57,18 +57,52 @@ class Player(Sprite):
 
     def updatePosition(self, x_update=None, y_update=None):
         if not (x_update and y_update):
-
             if (self.rect.left + self.direction.x * self.xspeed > 0) and (self.rect.right + self.direction.x * self.xspeed < self.display_size[0]):
                 self.rect.centerx += self.direction.x * self.xspeed
-                for rect in self.rects:
-                    rect.centerx += self.direction.x * self.xspeed
 
             if (self.rect.bottom + self.direction.y * self.yspeed < self.display_size[1] + 10) and (self.rect.top + self.direction.y * self.yspeed > 0):
                 self.rect.centery += self.direction.y * self.yspeed
-                for rect in self.rects:
-                    rect.centery += self.direction.y * self.yspeed
+
+        self.rects = [
+            pg.Rect(int(self.rect.left + self.rect.width/2.5), self.rect.top,
+                    int(self.rect.width/5), int(self.rect.height*0.9)),
+            pg.Rect(self.rect.left, int(self.rect.top +
+                    self.rect.height/2.5), self.rect.width, self.rect.height/4)
+        ]
 
         return self.rect
+
+    def push(self, axis=1, direction=1):
+        if axis == 1:
+            if self.rect.bottom + self.rect.height < self.display_size[1] and self.rect.top - self.rect.height > 0:
+                self.rect.y += self.rect.height * direction
+            else:
+                return None
+
+            self.direction.y = direction
+            self.yspeed = self.max_speed
+
+        elif axis == 0:
+            if self.rect.right + self.rect.width < self.display_size[0] and self.rect.left - self.rect.width > 0:
+                self.rect.x += self.rect.width * direction
+            else:
+                return None
+
+            self.direction.x = direction
+            self.xspeed = self.max_speed
+
+    def pushByRect(self, pushed_rect):
+        if pushed_rect.width > pushed_rect.height:
+            
+            if pushed_rect.top == self.rect.top:
+                self.push(axis=1, direction=1)
+            else:
+                self.push(axis=1, direction=-1)
+        else:
+            if pushed_rect.left == self.rect.left: 
+                self.push(axis=0, direction=1)
+            else:
+                self.push(axis=0, direction=-1)
 
     def updateActingImage(self, threshold):
         if self.direction.x > threshold:
@@ -130,9 +164,10 @@ class Player(Sprite):
         dispaly.blit(
             self.acting_images[self.animation.getIteration], self.rect)
         # for rect in self.rects:
-        #     pg.draw.rect(dispaly, self.rect_color, rect, width=1)
+        #     pg.draw.rect(dispaly, (0, 255, 0), rect, width=1)
 
-        self.health.draw(dispaly, border_radius=self.rect.height//2, border_top_right_radius=self.rect.height//2)
+        self.health.draw(dispaly, border_radius=self.rect.height //
+                         2, border_top_right_radius=self.rect.height//2)
         # self.health.draw(dispaly, border_bottom_right_radius=self.rect.height//2, border_top_right_radius=self.rect.height//2)
 
     def executeWeapon(self):
@@ -156,8 +191,12 @@ class Player(Sprite):
             self.HP -= value
         else:
             self.HP = 0
-            
+
         self.health.updateHP(self.HP)
 
     def kill(self):
         return super().kill()
+
+    def restart(self):
+        self.__init__(self.display_size, self.mediator,
+                      self.shellGroup, self.particle_group)

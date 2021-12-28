@@ -13,13 +13,14 @@ class HealthBar:
         self.background_color = kwargs.get(
             'background') if kwargs.get('background') else None
         self.draw_text = False
-        
+
         if kwargs.get('draw_text') == True:
             self.draw_text = True
             self.font = pg.font.Font(
                 MEDIA + '\\font\\karmafuture.ttf', int(self.rect.height*0.95))
             self.values = [self.font.render(
                 str(i), False, (255, 255, 255)) for i in range(self.MAX_HP+1)]
+            
 
     def draw(self, display, *args, **kwargs):
         self.rect.width = (self.HP / self.MAX_HP) * self.rectMAX.width
@@ -28,15 +29,16 @@ class HealthBar:
                          self.rectMAX, **kwargs)
         pg.draw.rect(display, self.color, self.rect, **kwargs)
         if self.draw_text:
-            display.blit(self.values[self.HP], (self.rectMAX.centerx, self.rectMAX.centery-self.values[self.HP].get_height()//2-3))
+            display.blit(self.values[self.HP], (self.rectMAX.centerx,
+                         self.rectMAX.centery-self.values[self.HP].get_height()//2-3))
 
     def updateHP(self, hp):
         self.HP = hp
-        
+
     def update(self, x, y):
         self.rect.x = x
         self.rect.y = y
-        self.rectMAX.x = x 
+        self.rectMAX.x = x
         self.rectMAX.y = y
 
 

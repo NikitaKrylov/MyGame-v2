@@ -1,6 +1,7 @@
 import pygame as pg
 from pygame.sprite import AbstractGroup, Group, groupcollide
 from shell import ParticleShell
+from enemy import AbstractEnemy, FirstFlightEnemy
 
 
 class CustomGroup(Group):
@@ -27,17 +28,28 @@ class Groups:
     def collide(self, player):
         # enemy and shell collision
         for enemy in self.enemyGroup:
-            shell = spritecollide(enemy, self.playerShell)
-            if shell:
-                enemy.damage(shell.getDamage())
+            player_shell = spritecollide(enemy, self.playerShell)
+            if player_shell:
+                enemy.damage(player_shell.getDamage())
         # player and enemy collision
-        res = spritecollide(player, self.enemyGroup)
-        if res:
-            player.damage(res.getDamage())
+        enemy_sprite = spritecollide(player, self.enemyGroup)
+        if enemy_sprite:
+            if isinstance(enemy_sprite, FirstFlightEnemy):   
+                # left = max(player.rect.left,  enemy_sprite.rect.left)
+                # width = min(player.rect.right,enemy_sprite.rect.right) - left
+                # top = max(player.rect.top,   enemy_sprite.rect.top)
+                # height = min(player.rect.bottom,enemy_sprite.rect.bottom) - top
+                # player.pushByRect(
+                #     pg.Rect(left, top, width, height))
+
+                player.push(axis=1, direction=1)
+                
+            player.damage(enemy_sprite.getDamage())
 
     def update(self, *args, **kwargs):
         for _group in self._groups:
             _group.update(*args, **kwargs)
+            
 
     def draw(self, display, *args, **kwargs):
         for _group in self._groups:
@@ -48,6 +60,10 @@ class Groups:
         for _group in self._groups:
             _counter += len(_group.sprites())
         return _counter
+
+    def restart(self):
+        for group in self._groups:
+            group.empty()
 
 
 def twospritecollide(spritea, spriteb, killa=False, killb=False):

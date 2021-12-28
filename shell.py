@@ -57,7 +57,7 @@ class BaseShell(Sprite):
     isPlayer: bool = None
     animation = Animator
 
-    def __init__(self, images: list,  pos, particle_group, *groups: AbstractGroup):
+    def __init__(self, images: list,  pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
         self.particle_group = particle_group
         self.animation = self.animation()
@@ -94,9 +94,9 @@ class BaseShell(Sprite):
 
 
 class ParticleShell(Particle):
-    def __init__(self, pos, size, speed, color: list, vector, damage, life_size=None, size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup):
+    def __init__(self, pos, size, speed, color: list, vector, damage, life_size=None, size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup, **kwargs):
         super().__init__(pos, size, speed, color, vector, life_size=life_size,
-                         size_rate=size_rate, speed_rate=speed_rate, life_time=life_time, shape=shape, *groups)
+                         size_rate=size_rate, speed_rate=speed_rate, life_time=life_time, shape=shape, *groups, **kwargs)
         self.DAMAGE = damage
         self.rects = [self.rect]
 
@@ -111,8 +111,8 @@ class ParticleShell(Particle):
 
 
 class FirstShell(BaseShell):
-    def __init__(self, images: list, pos, *groups: AbstractGroup):
-        super().__init__(images, pos, *groups)
+    def __init__(self, images: list, pos, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, *groups, **kwargs)
         self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.15, self.rect.y +
                                   self.rect.height * 0.15, self.rect.width*0.7, self.rect.height*0.7)]
         self.DAMAGE = 25
@@ -136,8 +136,8 @@ class FirstShell(BaseShell):
 
 
 class SecondShell(BaseShell):
-    def __init__(self, images: list, pos, *groups: AbstractGroup):
-        super().__init__(images, pos, *groups)
+    def __init__(self, images: list, pos, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, *groups, **kwargs)
         self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.3, self.rect.y +
                                   self.rect.height * 0.3, self.rect.width*0.6, self.rect.height*0.6)]
         self.DAMAGE = 17
@@ -161,8 +161,8 @@ class SecondShell(BaseShell):
 
 
 class Rocket(BaseShell):
-    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup):
-        super().__init__(images, pos, particle_group, *groups)
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
         self.speed = 5
         self.DAMAGE = 120
 
@@ -203,8 +203,8 @@ class Rocket(BaseShell):
 
 
 class BurnedShell(BaseShell):
-    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup):
-        super().__init__(images, pos, particle_group, *groups)
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
         self.speed = 13
         self.DAMAGE = 15
         self.PARTICLE_DAMAGE = 10

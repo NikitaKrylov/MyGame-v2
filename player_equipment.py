@@ -32,11 +32,25 @@ class AbstructHeal(ObjectInterface):
 
 
 class AbstaructWeapon:
+    updatingTime = {
+        'last': 0,
+        'cooldawn': 0
+    }
+    
+
     def __init__(self):
-        pass
+        self.__isExecute = True
 
     def execute(self):
-        return
+        return 
+    
+    @property
+    def isExecute(self):
+        now = pg.time.get_ticks()
+        if now - self.updatingTime['last'] > self.updatingTime['cooldawn']:
+            self.updatingTime['last'] = now
+            return True
+        return False
 
 
 class AbstractUltimate:
@@ -54,6 +68,7 @@ class AbstractGun(AbstaructWeapon):
         super().__init__()
         self.particle_group = particle_group
         self.group = group
+        
 
     def execute(self):
         return super().execute()
@@ -94,6 +109,10 @@ class DubleGun(AbstractGun):
 
 class RocketLauncher(AbstractGun):
     amo = Rocket
+    updatingTime = {
+        'last': 0,
+        'cooldawn': 1000
+    }
 
     def __init__(self, group, particle_group):
         super().__init__(group, particle_group)
@@ -103,9 +122,10 @@ class RocketLauncher(AbstractGun):
             IMAGES+'\shell\\racket\\racket.png').convert_alpha()]
 
     def execute(self, rect):
-        self.group.add(self.amo(self.images, rect.center,
-                       self.particle_group, [self.group]))
-        return super().execute()
+        if self.isExecute:
+            self.group.add(self.amo(self.images, rect.center,
+                        self.particle_group, [self.group]))
+            return super().execute()
 
 
 class BurnedLauncher(AbstractGun):
@@ -117,7 +137,7 @@ class BurnedLauncher(AbstractGun):
             IMAGES+'\shell\\orange\\orange.png').convert_alpha()]
 
     def execute(self, rect):
-        pos = [rect.centerx,rect.top + self.images[0].get_height()//1.5]
+        pos = [rect.centerx, rect.top + self.images[0].get_height()//1.5]
         self.group.add(self.amo(self.images, pos,
                        self.particle_group, [self.group]))
         return super().execute()

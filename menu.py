@@ -128,7 +128,7 @@ class Menu:
         self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                     exit_image.get_height()*6.5], settings_image.convert_alpha(), center=True, func=None)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   exit_image.get_height()*8.5], restart_image.convert_alpha(), center=True, func=None)
+                                   exit_image.get_height()*8.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
@@ -139,9 +139,9 @@ class Menu:
         self.btnGroup.draw(display)
 
     def execute(self):
-        for sprite in self.btnGroup:
-            if sprite.rect.collidepoint(pg.mouse.get_pos()):
-                sprite.execute()
+        for btn in self.btnGroup:
+            if btn.rect.collidepoint(pg.mouse.get_pos()):
+                btn.execute()
 
     def update(self):
         for sprite in self.btnGroup:

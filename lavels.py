@@ -27,9 +27,8 @@ class Level:
             counter += ft.count()
         return counter
 
-    # def update(self, now):
-    #     for factory in self.factories:
-    #         factory.update()
+    def restart(self):
+        self.__init__(self.aplication, self.shellGroup, self.enemyGroup)
 
     def __str__(self):
         return self.name
@@ -46,7 +45,6 @@ class Level1(Level):
             'flightEnemy': 7000
         }
         self.last_spawn_time = {i: 0 for i in self.spawn_rates.keys()}
-
 
     def start(self):
         self.asteroidFactory = AsteroidFactory(
@@ -68,4 +66,3 @@ class Level1(Level):
             self.last_spawn_time['flightEnemy'] = now
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
-    
