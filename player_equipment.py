@@ -1,6 +1,6 @@
 import pygame as pg
 from animation import Animator
-from shell import FirstShell, SecondShell, Rocket, BurnedShell
+from shell import *
 from pygame.sprite import Sprite, AbstractGroup
 from shell import BaseShell
 from pygame.sprite import Group
@@ -32,18 +32,17 @@ class AbstructHeal(ObjectInterface):
 
 
 class AbstaructWeapon:
-    updatingTime = {
-        'last': 0,
-        'cooldawn': 0
-    }
-    
 
     def __init__(self):
         self.__isExecute = True
+        self.updatingTime = {
+        'last': 0,
+        'cooldawn': 0
+    }
 
     def execute(self):
-        return 
-    
+        return
+
     @property
     def isExecute(self):
         now = pg.time.get_ticks()
@@ -68,7 +67,6 @@ class AbstractGun(AbstaructWeapon):
         super().__init__()
         self.particle_group = particle_group
         self.group = group
-        
 
     def execute(self):
         return super().execute()
@@ -107,12 +105,29 @@ class DubleGun(AbstractGun):
         return super().execute()
 
 
+class DubleGunEnemy(DubleGun):
+    amo = SecondShellEnemy
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 1700
+        }
+
+    def execute(self, rect):
+        if self.isExecute:
+            pos1 = [rect.left, rect.top+rect.height//2]
+            pos2 = [rect.right, pos1[1]]
+            self.group.add(self.amo(self.images, pos1,
+                                    self.particle_group, [self.group]))
+            self.group.add(self.amo(self.images, pos2,
+                                    self.particle_group, [self.group]))
+        return
+
+
 class RocketLauncher(AbstractGun):
     amo = Rocket
-    updatingTime = {
-        'last': 0,
-        'cooldawn': 1000
-    }
 
     def __init__(self, group, particle_group):
         super().__init__(group, particle_group)
@@ -120,11 +135,15 @@ class RocketLauncher(AbstractGun):
         # IMAGES+'\shell\\racket\\racket'+str(i)+'.png').convert_alpha() for i in range(1, 7)]
         self.images = [pg.image.load(
             IMAGES+'\shell\\racket\\racket.png').convert_alpha()]
+        self.updatingTime = {
+        'last': 0,
+        'cooldawn': 1000
+    }
 
     def execute(self, rect):
         if self.isExecute:
             self.group.add(self.amo(self.images, rect.center,
-                        self.particle_group, [self.group]))
+                                    self.particle_group, [self.group]))
             return super().execute()
 
 

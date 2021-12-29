@@ -56,13 +56,13 @@ class Particle(Sprite):
 class BaseShell(Sprite):
     isPlayer: bool = None
     animation = Animator
+    DAMAGE = 10
+    speed = 25
 
     def __init__(self, images: list,  pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
         self.particle_group = particle_group
         self.animation = self.animation()
-        self.DAMAGE = 10
-        self.speed = 25
         self.images = images
         self.image = images[0]
         self.movement = StaticMovement(pygame.Vector2(0.0, -1.0))
@@ -88,6 +88,9 @@ class BaseShell(Sprite):
         damage = self.DAMAGE
         self.kill()
         return damage
+    
+    def draw(self, display):
+        return display.blit(self.image, self.rect)
 
     def kill(self):
         return super().kill()
@@ -111,12 +114,13 @@ class ParticleShell(Particle):
 
 
 class FirstShell(BaseShell):
-    def __init__(self, images: list, pos, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, *groups, **kwargs)
+    DAMAGE = 25
+    speed = 23
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
         self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.15, self.rect.y +
                                   self.rect.height * 0.15, self.rect.width*0.7, self.rect.height*0.7)]
-        self.DAMAGE = 25
-        self.speed = 23
 
     def kill(self):
         """create particles when sprite die"""
@@ -136,12 +140,13 @@ class FirstShell(BaseShell):
 
 
 class SecondShell(BaseShell):
-    def __init__(self, images: list, pos, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, *groups, **kwargs)
+    DAMAGE = 17
+    speed = 19
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
         self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.3, self.rect.y +
                                   self.rect.height * 0.3, self.rect.width*0.6, self.rect.height*0.6)]
-        self.DAMAGE = 17
-        self.speed = 19
 
     def kill(self):
         """create particles when sprite die"""
@@ -160,11 +165,25 @@ class SecondShell(BaseShell):
         return super().kill()
 
 
-class Rocket(BaseShell):
+class SecondShellEnemy(SecondShell):
+    DAMAGE = 2
+    speed = 10
+
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.speed = 5
-        self.DAMAGE = 120
+        self.movement.changeDirection(update_y=1)
+        
+    def damage(self, value):
+        return super().kill()
+    
+
+
+class Rocket(BaseShell):
+    speed = 5
+    DAMAGE = 120
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
 
     def update(self, *args, **kwargs):
         colors = [(190, 192, 194), (164, 165, 166),
@@ -191,7 +210,7 @@ class Rocket(BaseShell):
                 pos=[random.randint(self.rect.left-self.rect.width//2, self.rect.right+self.rect.width//2), random.randint(
                     self.rect.top - self.rect.height//2, self.rect.bottom + self.rect.height//2)],
                 size=random.randint(2, self.rect.width//2),
-                speed=random.randint(7,11),
+                speed=random.randint(7, 11),
                 color=random.choice(colors),
                 vector=vector,
                 life_size=random.randint(50, 100),
@@ -203,11 +222,13 @@ class Rocket(BaseShell):
 
 
 class BurnedShell(BaseShell):
+    speed = 13
+    DAMAGE = 15
+    PARTICLE_DAMAGE = 10
+
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.speed = 13
-        self.DAMAGE = 15
-        self.PARTICLE_DAMAGE = 10
+
         self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.375, self.rect.y +
                                   self.rect.height * 0.375, self.rect.width*0.25, self.rect.height*0.25)]
 

@@ -1,5 +1,6 @@
 from pygame import key
 from enemy import AsteroidFactory, FirstFlightEnemyFactory
+from sprite import Groups
 
 
 class Level:
@@ -7,10 +8,9 @@ class Level:
     factories = []
     mediator = None
 
-    def __init__(self, mediator, shellGroup=None, enemyGroup=None):
+    def __init__(self, mediator, grops:Groups):
         self.aplication = mediator
-        self.shellGroup = shellGroup
-        self.enemyGroup = enemyGroup
+        self.grops = grops
 
     def start(self):
         return True
@@ -28,7 +28,7 @@ class Level:
         return counter
 
     def restart(self):
-        self.__init__(self.aplication, self.shellGroup, self.enemyGroup)
+        self.__init__(self.aplication, self.grops)
 
     def __str__(self):
         return self.name
@@ -37,9 +37,9 @@ class Level:
 class Level1(Level):
     name = 'Layer1'
     factories = []
-
-    def __init__(self, mediator, shellGroup=None, enemyGroup=None):
-        super().__init__(mediator, shellGroup=shellGroup, enemyGroup=enemyGroup)
+    
+    def __init__(self, mediator, grops: Groups):
+        super().__init__(mediator, grops)
         self.spawn_rates = {
             'asteroid': 2000,
             'flightEnemy': 7000
@@ -48,9 +48,9 @@ class Level1(Level):
 
     def start(self):
         self.asteroidFactory = AsteroidFactory(
-            display_size=self.aplication.display_size, group=self.enemyGroup)
+            display_size=self.aplication.display_size, group=self.grops.enemyGroup)
         self.firstFlightFactory = FirstFlightEnemyFactory(
-            display_size=self.aplication.display_size, group=self.enemyGroup)
+            display_size=self.aplication.display_size, group=self.grops.enemyGroup, particle_group=self.grops.Particles)
 
         self.factories.append(self.asteroidFactory)
         self.factories.append(self.firstFlightFactory)
@@ -66,3 +66,7 @@ class Level1(Level):
             self.last_spawn_time['flightEnemy'] = now
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
+                
+        # if self.firstFlightFactory.information['killed'] >= 7:
+        #     self.aplication.close()
+            

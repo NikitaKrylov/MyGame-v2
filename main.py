@@ -135,7 +135,7 @@ class Aplication:
         self.menuStrategy = self.menuStrategy(self)
         self.gameStrategy = self.gameStrategy(self)
         self._actingStrategy = self.gameStrategy
-        self.level = level(self, enemyGroup=self.groups.enemyGroup)
+        self.level = level(self, self.groups)
         self.level.start()
 
     def setControllerType(self, controllerType: str, *args, **kwargs):
@@ -162,7 +162,7 @@ class Aplication:
             self.isMenu = not self.isMenu
 
     def start(self):
-        """main aplication start function"""
+        """main aplicatiodn start function"""
         while self.__run:
             for event in pg.event.get():
                 self._actingStrategy.eventListen(event)

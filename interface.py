@@ -1,4 +1,6 @@
 import pygame as pg
+import pygame.gfxdraw
+
 from settings import IMAGES, MEDIA
 
 
