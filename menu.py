@@ -2,7 +2,7 @@ import pygame as pg
 from pygame.sprite import Sprite, spritecollide
 from settings import IMAGES
 from pygame.sprite import Group
-from sprite import CustomGroup
+from changed_group import CustomGroup
 
 
 class Text:

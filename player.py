@@ -1,7 +1,7 @@
 
 from exception import NoneInitializeError
 from animation import Animator
-from player_equipment import Equipment
+from game_objects import Equipment
 import pygame as pg
 from pygame.sprite import Group, Sprite
 from settings import IMAGES

@@ -1,8 +1,8 @@
 import pygame as pg
 from animation import Animator
-from shell import *
+from sprites.shell import *
 from pygame.sprite import Sprite, AbstractGroup
-from shell import BaseShell
+from sprites.shell import BaseShell
 from pygame.sprite import Group
 from settings import IMAGES
 

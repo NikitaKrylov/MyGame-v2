@@ -1,7 +1,6 @@
 import pygame as pg
-from pygame.sprite import AbstractGroup, Group, groupcollide
-from shell import ParticleShell
-from enemy import AbstractEnemy, FirstFlightEnemy
+from pygame.sprite import Group
+from sprites.enemy import AbstaractFlightEnemy
 
 
 class CustomGroup(Group):
@@ -34,14 +33,13 @@ class Groups:
         # player and enemy collision
         enemy_sprite = spritecollide(player, self.enemyGroup)
         if enemy_sprite:
-            if isinstance(enemy_sprite, FirstFlightEnemy):   
+            if isinstance(enemy_sprite, AbstaractFlightEnemy):   
                 # left = max(player.rect.left,  enemy_sprite.rect.left)
                 # width = min(player.rect.right,enemy_sprite.rect.right) - left
                 # top = max(player.rect.top,   enemy_sprite.rect.top)
                 # height = min(player.rect.bottom,enemy_sprite.rect.bottom) - top
                 # player.pushByRect(
                 #     pg.Rect(left, top, width, height))
-
                 player.push(axis=1, direction=1)
                 
             player.damage(enemy_sprite.getDamage())

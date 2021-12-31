@@ -3,7 +3,7 @@ from pygame import display
 from pygame import image
 from pygame import event
 from pygame import draw
-from lavels import Level, Level1
+from lavels import AsteroidWaves, Level, Level1
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle, BaseController
 from pygame.sprite import Group, RenderUpdates
@@ -12,7 +12,7 @@ from pygame import Surface
 import ctypes
 from menu import Menu, Text
 from interface import Toolbar
-from sprite import Groups, spritecollide
+from changed_group import Groups, spritecollide
 """RenderUpdates - в методе draw возвращает изменения rect"""
 
 
@@ -51,13 +51,15 @@ class InventoryStrategy(BaseStrategy):
 
 
 class GameStrategy(BaseStrategy):
-    def update(self):
+    def update(self, *args, **kwargs):
         _now = pg.time.get_ticks()
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
         self.aplication.toolbar.update()
         self.aplication.groups.update(
-            now=_now, display_size=self.aplication.display_size)
+            now=_now,
+            display_size=self.aplication.display_size,
+            player_center=self.aplication.player.rect.center)
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
         self.aplication.level.update(now=_now)
@@ -175,16 +177,26 @@ class Aplication:
     def close(self):
         self.__run = False
 
+    def changeLevel(self, level: Level):
+        print(f"""
+              Level was removed to { self.level}
+              """)
+        self.level = level(self, self.groups)
+        self.level.start()
+        return
+
     def restart(self):
         pg.init()
         self.groups.restart()
         self.level.restart()
         self.level.start()
         self.player.restart()
-        
+
         self.showMenu()
+
 
 if __name__ == '__main__':
     aplication = Aplication(Level1)
+    # aplication.changeLevel(AsteroidWaves)
     # aplication.setControllerType('joystick')
     aplication.start()

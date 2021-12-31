@@ -1,4 +1,3 @@
-from exception import NoneInitializeError
 from animation import Animator, StaticMovement, CoordMovement, FunctionMovement
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
@@ -6,7 +5,11 @@ from settings import IMAGES
 import random
 import math
 from interface import HealthBar
-from player_equipment import DubleGunEnemy
+from game_objects import DubleGunEnemy
+
+
+def sign(value):
+    return 1 if value > 0 else -1
 
 
 class AbstractEnemy(Sprite):  # Sprite Interface
@@ -15,17 +18,18 @@ class AbstractEnemy(Sprite):  # Sprite Interface
     DAMAGE = 0
     animation = Animator
     ability = None
-    isDamage = True
 
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
+        self.isDamage = True
+        self.isBurst = False
         self.factory = factory
         self.images = images
         self.image = images[0]
         self.rect = self.image.get_rect(center=pos)
         self.rects = [self.rect]
         self.animation = self.animation()
-        
+
         if kwargs.get('burst_images'):
             self.burst_images = kwargs.get('burst_images')
         if kwargs.get('particle_group'):
@@ -64,10 +68,9 @@ class AbstractEnemy(Sprite):  # Sprite Interface
 
 
 class Asteroid(AbstractEnemy):  # Sprite
-    MAX_HP = 100
+    MAX_HP = 70
     HP = MAX_HP
     DAMAGE = 10
-    isBurst = False
 
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
         scale_index = random.uniform(0.7, 1.7)
@@ -142,18 +145,28 @@ class AbstaractFlightEnemy(AbstractEnemy):
     DAMAGE = 5
 
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, factory, *groups)
+        super().__init__(images, pos, factory, *groups, **kwargs)
         self.rects = [pg.Rect(self.rect.x, self.rect.y, self.rect.width, self.rect.height*0.55),
                       pg.Rect(self.rect.x+self.rect.width/3, self.rect.y, self.rect.width//3, self.rect.height)]
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
                                    self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (233, 22, 22))
         self.movement = None
-        self.weapon = DubleGunEnemy(self.groups()[0], kwargs.get('particle_group'))
-        
+        self.weapon = DubleGunEnemy(
+            self.groups()[0], kwargs.get('particle_group'))
+        self.burstAnimation = Animator()
 
     def damage(self, amount):
-        super().damage(amount)
+        self.HP -= amount
         self.healthBar.updateHP(self.HP)
+
+        if self.HP <= 0 and not self.isBurst:
+            self.factory.spriteWasKilled(self)
+            self.isDamage = False
+            self.isBurst = True
+            # super().kill()
+            return False
+        else:
+            return self.HP
 
     def updatePosition(self, *args, **kwargs):
         self.movement.update(
@@ -166,39 +179,23 @@ class AbstaractFlightEnemy(AbstractEnemy):
 
         self.animation.update(
             now=kwargs['now'], rate=50, frames_len=len(self.images), repeat=True)
-        self.image = self.images[self.animation.getIteration]
 
+        if self.isBurst:
+            self.burstAnimation.update(now=kwargs['now'], rate=80, frames_len=len(
+                self.burst_images), repeat=False, finiteFunction=self.kill)
+            self.image = self.burst_images[self.burstAnimation.getIteration]
+            return
+
+        self.image = self.images[self.animation.getIteration]
         self.healthBar.update(self.rect.left, self.rect.top -
                               self.healthBar.rect.height * 1.5)
         self.weapon.execute(self.rect)
 
         return super().update(*args, **kwargs)  # updatePosition()
-    
+
     def draw(self, display):
         self.healthBar.draw(display)
         return super().draw(display)
-        
-
-
-class FirstFlightEnemy(AbstaractFlightEnemy):
-    speed = 5
-    MAX_HP = 250
-    HP = MAX_HP
-    DAMAGE = 5
-
-    def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, factory, *groups, **kwargs)
-        self.movement = StaticMovement(pg.Vector2(1.0, 0.0))
-        
-    def update(self, *args, **kwargs):
-        if self.rect.left + self.movement.direction.x * self.speed <= self.rect.width * -1.5:
-            self.movement.changeDirection(mn_x=-1)
-
-        if self.rect.right + self.movement.direction.x * self.speed >= kwargs['display_size'][0] + self.rect.width*1.5:
-            self.movement.changeDirection(mn_x=-1)
-        return super().update(*args, **kwargs)
-
-        
 
 
 class FirstFlightEnemy2(AbstaractFlightEnemy):
@@ -206,17 +203,30 @@ class FirstFlightEnemy2(AbstaractFlightEnemy):
 
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, factory, *groups, **kwargs)
-        _a, _b = random.randint(40, 100), random.randint(30, 90)
-        def func(x): return math.sin(x/_a)*_b + 500
+        self._a, self._b = random.randint(60, 120), random.randint(30, 90)
+        self.bias = 500
+        def func(x): return math.sin(x/self._a)*self._b + self.bias
         self.speed = random.randint(1, 3)
-        self.movement = FunctionMovement(pg.Vector2(1.0, 0.0), func=func)
+        self.movement = FunctionMovement(pg.Vector2(1.0, 1.0), func=func)
 
     def update(self, *args, **kwargs):
         if self.rect.left + self.movement.direction.x * self.speed <= self.rect.width * -1.5:
             self.movement.changeDirection(update_x=1)
+            self.bias += self.rect.height * self.movement.direction.y
 
         if self.rect.right + self.movement.direction.x * self.speed >= kwargs['display_size'][0]+self.rect.width*1.5:
             self.movement.changeDirection(update_x=-1)
+            self.bias += self.rect.height * self.movement.direction.y
+
+        if self.rect.centery > kwargs['display_size'][1] - self.rect.width * 4 and self.movement.direction.y > 0:
+            self.movement.changeDirection(update_y=-1)
+            self.movement.func = lambda x: math.sin(
+                x/self._a)*self._b + self.bias
+
+        if self.rect.centery < self.rect.width * 1.5 and self.movement.direction.y < 0:
+            self.movement.changeDirection(update_y=1)
+            self.movement.func = lambda x: math.sin(
+                x/self._a)*self._b + self.bias
 
         return super().update(*args, **kwargs)
 
@@ -228,7 +238,7 @@ class AbstarctFactory:
     object = None
 
     def __init__(self, display_size, group=None, *args, **kwargs):
-        
+
         self.display_size = display_size
         self.group = group
         self.information = {
@@ -236,7 +246,7 @@ class AbstarctFactory:
             'killed': 0,
             'spawned': 0
         }
-            
+
         self.particle_group = kwargs.get('particle_group')
 
     def createObject(self, *args, **kwargs):
@@ -246,12 +256,6 @@ class AbstarctFactory:
             self.information['alive'] += kwargs.get('amount')
 
     def count(self):
-        # counter = 0
-        # for sprite in self.group.sprites():
-        #     if isinstance(sprite, self.object):
-        #         counter += 1
-
-        # return counter
         return self.information['alive']
 
     def updateAllObjectCondition(self, func):
@@ -288,7 +292,8 @@ class AsteroidFactory(AbstarctFactory):
         random_image = random.choice(self.all_images)
         spawn_pos = (random.randint(
             10, self.display_size[0]), -random_image.get_rect().height)
-        _obj = self.object([random_image], spawn_pos, self, self.group, burst_images=self.burst_images)
+        _obj = self.object([random_image], spawn_pos, self,
+                           self.group, burst_images=self.burst_images)
         return super().createObject(*args, amount=1, **kwargs)
 
 
@@ -299,8 +304,18 @@ class FirstFlightEnemyFactory(AbstarctFactory):
         super().__init__(display_size, group=group, *args, **kwargs)
         self.images = [pg.image.load(
             IMAGES+'\enemy\\firstFlight\\1Enemy'+str(i)+'.png').convert_alpha() for i in range(1, 3)]
+        self.burst_images = [pg.image.load(
+            IMAGES+'\enemy\\firstFlight\\burst\\1Enemy'+str(i)+'.png').convert_alpha() for i in range(1, 10)]
 
     def createObject(self, *args, **kwargs):
         _obj = self.object(
-            self.images, (-self.display_size[0]*0.1, self.display_size[1]//4), self, self.group, particle_group=self.particle_group)
+            self.images, (-self.display_size[0]*0.1, self.display_size[1]//4), self, self.group, particle_group=self.particle_group, burst_images=self.burst_images)
         return super().createObject(*args, amount=1, **kwargs)
+
+
+class AbstractBoss(AbstractEnemy):
+    def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, factory, *groups, **kwargs)
+
+    def draw(self, display):
+        return super().draw(display)
