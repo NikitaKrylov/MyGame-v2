@@ -21,8 +21,13 @@ class Groups:
         self.playerShell = Group()
         self.objectsGroup = Group()
         self.Particles = CustomGroup()
-        self._groups = [self.enemyGroup, self.playerShell,
-                        self.objectsGroup, self.Particles]
+        self.Background = Group()
+        self._groups = [
+            self.Background,
+            self.enemyGroup,
+            self.playerShell,
+            self.objectsGroup,
+            self.Particles]
 
     def collide(self, player):
         # enemy and shell collision
@@ -33,7 +38,7 @@ class Groups:
         # player and enemy collision
         enemy_sprite = spritecollide(player, self.enemyGroup)
         if enemy_sprite:
-            if isinstance(enemy_sprite, AbstaractFlightEnemy):   
+            if isinstance(enemy_sprite, AbstaractFlightEnemy):
                 # left = max(player.rect.left,  enemy_sprite.rect.left)
                 # width = min(player.rect.right,enemy_sprite.rect.right) - left
                 # top = max(player.rect.top,   enemy_sprite.rect.top)
@@ -41,13 +46,12 @@ class Groups:
                 # player.pushByRect(
                 #     pg.Rect(left, top, width, height))
                 player.push(axis=1, direction=1)
-                
+
             player.damage(enemy_sprite.getDamage())
 
     def update(self, *args, **kwargs):
         for _group in self._groups:
             _group.update(*args, **kwargs)
-            
 
     def draw(self, display, *args, **kwargs):
         for _group in self._groups:

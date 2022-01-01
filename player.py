@@ -1,5 +1,3 @@
-
-from exception import NoneInitializeError
 from animation import Animator
 from game_objects import Equipment
 import pygame as pg
@@ -93,13 +91,13 @@ class Player(Sprite):
 
     def pushByRect(self, pushed_rect):
         if pushed_rect.width > pushed_rect.height:
-            
+
             if pushed_rect.top == self.rect.top:
                 self.push(axis=1, direction=1)
             else:
                 self.push(axis=1, direction=-1)
         else:
-            if pushed_rect.left == self.rect.left: 
+            if pushed_rect.left == self.rect.left:
                 self.push(axis=0, direction=1)
             else:
                 self.push(axis=0, direction=-1)

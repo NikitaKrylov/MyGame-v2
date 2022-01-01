@@ -2,7 +2,7 @@ import pygame as pg
 from pygame import key
 from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory
 from changed_group import Groups
-
+from background import StarsBackground
 
 class Level:
     factories = []
@@ -71,10 +71,14 @@ class Level1(Level):
 
         self.factories.append(self.asteroidFactory)
         self.factories.append(self.firstFlightFactory)
+        
+        self.background = StarsBackground(self.aplication, self.aplication.display_size, self.grops.Background)
 
         return super().start()
 
     def update(self, now):
+        self.background.update()
+        
         if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
             self.last_spawn_time['asteroid'] = now
             self.asteroidFactory.createObject()

@@ -73,7 +73,7 @@ class GameStrategy(BaseStrategy):
         self.aplication.toolbar.draw(display)
 
     def eventListen(self, event):
-        self.aplication.controller.executeWeapon(
+        self .aplication.controller.executeWeapon(
             self.aplication.player, event)
         self.aplication.controller.changeWeapon(
             self.aplication.player, event)
@@ -122,6 +122,7 @@ class Aplication:
             0), user32.GetSystemMetrics(1)
         self.display_size = (
             int(0.4*self.window_size[0]), int(0.9*self.window_size[1]))
+        print(self.display_size)
         self.display = pg.display.set_mode(self.display_size)
 
         self.clock = pg.time.Clock()

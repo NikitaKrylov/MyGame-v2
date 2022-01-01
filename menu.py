@@ -108,7 +108,8 @@ class Menu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator
         self.display_size = (self.width, self.height) = display_size
-
+        
+        blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
@@ -119,6 +120,7 @@ class Menu:
         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
         settings_image = pg.image.load(IMAGES + '\menu\Settings.png')
 
+        self.blured_background = ImageSurface((0,0), blured_background_image, center=False)
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.label = ImageSurface(
@@ -137,6 +139,7 @@ class Menu:
 
     def draw(self, display):
         self.btnGroup.draw(display)
+        self.blured_background.draw(display)
 
     def execute(self):
         for btn in self.btnGroup:
