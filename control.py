@@ -20,7 +20,7 @@ class ControlImplementation:
 
     def showMenu(self):
         """Show and close menu"""
-        self.aplication.showMenu()
+        return self.aplication.showMenu()
 
     def executeWeapon(self, player):
         return player.executeWeapon()
@@ -33,12 +33,12 @@ class ControlImplementation:
 
     def changePlayerDirection(self, player: Player, *args, **kwargs):
         pass
-    
-    def menuExecute(self):
-        self.aplication._actingStrategy.menu.execute()
-        
-    
-        
+
+    def menuExecute(self, *args, **kwargs):
+        self.aplication._actingStrategy.menu.execute(*args, **kwargs)
+
+    def menuUpdate(self, *args, **kwargs):
+        return self.aplication._actingStrategy.menu.update(*args, **kwargs)
 
     def __str__(self):
         return 'Базовая реализация функций управления'
@@ -92,9 +92,12 @@ class BaseController:  # Interface
 
     def changeWeapon(self, player, update=None, value=None):
         self.__implementation.changeWeapon(player, update, value)
-        
+
     def menuExecute(self, event, *args, **kwargs):
-        self.__implementation.menuExecute()
+        self.__implementation.menuExecute(*args, **kwargs)
+
+    def menuUpdate(self, event, *args, **kwargs):
+        self.__implementation.menuUpdate(*args, **kwargs)
 
     def type(self):
         return self.name
@@ -115,6 +118,7 @@ class JoystickControle(BaseController):
         self.joysticks = [pg.joystick.Joystick(
             x) for x in range(pg.joystick.get_count())]
         self.joystick = self.joysticks[0]
+        self.btnHoverIndex = 0
 
     def getAllContrillers(self):
         return self.joysticks
@@ -122,7 +126,7 @@ class JoystickControle(BaseController):
     def changePlayerDirection(self, player: Player, *args, **kwargs):
         jx = round(self.joystick.get_axis(0), 2)
         jy = round(self.joystick.get_axis(1), 2)
-        
+
         """        X AXIS        """
         if abs(jx) < self.ball_threshold:
             player.decreaseAccel(0)
@@ -164,12 +168,23 @@ class JoystickControle(BaseController):
                     _update_value = 1
 
                 return super().changeWeapon(player, update=_update_value)
-            
-    def menuExecute(self, event, *args, **kwargs):
-        pass
-        # return super().menuExecute(event, *args, **kwargs)
-            
 
+    def menuExecute(self, event, *args, **kwargs):
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button == 0:
+                return super().menuExecute(event, *args, isController=True, controller=self.btnHoverIndex)
+
+    def menuUpdate(self, event, *args, **kwargs):
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button in [11, 12, 13, 14]:
+                if event.button in [12, 14]:
+                    self.btnHoverIndex += 1
+                elif event.button in [11, 13]:
+                    if self.btnHoverIndex - 1 < 0:
+                        self.btnHoverIndex = 0
+                    else:
+                        self.btnHoverIndex -= 1
+        return super().menuUpdate(event, *args, isController=True, controller=self.btnHoverIndex)
 
 
 class KeyboardControle(BaseController):
@@ -180,7 +195,6 @@ class KeyboardControle(BaseController):
         self.config = self.config[self.name]
 
     def changePlayerDirection(self, player: Player, *args, **kwargs):
-
         """Update player direction by axis"""
         scancode = pg.key.get_pressed()
 
@@ -234,8 +248,10 @@ class KeyboardControle(BaseController):
                     _update_value = -1
 
                 return super().changeWeapon(player=player, update=_update_value)
-            
+
     def menuExecute(self, event, *args, **kwargs):
         if event.type == pg.MOUSEBUTTONDOWN:
             return super().menuExecute(event, *args, **kwargs)
-        
+
+    def menuUpdate(self, event, *args, **kwargs):
+        return super().menuUpdate(event, *args, **kwargs)

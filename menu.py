@@ -108,7 +108,7 @@ class Menu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator
         self.display_size = (self.width, self.height) = display_size
-        
+
         blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
@@ -120,7 +120,8 @@ class Menu:
         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
         settings_image = pg.image.load(IMAGES + '\menu\Settings.png')
 
-        self.blured_background = ImageSurface((0,0), blured_background_image, center=False)
+        self.blured_background = ImageSurface(
+            (0, 0), blured_background_image, center=False)
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.label = ImageSurface(
@@ -134,21 +135,42 @@ class Menu:
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
-        self.btnGroup = CustomGroup(
-            self.surface, self.label, self.exit, self._continue, self.restart, self.settings)
+        self.backgroundPieces = CustomGroup(self.surface, self.label)
+        
+        self.btnGroup = CustomGroup(self._continue, self.settings,  self.restart, self.exit)
 
     def draw(self, display):
-        self.btnGroup.draw(display)
+        self.backgroundPieces.draw(display)
         self.blured_background.draw(display)
+        self.btnGroup.draw(display)
 
-    def execute(self):
-        for btn in self.btnGroup:
-            if btn.rect.collidepoint(pg.mouse.get_pos()):
-                btn.execute()
+    def execute(self, *args, **kwargs):
+        if kwargs.get("isController"):
+            key = kwargs.get("controller")
+            i = key % self.btnGroup.__len__()
+            self.btnGroup.sprites()[i].execute()
+            return 
 
-    def update(self):
-        for sprite in self.btnGroup:
-            if sprite.rect.collidepoint(pg.mouse.get_pos()):
-                sprite.isHover = True
-            else:
-                sprite.isHover = False
+                    
+        else:
+            for btn in self.btnGroup:
+                if btn.rect.collidepoint(pg.mouse.get_pos()):
+                    btn.execute()
+
+    def update(self, *args, **kwargs):
+        if kwargs.get("isController"):
+            key = kwargs.get("controller")
+            i = key % self.btnGroup.__len__()
+            
+            for j in range(self.btnGroup.__len__()):
+                if j == i:
+                    self.btnGroup.sprites()[j].isHover = True
+                else:
+                    self.btnGroup.sprites()[j].isHover = False
+        else:
+        
+            for sprite in self.btnGroup:
+                if sprite.rect.collidepoint(pg.mouse.get_pos()):
+                    sprite.isHover = True
+                else:
+                    sprite.isHover = False

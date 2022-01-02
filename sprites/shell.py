@@ -236,7 +236,7 @@ class BurnedShell(BaseShell):
         colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
         group = self.groups()[0]
 
-        for i in range(random.randint(2, 6)):
+        for i in range(random.randint(4, 7)):
             group.add(ParticleShell(
                 pos=self.rect.center,
                 size=self.rect.width//5,

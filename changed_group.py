@@ -66,6 +66,7 @@ class Groups:
     def restart(self):
         for group in self._groups:
             group.empty()
+        
 
 
 def twospritecollide(spritea, spriteb, killa=False, killb=False):

@@ -2,17 +2,22 @@ import pygame as pg
 from pygame import key
 from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory
 from changed_group import Groups
-from background import StarsBackground
+from background import *
+
 
 class Level:
     factories = []
     mediator = None
+    background_class = None
 
     def __init__(self, mediator, grops: Groups):
         self.aplication = mediator
         self.grops = grops
 
     def start(self):
+        self.background = self.background_class(
+            self.aplication, self.aplication.display_size, self.grops.Background)
+
         line = ''.join(['*' for i in range(int(len(self.discription) * 1.2))])
         return print(
             f"""
@@ -37,8 +42,8 @@ class Level:
     def restart(self):
         self.__init__(self.aplication, self.grops)
 
-    def update(self):
-        pass
+    def update(self, *args, **kwargs):
+        self.background.update()
 
     @property
     def discription(self):
@@ -50,6 +55,7 @@ class Level:
 
 class Level1(Level):
     factories = []
+    background_class = FustStarsBackground
 
     def __init__(self, mediator, grops: Groups):
         super().__init__(mediator, grops)
@@ -71,14 +77,12 @@ class Level1(Level):
 
         self.factories.append(self.asteroidFactory)
         self.factories.append(self.firstFlightFactory)
-        
-        self.background = StarsBackground(self.aplication, self.aplication.display_size, self.grops.Background)
 
         return super().start()
 
-    def update(self, now):
-        self.background.update()
-        
+    def update(self, *args, **kwargs):
+        now = pg.time.get_ticks()
+
         if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
             self.last_spawn_time['asteroid'] = now
             self.asteroidFactory.createObject()
@@ -91,9 +95,15 @@ class Level1(Level):
         if self.firstFlightFactory.information['killed'] >= 10:
             print('You won')
             self.aplication.close()
-
+            
+        return super().update(*args, **kwargs)
+        
+        
 
 class AsteroidWaves(Level):
+    factories = []
+    background_class = StarsBackground
+
     def __init__(self, mediator, grops: Groups):
         super().__init__(mediator, grops)
         self.spawn_rates = {
@@ -108,7 +118,6 @@ class AsteroidWaves(Level):
     def start(self):
         self.asteroidFactory = AsteroidFactory(
             display_size=self.aplication.display_size, group=self.grops.enemyGroup)
-
         self.factories.append(self.asteroidFactory)
 
         return super().start()
@@ -122,3 +131,7 @@ class AsteroidWaves(Level):
         if self.asteroidFactory.information['killed'] > 200:
             print('You won')
             self.aplication.close()
+            
+        return super().update(*args, **kwargs)
+            
+        

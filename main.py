@@ -1,16 +1,10 @@
 import pygame as pg
-from pygame import display
-from pygame import image
-from pygame import event
-from pygame import draw
-from lavels import AsteroidWaves, Level, Level1
 from player import Player
-from control import ControlImplementation, JoystickControle, KeyboardControle, BaseController
-from pygame.sprite import Group, RenderUpdates
+from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
-from pygame import Surface
 import ctypes
-from menu import Menu, Text
+from lavels import Level
+from menu import Menu
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 """RenderUpdates - в методе draw возвращает изменения rect"""
@@ -36,6 +30,9 @@ class BaseStrategy:
 
     @property
     def type(self):
+        return self.__class__.__name__
+
+    def __str__(self):
         return self.__class__.__name__
 
 
@@ -87,13 +84,13 @@ class MenuStrategy(BaseStrategy):
         self.menu = Menu(self.aplication, self.aplication.display_size)
 
     def update(self):
-        self.menu.update()
         return super().update()
 
     def draw(self, display):
         self.menu.draw(display)
 
     def eventListen(self, event):
+        self.aplication.controller.menuUpdate(event)
         self.aplication.controller.menuExecute(event)
         return super().eventListen(event)
 
@@ -120,8 +117,8 @@ class Aplication:
 
         self.window_size = user32.GetSystemMetrics(
             0), user32.GetSystemMetrics(1)
-        self.display_size = (
-            int(0.4*self.window_size[0]), int(0.9*self.window_size[1]))
+        self.display_size = [int(0.4*self.window_size[0]),
+                             int(0.9*self.window_size[1])]
         print(self.display_size)
         self.display = pg.display.set_mode(self.display_size)
 
@@ -159,10 +156,10 @@ class Aplication:
         """Show and close menu"""
         if not self.isMenu:
             self._actingStrategy = self.menuStrategy
-            self.isMenu = not self.isMenu
+            self.isMenu = True
         else:
             self._actingStrategy = self.gameStrategy
-            self.isMenu = not self.isMenu
+            self.isMenu = False
 
     def start(self):
         """main aplicatiodn start function"""
@@ -183,6 +180,7 @@ class Aplication:
               Level was removed to { self.level}
               """)
         self.level = level(self, self.groups)
+        self.groups.Background.empty()
         self.level.start()
         return
 
@@ -197,7 +195,8 @@ class Aplication:
 
 
 if __name__ == '__main__':
+    from lavels import AsteroidWaves, Level1
     aplication = Aplication(Level1)
     # aplication.changeLevel(AsteroidWaves)
-    # aplication.setControllerType('joystick')
+    aplication.setControllerType('joystick')
     aplication.start()
