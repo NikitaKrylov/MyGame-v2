@@ -37,6 +37,7 @@ class Groups:
                 enemy.damage(player_shell.getDamage())
         # player and enemy collision
         enemy_sprite = spritecollide(player, self.enemyGroup)
+        
         if enemy_sprite:
             if isinstance(enemy_sprite, AbstaractFlightEnemy):
                 # left = max(player.rect.left,  enemy_sprite.rect.left)

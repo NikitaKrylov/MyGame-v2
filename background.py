@@ -11,6 +11,9 @@ class AbstaractBackground:
         self.size = size
         self.group = group
         self.counter = 0
+        # self.eventupdateNumber = pg.USEREVENT + 1
+        # delay = 60
+        # pg.time.set_timer(self.eventupdateNumber, delay)
 
     def update(self, *args, **kwargs):
         """update background and background pieces"""
@@ -29,7 +32,7 @@ class AbstaractBackground:
 
 
 class StarsBackground(AbstaractBackground):
-    scene_speed = 2
+    scene_speed = 1
     element_speed = scene_speed
 
     def __init__(self, mediator, size: tuple, group, stars_amount=20, particle_amount=40, *args, **kwargs):
@@ -45,7 +48,7 @@ class StarsBackground(AbstaractBackground):
         self.createScene(self.size, stars_amount, particle_amount)
         self.createScene([self.size[0], -self.size[1]],
                          stars_amount, particle_amount)
-    
+
     # @property
     # def element_speed(self):
     #     return random.randint(1, 2)
@@ -71,7 +74,7 @@ class StarsBackground(AbstaractBackground):
 
 
 class FustStarsBackground(StarsBackground):
-    scene_speed = 7
+    scene_speed = 4
     element_speed = scene_speed
 
 
@@ -82,21 +85,22 @@ class BackgroundParticle(Sprite):
     def __init__(self, center: list, direction, speed, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
         self.size = kwargs.get('size') if kwargs.get(
-            'size') else random.randint(2, 5)
+            'size') else random.randint(1, 3)
         self.image = pg.Surface((self.size, self.size))
         self.image.fill((255, 255, 255))
         self.rect = self.image.get_rect(center=center)
         self.direction = direction
         self.speed = random.choice(speed) if isinstance(
             speed, (list, tuple)) else speed
+    
 
     def update(self, *args, **kwargs):
         self.rect.centerx += self.direction.x * self.speed
         self.rect.centery += self.direction.y * self.speed
-        
+
         if self.rect.top > kwargs.get('display_size')[1]:
             self.kill()
-        
+
         return super().update(*args, **kwargs)
 
     def draw(self, display):

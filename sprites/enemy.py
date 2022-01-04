@@ -1,4 +1,4 @@
-from animation import Animator, StaticMovement, CoordMovement, FunctionMovement
+from animation import Animator, StaticMovement, FunctionMovement, PointerMovement
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
 from settings import IMAGES
@@ -43,10 +43,10 @@ class AbstractEnemy(Sprite):  # Sprite Interface
 
     def draw(self, display):
         display.blit(self.image, self.rect)
-        # pg.draw.rect(display, (0, 255, 20), self.rect, width=3)
+        pg.draw.rect(display, (0, 255, 20), self.rect, width=3)
 
-        # for rect in self.rects:
-        #     pg.draw.rect(display, (0, 255, 0), rect, width=2)
+        for rect in self.rects:
+            pg.draw.rect(display, (0, 255, 0), rect, width=2)
 
     def getDamage(self):
         if self.isDamage:
@@ -61,10 +61,6 @@ class AbstractEnemy(Sprite):  # Sprite Interface
             super().kill()
             return False
         return self.HP
-
-    def kill(self):
-        self.factory.spriteWasDestroy(self)
-        return super().kill()
 
 
 class Asteroid(AbstractEnemy):  # Sprite
@@ -137,6 +133,10 @@ class Asteroid(AbstractEnemy):  # Sprite
             self.factory.spriteWasKilled(self)
             self.isBurst = True
 
+    def kill(self):
+        self.factory.spriteWasDestroy(self)
+        return super().kill()
+
 
 class AbstaractFlightEnemy(AbstractEnemy):
     speed = 5
@@ -149,7 +149,7 @@ class AbstaractFlightEnemy(AbstractEnemy):
         self.rects = [pg.Rect(self.rect.x, self.rect.y, self.rect.width, self.rect.height*0.55),
                       pg.Rect(self.rect.x+self.rect.width/3, self.rect.y, self.rect.width//3, self.rect.height)]
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
-                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (233, 22, 22))
+                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
         self.movement = None
         self.weapon = DubleGunEnemy(
             self.groups()[0], kwargs.get('particle_group'))
@@ -199,14 +199,14 @@ class AbstaractFlightEnemy(AbstractEnemy):
 
 
 class FirstFlightEnemy2(AbstaractFlightEnemy):
-    speed = 1
+    speed = 1  # dont float!
 
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, factory, *groups, **kwargs)
         self._a, self._b = random.randint(60, 120), random.randint(30, 90)
         self.bias = 500
         def func(x): return math.sin(x/self._a)*self._b + self.bias
-        self.speed = random.randint(1, 3)
+        self.speed = random.randint(1, 2)
         self.movement = FunctionMovement(pg.Vector2(1.0, 1.0), func=func)
 
     def update(self, *args, **kwargs):
@@ -231,6 +231,68 @@ class FirstFlightEnemy2(AbstaractFlightEnemy):
         return super().update(*args, **kwargs)
 
 
+class StarEnemy(AbstractEnemy):
+    speed = 1.5
+    MAX_HP = 300
+    HP = MAX_HP
+    DAMAGE = 5
+
+    def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, factory, *groups, **kwargs)
+        self.rects = [images[0].get_rect(center=pos)]
+        self.rot_speed = .8
+        self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
+                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
+        self.movement = PointerMovement(pg.Vector2(1, 0))
+
+    def updatePosition(self, *args, **kwargs):
+        self.movement.update(self.rect, self.rects, speed=self.speed)
+
+    def update(self, *args, **kwargs):
+        if self.isBurst:
+            self.kill()
+            return
+
+        self.rect, self.image, = self.animation.rotate(
+            now=kwargs['now'],
+            rot_speed=self.rot_speed,
+            rect=self.rect,
+            image=self.images[0],
+            image_copy=self.image,
+            cooldawn=15)
+
+        self.updatePoints(kwargs['display_size'])
+        return super().update(*args, **kwargs)
+
+    def updatePoints(self, display_size, *args, **kwargs):
+        if not self.movement.next_point:
+            point = self.createPoints(display_size)
+            self.movement.next_point = point
+
+        if not self.movement.point:
+            point = self.createPoints(display_size)
+            self.movement.point = point
+        return
+
+    def createPoints(self, display_size, *args, **kwargs):
+        return [random.randint(0, display_size[0]),
+                random.randint(0, display_size[1])]
+
+    def damage(self, amount):
+        self.HP -= amount
+        self.healthBar.updateHP(self.HP)
+
+        if self.HP <= 0 and not self.isBurst:
+            self.factory.spriteWasKilled(self)
+            self.isDamage = False
+            self.isBurst = True
+
+            super().kill()
+            return
+        else:
+            return self.HP
+
+
 # -----------------------------------------------------------------
 
 
@@ -249,11 +311,10 @@ class AbstarctFactory:
 
         self.particle_group = kwargs.get('particle_group')
 
-    def createObject(self, *args, **kwargs):
+    def createObject(self, amount=1, *args, **kwargs):
         """create and add object to group"""
-        if kwargs.get('amount'):
-            self.information['spawned'] += kwargs.get('amount')
-            self.information['alive'] += kwargs.get('amount')
+        self.information['spawned'] += amount
+        self.information['alive'] += amount
 
     def count(self):
         return self.information['alive']
@@ -264,11 +325,11 @@ class AbstarctFactory:
         """
         pass
 
-    def spriteWasKilled(self, instance):
+    def spriteWasKilled(self, instance=None):
         self.information['killed'] += 1
         self.information['alive'] -= 1
 
-    def spriteWasDestroy(self, instance):
+    def spriteWasDestroy(self, instance=None):
         self.information['alive'] -= 1
 
     def __destroyAllObject(self):
@@ -294,7 +355,7 @@ class AsteroidFactory(AbstarctFactory):
             10, self.display_size[0]), -random_image.get_rect().height)
         _obj = self.object([random_image], spawn_pos, self,
                            self.group, burst_images=self.burst_images)
-        return super().createObject(*args, amount=1, **kwargs)
+        return super().createObject(amount=1, *args, **kwargs)
 
 
 class FirstFlightEnemyFactory(AbstarctFactory):
@@ -310,12 +371,24 @@ class FirstFlightEnemyFactory(AbstarctFactory):
     def createObject(self, *args, **kwargs):
         _obj = self.object(
             self.images, (-self.display_size[0]*0.1, self.display_size[1]//4), self, self.group, particle_group=self.particle_group, burst_images=self.burst_images)
-        return super().createObject(*args, amount=1, **kwargs)
+        return super().createObject(amount=1, *args, **kwargs)
 
 
-class AbstractBoss(AbstractEnemy):
-    def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, factory, *groups, **kwargs)
+class StarEnemyFactory(AbstarctFactory):
+    object = StarEnemy
 
-    def draw(self, display):
-        return super().draw(display)
+    def __init__(self, display_size, group=None, *args, **kwargs):
+        super().__init__(display_size, group=group, *args, **kwargs)
+        self.images = [pg.image.load(
+            IMAGES+'\enemy\\star\\star1.png').convert_alpha()]
+
+    def createObject(self, *args, **kwargs):
+        _obj_width, _obj_height = self.images[0].get_width(
+        ), self.images[0].get_height()
+
+        pos = [random.randint(_obj_width, self.display_size[0]-_obj_height),
+               random.randint(_obj_height, self.display_size[1] - _obj_height)]
+
+        _obj = self.object(
+            self.images, pos, self, self.group, particle_group=self.particle_group)
+        return super().createObject(amount=1, *args, **kwargs)

@@ -3,13 +3,20 @@
         "executeWeapon" : {
             "mouse" : 1
         },
-        "showMenu":[27]
+        "showMenu":[27],
+        "changeWeapon" : {
+            "mouse" :  [4, 5],
+            "keyboard" : [49, 57]
+            
+        }
     },
 
     "joystick":{
         "executeWeapon" : {
             "button" : 2
         },
-        "showMenu":[5,6]
+        "showMenu":[5,6],
+        "changeWeapon" : [9, 10],
+        "apply" : 0
     }
 }

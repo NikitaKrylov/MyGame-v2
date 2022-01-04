@@ -1,6 +1,6 @@
 import pygame as pg
 from pygame import key
-from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory
+from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFactory
 from changed_group import Groups
 from background import *
 
@@ -74,9 +74,12 @@ class Level1(Level):
             display_size=self.aplication.display_size, group=self.grops.enemyGroup)
         self.firstFlightFactory = FirstFlightEnemyFactory(
             display_size=self.aplication.display_size, group=self.grops.enemyGroup, particle_group=self.grops.Particles)
+        self.starEnemyFactory = StarEnemyFactory(
+            display_size=self.aplication.display_size, group=self.grops.enemyGroup)
 
         self.factories.append(self.asteroidFactory)
         self.factories.append(self.firstFlightFactory)
+        self.factories.append(self.starEnemyFactory)
 
         return super().start()
 
@@ -92,13 +95,17 @@ class Level1(Level):
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
 
+        if self.starEnemyFactory.count() < 1:
+            self.starEnemyFactory.createObject()
+            
+        # print(self.starEnemyFactory.information)
+
         if self.firstFlightFactory.information['killed'] >= 10:
             print('You won')
             self.aplication.close()
-            
+
         return super().update(*args, **kwargs)
-        
-        
+
 
 class AsteroidWaves(Level):
     factories = []
@@ -131,7 +138,5 @@ class AsteroidWaves(Level):
         if self.asteroidFactory.information['killed'] > 200:
             print('You won')
             self.aplication.close()
-            
+
         return super().update(*args, **kwargs)
-            
-        

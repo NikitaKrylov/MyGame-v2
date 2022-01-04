@@ -23,7 +23,7 @@ class Player(Sprite):
         self.HP = self.MAX_HP
         self.mediator = mediator
         self.health = HealthBar(
-            [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.45, display_size[1]*0.02], (228, 113, 116), background=(53, 64, 77), draw_text=True)
+            [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.45, display_size[1]*0.02], (240, 84, 84), background=(198, 212, 217), draw_text=True)
         self.animation = Animator()
         self.shellGroup = shellGroup
         self.particle_group = particle_group

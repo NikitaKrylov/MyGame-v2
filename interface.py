@@ -19,9 +19,13 @@ class HealthBar:
         if kwargs.get('draw_text') == True:
             self.draw_text = True
             self.font = pg.font.Font(
-                MEDIA + '\\font\\karmafuture.ttf', int(self.rect.height*0.95))
+                MEDIA + '\\font\\karmasuture.ttf', int(self.rect.height*0.95))
             self.values = [self.font.render(
-                str(i), False, (255, 255, 255)) for i in range(self.MAX_HP+1)]
+                str(i), False, self.color) for i in range(self.MAX_HP//2)]
+            
+            for i in range(self.MAX_HP//2 ,self.MAX_HP+1):
+                self.values.append(self.font.render(
+                str(i), False, (255, 255, 255)))
             
 
     def draw(self, display, *args, **kwargs):
@@ -32,7 +36,7 @@ class HealthBar:
         pg.draw.rect(display, self.color, self.rect, **kwargs)
         if self.draw_text:
             display.blit(self.values[self.HP], (self.rectMAX.centerx,
-                         self.rectMAX.centery-self.values[self.HP].get_height()//2-3))
+                         self.rectMAX.centery-self.values[self.HP].get_height()//2-1))
 
     def updateHP(self, hp):
         self.HP = hp

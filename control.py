@@ -117,7 +117,11 @@ class JoystickControle(BaseController):
         pg.joystick.init()
         self.joysticks = [pg.joystick.Joystick(
             x) for x in range(pg.joystick.get_count())]
-        self.joystick = self.joysticks[0]
+        try:
+            self.joystick = self.joysticks[0]
+        except IndexError:
+            print('\n\n', 'Геймпад не обнаружен!'.upper(), '\n\n')
+
         self.btnHoverIndex = 0
 
     def getAllContrillers(self):
@@ -160,18 +164,18 @@ class JoystickControle(BaseController):
 
     def changeWeapon(self, player, event):
         if event.type == pg.JOYBUTTONDOWN:
-            if event.button in [9, 10]:
+            if event.button in self.config['changeWeapon']:
                 _update_value = 0
-                if event.button == 9:
+                if event.button == self.config['changeWeapon'][0]:
                     _update_value = -1
-                elif event.button == 10:
+                elif event.button == self.config['changeWeapon'][1]:
                     _update_value = 1
 
                 return super().changeWeapon(player, update=_update_value)
 
     def menuExecute(self, event, *args, **kwargs):
         if event.type == pg.JOYBUTTONDOWN:
-            if event.button == 0:
+            if event.button == self.config['apply']:
                 return super().menuExecute(event, *args, isController=True, controller=self.btnHoverIndex)
 
     def menuUpdate(self, event, *args, **kwargs):
@@ -236,15 +240,15 @@ class KeyboardControle(BaseController):
 
     def changeWeapon(self, player, event):
         if event.type == pg.KEYDOWN:
-            if 49 <= event.key <= 57:
+            if self.config['changeWeapon']['keyboard'][0] <= event.key <= self.config['changeWeapon']['keyboard'][1]:
                 return super().changeWeapon(player=player, value=int(event.unicode))
 
         elif event.type == pg.MOUSEBUTTONDOWN:
-            if event.button in [4, 5]:
+            if event.button in self.config['changeWeapon']['mouse']:
                 _update_value = 0
-                if event.button == 4:
+                if event.button == self.config['changeWeapon']['mouse'][0]:
                     _update_value = 1
-                elif event.button == 5:
+                elif event.button == self.config['changeWeapon']['mouse'][1]:
                     _update_value = -1
 
                 return super().changeWeapon(player=player, update=_update_value)

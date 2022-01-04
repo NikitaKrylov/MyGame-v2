@@ -7,6 +7,7 @@ from lavels import Level
 from menu import Menu
 from interface import Toolbar
 from changed_group import Groups, spritecollide
+from settings import IMAGES
 """RenderUpdates - в методе draw возвращает изменения rect"""
 
 
@@ -70,11 +71,10 @@ class GameStrategy(BaseStrategy):
         self.aplication.toolbar.draw(display)
 
     def eventListen(self, event):
-        self .aplication.controller.executeWeapon(
+        self.aplication.controller.executeWeapon(
             self.aplication.player, event)
         self.aplication.controller.changeWeapon(
             self.aplication.player, event)
-
         return super().eventListen(event)
 
 
@@ -198,5 +198,5 @@ if __name__ == '__main__':
     from lavels import AsteroidWaves, Level1
     aplication = Aplication(Level1)
     # aplication.changeLevel(AsteroidWaves)
-    aplication.setControllerType('joystick')
+    # aplication.setControllerType('joystick')
     aplication.start()
