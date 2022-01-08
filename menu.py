@@ -104,10 +104,51 @@ class ImageButton(ImageSurface):
         return
 
 
-class Menu:
+class BaseMenu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator
         self.display_size = (self.width, self.height) = display_size
+        self.backgroundPiecesGroup = CustomGroup()
+        self.btnGroup = CustomGroup()
+
+    def draw(self, display, *args, **kwargs):
+        self.backgroundPiecesGroup.draw(display)
+        self.btnGroup.draw(display)
+
+    def update(self, *args, **kwargs):
+        if kwargs.get("isController"):
+            key = kwargs.get("controller")
+            i = key % self.btnGroup.__len__()
+
+            for j in range(self.btnGroup.__len__()):
+                if j == i:
+                    self.btnGroup.sprites()[j].isHover = True
+                else:
+                    self.btnGroup.sprites()[j].isHover = False
+        else:
+
+            for sprite in self.btnGroup:
+                if sprite.rect.collidepoint(pg.mouse.get_pos()):
+                    sprite.isHover = True
+                else:
+                    sprite.isHover = False
+
+    def execute(self, *args, **kwargs):
+        if kwargs.get("isController"):
+            key = kwargs.get("controller")
+            i = key % self.btnGroup.__len__()
+            self.btnGroup.sprites()[i].execute()
+            return
+
+        else:
+            for btn in self.btnGroup:
+                if btn.rect.collidepoint(pg.mouse.get_pos()):
+                    btn.execute()
+
+
+class Menu(BaseMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
 
         blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
@@ -135,42 +176,47 @@ class Menu:
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
-        self.backgroundPieces = CustomGroup(self.surface, self.label)
-        
-        self.btnGroup = CustomGroup(self._continue, self.settings,  self.restart, self.exit)
+        self.backgroundPiecesGroup.add(self.surface, self.label)
+        self.btnGroup.add(self._continue, self.settings,
+                          self.restart, self.exit)
 
-    def draw(self, display):
-        self.backgroundPieces.draw(display)
+    def draw(self, display, *args, **kwargs):
         self.blured_background.draw(display)
-        self.btnGroup.draw(display)
-
-    def execute(self, *args, **kwargs):
-        if kwargs.get("isController"):
-            key = kwargs.get("controller")
-            i = key % self.btnGroup.__len__()
-            self.btnGroup.sprites()[i].execute()
-            return 
-
-                    
-        else:
-            for btn in self.btnGroup:
-                if btn.rect.collidepoint(pg.mouse.get_pos()):
-                    btn.execute()
+        return super().draw(display, *args, **kwargs)
 
     def update(self, *args, **kwargs):
-        if kwargs.get("isController"):
-            key = kwargs.get("controller")
-            i = key % self.btnGroup.__len__()
-            
-            for j in range(self.btnGroup.__len__()):
-                if j == i:
-                    self.btnGroup.sprites()[j].isHover = True
-                else:
-                    self.btnGroup.sprites()[j].isHover = False
-        else:
+        return super().update(*args, **kwargs)
+
+    def execute(self, *args, **kwargs):
+        return super().execute(*args, **kwargs)
+
+
+class DieMenu(BaseMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+
+        blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
+        surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
+        surface_image = pg.transform.scale(surface_image, (int(
+            surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
+        label_image = pg.image.load(IMAGES + '\menu\YouDied.png')
+        exit_image = pg.image.load(IMAGES + '\menu\Quite.png')
+        restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
+
+        self.surface = ImageSurface(
+            [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
+        self.blured_background = ImageSurface(
+            (0, 0), blured_background_image, center=False)
+        self.label = ImageSurface(
+            [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
+        self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
+                                   exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+        self.exit = ImageButton(
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*7.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+
+        self.backgroundPiecesGroup.add(self.surface, self.label)
+        self.btnGroup.add(self.restart, self.exit)
         
-            for sprite in self.btnGroup:
-                if sprite.rect.collidepoint(pg.mouse.get_pos()):
-                    sprite.isHover = True
-                else:
-                    sprite.isHover = False
+    def draw(self, display, *args, **kwargs):
+        self.blured_background.draw(display)
+        return super().draw(display, *args, **kwargs)

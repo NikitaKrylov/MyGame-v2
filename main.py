@@ -4,11 +4,30 @@ from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
 from lavels import Level
-from menu import Menu
+from menu import Menu, DieMenu
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
 """RenderUpdates - в методе draw возвращdaает изменения rect"""
+
+
+class Timer:
+    def __init__(self):
+        self.ticks = 0
+        self.timer_update_event = pg.USEREVENT+1
+        pg.time.set_timer(self.timer_update_event, 1)
+
+    def update(self):
+        self.ticks += 1
+
+    def reset(self):
+        self.ticks = 0
+
+    def get_ticks(self):
+        return self.ticks
+
+    def __str__(self):
+        return str(self.ticks)
 
 
 class BaseStrategy:
@@ -50,7 +69,8 @@ class InventoryStrategy(BaseStrategy):
 
 class GameStrategy(BaseStrategy):
     def update(self, *args, **kwargs):
-        _now = pg.time.get_ticks()
+        # _now = pg.time.get_ticks()
+        _now = self.aplication.game_timer.get_ticks()
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
         self.aplication.toolbar.update()
@@ -61,9 +81,9 @@ class GameStrategy(BaseStrategy):
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
         self.aplication.level.update(now=_now)
-        
+
         if self.aplication.player.HP <= 0:
-            self.aplication.close()
+            self.aplication.showDieMenu()
             print('You lose')
 
         return super().update()
@@ -79,6 +99,10 @@ class GameStrategy(BaseStrategy):
             self.aplication.player, event)
         self.aplication.controller.changeWeapon(
             self.aplication.player, event)
+
+        if event.type == self.aplication.game_timer.timer_update_event:
+            self.aplication.game_timer.update()
+
         return super().eventListen(event)
 
 
@@ -91,12 +115,18 @@ class MenuStrategy(BaseStrategy):
         return super().update()
 
     def draw(self, display):
-        self.menu.draw(display) 
+        self.menu.draw(display)
 
     def eventListen(self, event):
         self.aplication.controller.menuUpdate(event)
         self.aplication.controller.menuExecute(event)
         return super().eventListen(event)
+
+
+class DieMenuStrategy(MenuStrategy):
+    def __init__(self, mediator):
+        super().__init__(mediator)
+        self.menu = DieMenu(mediator, mediator.display_size)
 
 
 class Aplication:
@@ -107,9 +137,11 @@ class Aplication:
     }
     menuStrategy: BaseStrategy = MenuStrategy
     gameStrategy: BaseStrategy = GameStrategy
+    dieMenuStrategy: BaseStrategy = DieMenuStrategy
     inventoryStrategy: BaseStrategy = None
     _actingStrategy = None
     isMenu = False
+    isPlayerDie = False
     isInterface = False
     __run = True
     ticks = 0
@@ -119,6 +151,7 @@ class Aplication:
         pg.font.init()
         user32 = ctypes.windll.user32
 
+        self.game_timer = Timer()
         self.window_size = user32.GetSystemMetrics(
             0), user32.GetSystemMetrics(1)
         self.display_size = [int(0.4*self.window_size[0]),
@@ -137,6 +170,7 @@ class Aplication:
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
 
         self.menuStrategy = self.menuStrategy(self)
+        self.dieMenuStrategy = self.dieMenuStrategy(self)
         self.gameStrategy = self.gameStrategy(self)
         self._actingStrategy = self.gameStrategy
         self.level = level(self, self.groups)
@@ -156,8 +190,17 @@ class Aplication:
 
         return print(f'Controller was removed to {self.controller.type()}')
 
-    def showMenu(self):
+    def showMenu(self, value:bool=None):
         """Show and close menu"""
+        if value != None:
+            if value:
+                self._actingStrategy = self.menuStrategy
+                self.isMenu = True
+            elif not value:
+                self._actingStrategy = self.gameStrategy
+                self.isMenu = False
+            return 
+        
         if not self.isMenu:
             self._actingStrategy = self.menuStrategy
             self.isMenu = True
@@ -165,8 +208,17 @@ class Aplication:
             self._actingStrategy = self.gameStrategy
             self.isMenu = False
 
+    def showDieMenu(self):
+        if not self.isPlayerDie:
+            self._actingStrategy = self.dieMenuStrategy
+            self.isPlayerDie = True
+        else:
+            self._actingStrategy = self.gameStrategy
+            self.isPlayerDie = False
+
     def start(self):
         """main aplicatiodn start function"""
+
         while self.__run:
             for event in pg.event.get():
                 self._actingStrategy.eventListen(event)
@@ -196,8 +248,8 @@ class Aplication:
         self.level.start()
         self.player.restart()
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
-
-        self.showMenu()
+        self.game_timer.reset()
+        self.showMenu(value=False)
 
 
 if __name__ == '__main__':

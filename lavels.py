@@ -88,7 +88,7 @@ class Level1(Level):
         return super().start()
 
     def update(self, *args, **kwargs):
-        now = pg.time.get_ticks()
+        now = kwargs.get('now')
 
         if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
             self.last_spawn_time['asteroid'] = now
@@ -104,8 +104,8 @@ class Level1(Level):
                 if self.starEnemyFactory.count() < 1:
                     self.starEnemyFactory.createObject()
 
-        print("FlightEnemy: {}|10    StarEnemy: {}|5".format(
-            self.firstFlightFactory.information['killed'], self.starEnemyFactory.information['killed']))
+        # print("FlightEnemy: {}|10    StarEnemy: {}|5".format(
+        #     self.firstFlightFactory.information['killed'], self.starEnemyFactory.information['killed']))
 
         # print(self.starEnemyFactory.information)
 
@@ -141,7 +141,7 @@ class AsteroidWaves(Level):
         return super().start()
 
     def update(self, *args, **kwargs):
-        now = pg.time.get_ticks()
+        now = kwargs.get('now')
         if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
             self.last_spawn_time['asteroid'] = now
             self.asteroidFactory.createObject()
