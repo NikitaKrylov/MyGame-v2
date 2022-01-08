@@ -61,7 +61,7 @@ class GameStrategy(BaseStrategy):
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
         self.aplication.level.update(now=_now)
-
+        
         if self.aplication.player.HP <= 0:
             self.aplication.close()
             print('You lose')
@@ -91,7 +91,7 @@ class MenuStrategy(BaseStrategy):
         return super().update()
 
     def draw(self, display):
-        self.menu.draw(display)
+        self.menu.draw(display) 
 
     def eventListen(self, event):
         self.aplication.controller.menuUpdate(event)
