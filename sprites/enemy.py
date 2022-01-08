@@ -1,3 +1,5 @@
+from pygame.math import disable_swizzling
+from pygame.transform import rotate
 from animation import Animator, StaticMovement, FunctionMovement, PointerMovement
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
@@ -5,7 +7,7 @@ from settings import IMAGES
 import random
 import math
 from interface import HealthBar
-from game_objects import DubleGunEnemy
+from game_objects import DubleGunEnemy, SingleRedGunEnemy, StarGun
 
 
 def sign(value):
@@ -43,10 +45,10 @@ class AbstractEnemy(Sprite):  # Sprite Interface
 
     def draw(self, display):
         display.blit(self.image, self.rect)
-        pg.draw.rect(display, (0, 255, 20), self.rect, width=3)
+        # pg.draw.rect(display, (0, 255, 20), self.rect, width=3)
 
-        for rect in self.rects:
-            pg.draw.rect(display, (0, 255, 0), rect, width=2)
+        # for rect in self.rects:
+        #     pg.draw.rect(display, (0, 255, 0), rect, width=2)
 
     def getDamage(self):
         if self.isDamage:
@@ -204,7 +206,7 @@ class FirstFlightEnemy2(AbstaractFlightEnemy):
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, factory, *groups, **kwargs)
         self._a, self._b = random.randint(60, 120), random.randint(30, 90)
-        self.bias = 500
+        self.bias = pos[1]
         def func(x): return math.sin(x/self._a)*self._b + self.bias
         self.speed = random.randint(1, 2)
         self.movement = FunctionMovement(pg.Vector2(1.0, 1.0), func=func)
@@ -244,6 +246,7 @@ class StarEnemy(AbstractEnemy):
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
                                    self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
         self.movement = PointerMovement(pg.Vector2(1, 0))
+        self.weapon = StarGun(self.groups()[0], kwargs.get('particle_group'))
 
     def updatePosition(self, *args, **kwargs):
         self.movement.update(self.rect, self.rects, speed=self.speed)
@@ -262,6 +265,18 @@ class StarEnemy(AbstractEnemy):
             cooldawn=15)
 
         self.updatePoints(kwargs['display_size'])
+
+        if self.weapon.isExecute:
+            for i in range(0, 361, 90):
+                v = self.animation.rotVector.rotate_rad(math.radians(i))
+                v.scale_to_length(self.rect.width//2.5)
+                point_pos = (self.rect.centerx + v.x, self.rect.centery + v.y)
+                v.scale_to_length(1)
+                self.weapon.execute(self.rect, pos=point_pos, vector=v)
+
+        self.healthBar.update(self.rects[0].left, self.rects[0].top -
+                              self.healthBar.rect.height)
+
         return super().update(*args, **kwargs)
 
     def updatePoints(self, display_size, *args, **kwargs):
@@ -292,8 +307,12 @@ class StarEnemy(AbstractEnemy):
         else:
             return self.HP
 
+    def draw(self, display):
+        self.healthBar.draw(display)
+        return super().draw(display)
 
-# -----------------------------------------------------------------
+
+# ---------------------------FACTORIES--------------------------------------
 
 
 class AbstarctFactory:
@@ -370,7 +389,7 @@ class FirstFlightEnemyFactory(AbstarctFactory):
 
     def createObject(self, *args, **kwargs):
         _obj = self.object(
-            self.images, (-self.display_size[0]*0.1, self.display_size[1]//4), self, self.group, particle_group=self.particle_group, burst_images=self.burst_images)
+            self.images, (-self.display_size[0]*0.1, self.display_size[1]*0.2), self, self.group, particle_group=self.particle_group, burst_images=self.burst_images)
         return super().createObject(amount=1, *args, **kwargs)
 
 

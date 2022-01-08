@@ -6,6 +6,8 @@ from animation import StaticMovement, Animator
 import random
 
 
+# ----------------------------------PARTICLES---------------------------------------------
+
 class Particle(Sprite):
     def __init__(self, pos, size, speed, color: list, vector, life_size=None,  size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup):
         super().__init__(*groups)
@@ -53,11 +55,31 @@ class Particle(Sprite):
                                self.rect.center, self.size//2)
 
 
+class ParticleShell(Particle):
+    def __init__(self, pos, size, speed, color: list, vector, damage, life_size=None, size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup, **kwargs):
+        super().__init__(pos, size, speed, color, vector, life_size=life_size,
+                         size_rate=size_rate, speed_rate=speed_rate, life_time=life_time, shape=shape, *groups, **kwargs)
+        self._damage = damage
+        self.rects = [self.rect]
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        self.rects = [self.rect]
+
+    def getDamage(self):
+        damage = self._damage
+        self.kill()
+        return damage
+
+
+# ----------------------------------BASE SHELL---------------------------------------------
+
+
 class BaseShell(Sprite):
     isPlayer: bool = None
     animation = Animator
-    DAMAGE = 10
-    speed = 25
+    _damage = 10
+    _speed = 20
 
     def __init__(self, images: list,  pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
@@ -73,22 +95,24 @@ class BaseShell(Sprite):
         self.rects = [self.rect]
 
     def update(self, *args, **kwargs):
-        self.rect, self.rects = self.movement.update(
+        self.movement.update(
             self.rect,
             self.rects,
-            speed=self.speed
+            speed=self._speed
         )
 
         if self.rect.bottom < -self.rect.bottom:
+            super().kill()
+        elif self.rect.top > kwargs.get('display_size')[1]:
             super().kill()
 
         return super().update(*args, **kwargs)
 
     def getDamage(self):
-        damage = self.DAMAGE
+        damage = self._damage
         self.kill()
         return damage
-    
+
     def draw(self, display):
         return display.blit(self.image, self.rect)
 
@@ -96,26 +120,12 @@ class BaseShell(Sprite):
         return super().kill()
 
 
-class ParticleShell(Particle):
-    def __init__(self, pos, size, speed, color: list, vector, damage, life_size=None, size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup, **kwargs):
-        super().__init__(pos, size, speed, color, vector, life_size=life_size,
-                         size_rate=size_rate, speed_rate=speed_rate, life_time=life_time, shape=shape, *groups, **kwargs)
-        self.DAMAGE = damage
-        self.rects = [self.rect]
-
-    def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-        self.rects = [self.rect]
-
-    def getDamage(self):
-        damage = self.DAMAGE
-        self.kill()
-        return damage
+# ----------------------------------PLAYER SHELL---------------------------------------------
 
 
 class FirstShell(BaseShell):
-    DAMAGE = 25
-    speed = 23
+    _damage = 25
+    _speed = 20
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
@@ -139,9 +149,9 @@ class FirstShell(BaseShell):
         return super().kill()
 
 
-class SecondShell(BaseShell):
-    DAMAGE = 17
-    speed = 19
+class RedShell(BaseShell):
+    _damage = 17
+    _speed = 19
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
@@ -165,22 +175,9 @@ class SecondShell(BaseShell):
         return super().kill()
 
 
-class SecondShellEnemy(SecondShell):
-    DAMAGE = 2
-    speed = 10
-
-    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.movement.changeDirection(update_y=1)
-        
-    def damage(self, value):
-        return super().kill()
-    
-
-
 class Rocket(BaseShell):
-    speed = 5
-    DAMAGE = 120
+    _speed = 5
+    _damage = 120
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
@@ -222,9 +219,9 @@ class Rocket(BaseShell):
 
 
 class BurnedShell(BaseShell):
-    speed = 13
-    DAMAGE = 15
-    PARTICLE_DAMAGE = 10
+    _speed = 13
+    _damage = 15
+    PARTICLE_DAMAGE = 7
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
@@ -250,3 +247,48 @@ class BurnedShell(BaseShell):
                 shape='square'
             ))
         return super().kill()
+
+
+# ----------------------------------ENEMT SHELL---------------------------------------------
+
+
+class RedEnemyShell(RedShell):
+    _damage = 2
+    _speed = 10
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
+        self.movement.changeDirection(update_y=1)
+
+    def damage(self, value):
+        return super().kill()
+
+
+class StarEnemyShell(BaseShell):
+    _speed = 4
+    _damage = 5
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
+        vector = kwargs.get('vector')
+        self.movement.changeDirection(update_y=vector.y)
+        self.movement.changeDirection(update_x=vector.x)
+
+    def kill(self):
+        colors = ["#8cd7fb", "#71c9f2", "#bfe9fd"]
+        for i in range(5):
+            self.particle_group.add(Particle(
+                pos=self.rect.center,
+                size=int(self.rect.width*0.8),
+                speed=random.randint(7, 11),
+                color=random.choice(colors),
+                vector=pygame.Vector2(1, 0).rotate(random.randint(1, 359)),
+                life_size=random.randint(2, 4),
+                size_rate=-random.uniform(0.3, 0.4),
+                speed_rate=-0.3,
+                shape='square'))
+
+        return super().kill()
+
+    def damage(self, value):
+        return self.kill()

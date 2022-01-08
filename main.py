@@ -8,7 +8,7 @@ from menu import Menu
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
-"""RenderUpdates - в методе draw возвращает изменения rect"""
+"""RenderUpdates - в методе draw возвращdaает изменения rect"""
 
 
 class BaseStrategy:
@@ -61,6 +61,10 @@ class GameStrategy(BaseStrategy):
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
         self.aplication.level.update(now=_now)
+
+        if self.aplication.player.HP <= 0:
+            self.aplication.close()
+            print('You lose')
 
         return super().update()
 
@@ -186,10 +190,12 @@ class Aplication:
 
     def restart(self):
         pg.init()
+        self.clock = pg.time.Clock()
         self.groups.restart()
         self.level.restart()
         self.level.start()
         self.player.restart()
+        self.toolbar = Toolbar(self.display_size, self.player.equipment)
 
         self.showMenu()
 

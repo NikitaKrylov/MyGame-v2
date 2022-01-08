@@ -44,6 +44,10 @@ class Level:
 
     def update(self, *args, **kwargs):
         self.background.update()
+        self.chackDone(*args, **kwargs)
+
+    def chackDone(self, *args, **kwargs):
+        pass
 
     @property
     def discription(self):
@@ -75,7 +79,7 @@ class Level1(Level):
         self.firstFlightFactory = FirstFlightEnemyFactory(
             display_size=self.aplication.display_size, group=self.grops.enemyGroup, particle_group=self.grops.Particles)
         self.starEnemyFactory = StarEnemyFactory(
-            display_size=self.aplication.display_size, group=self.grops.enemyGroup)
+            display_size=self.aplication.display_size, group=self.grops.enemyGroup, particle_group=self.grops.Particles)
 
         self.factories.append(self.asteroidFactory)
         self.factories.append(self.firstFlightFactory)
@@ -95,16 +99,23 @@ class Level1(Level):
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
 
-        if self.starEnemyFactory.count() < 1:
-            self.starEnemyFactory.createObject()
-            
+        if now//1000 > 15:
+            if self.starEnemyFactory.information['killed'] < 5:
+                if self.starEnemyFactory.count() < 1:
+                    self.starEnemyFactory.createObject()
+
+        print("FlightEnemy: {}|10    StarEnemy: {}|5".format(
+            self.firstFlightFactory.information['killed'], self.starEnemyFactory.information['killed']))
+
         # print(self.starEnemyFactory.information)
 
-        if self.firstFlightFactory.information['killed'] >= 10:
+        return super().update(*args, **kwargs)
+
+    def chackDone(self, *args, **kwargs):
+        if self.firstFlightFactory.information['killed'] >= 10 and self.starEnemyFactory.information['killed'] >= 5:
             print('You won')
             self.aplication.close()
-
-        return super().update(*args, **kwargs)
+        return super().chackDone(*args, **kwargs)
 
 
 class AsteroidWaves(Level):
@@ -135,8 +146,10 @@ class AsteroidWaves(Level):
             self.last_spawn_time['asteroid'] = now
             self.asteroidFactory.createObject()
 
+        return super().update(*args, **kwargs)
+
+    def chackDone(self, *args, **kwargs):
         if self.asteroidFactory.information['killed'] > 200:
             print('You won')
             self.aplication.close()
-
-        return super().update(*args, **kwargs)
+        return super().chackDone(*args, **kwargs)

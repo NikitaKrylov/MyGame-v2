@@ -6,10 +6,12 @@ from pygame import math as mathPg
 
 
 class Animator:
-    updatingTime = 0
-    frame = 0
-    rotationTime = 0
-    rot = 0
+    def __init__(self):
+        self.updatingTime = 0
+        self.frame = 0
+        self.rotationTime = 0
+        self.rot = 0
+        self.__rotVector = pg.Vector2(1, 0)
 
     def update(self, now: int, rate: int, frames_len: int, repeat: bool = True, finiteFunction=None):
         if now - self.updatingTime > rate:
@@ -37,6 +39,10 @@ class Animator:
             rect.center = old_center
 
         return rect, image_copy
+    
+    @property
+    def rotVector(self):
+        return self.__rotVector.rotate_rad(math.radians(-self.rot))
 
 
 class MovementInterface:
@@ -122,7 +128,7 @@ class PointerMovement(StaticMovement):
 
 # class AbstractParticle(sprite.Sprite):
 #     def __init__(self, pos: list, speed, rate, life_time=None, *groups: sprite.AbstractGroup):
-#         super().__init__(*groups)
+#         super().__init__(*groups) 
 #         self.speed = speed
 #         self.rate = rate
 #         self.life_time = life_time

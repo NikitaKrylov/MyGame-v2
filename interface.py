@@ -22,11 +22,10 @@ class HealthBar:
                 MEDIA + '\\font\\karmasuture.ttf', int(self.rect.height*0.95))
             self.values = [self.font.render(
                 str(i), False, self.color) for i in range(self.MAX_HP//2)]
-            
-            for i in range(self.MAX_HP//2 ,self.MAX_HP+1):
+
+            for i in range(self.MAX_HP//2, self.MAX_HP+1):
                 self.values.append(self.font.render(
-                str(i), False, (255, 255, 255)))
-            
+                    str(i), False, (255, 255, 255)))
 
     def draw(self, display, *args, **kwargs):
         self.rect.width = (self.HP / self.MAX_HP) * self.rectMAX.width

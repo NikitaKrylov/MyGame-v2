@@ -1,8 +1,9 @@
 import pygame as pg
+from pygame import surface
 from animation import Animator
-from sprites.shell import *
+# from sprites.shell import *
 from pygame.sprite import Sprite, AbstractGroup
-from sprites.shell import BaseShell
+from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell
 from pygame.sprite import Group
 from settings import IMAGES
 
@@ -36,11 +37,11 @@ class AbstaructWeapon:
     def __init__(self):
         self.__isExecute = True
         self.updatingTime = {
-        'last': 0,
-        'cooldawn': 0
-    }
+            'last': 0,
+            'cooldawn': 0
+        }
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
         return
 
     @property
@@ -67,8 +68,12 @@ class AbstractGun(AbstaructWeapon):
         super().__init__()
         self.particle_group = particle_group
         self.group = group
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 0
+        }
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
         return super().execute()
 
 
@@ -80,33 +85,69 @@ class FirstGun(AbstractGun):
         self.images = [pg.image.load(
             IMAGES+'\shell\lite\shell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
 
-    def execute(self, rect):
+    def execute(self, rect, *args, **kwargs):
         pos = [rect.centerx, int(rect.top+self.images[0].get_rect().height//2)]
         self.group.add(self.amo(self.images, pos,
                        self.particle_group, [self.group]))
         return super().execute()
 
 
-class DubleGun(AbstractGun):
-    amo = SecondShell
+class SingleRedGun(AbstractGun):
+    amo = RedShell
 
     def __init__(self, group, particle_group):
         super().__init__(group, particle_group)
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 1700
+        }
         self.images = [pg.image.load(
-            IMAGES+'\shell\\red\\redshell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
+            IMAGES+'\shell\\red\\redshell'+str(i)+'.png').convert_alpha() for i in range(1, 2)]
 
-    def execute(self, rect):
+    def execute(self, rect, *args, **kwargs):
+        pos = rect.center if not kwargs.get('pos') else kwargs.get('pos')
+
+        self.group.add(self.amo(
+            images=self.images, particle_group=self.particle_group, groups=[self.group], **kwargs))
+        return super().execute()
+
+
+class DubleRedGun(SingleRedGun):
+    amo = RedShell
+
+    def execute(self, rect, *args, **kwargs):
         pos1 = [rect.left, rect.top+rect.height//2]
         pos2 = [rect.right, pos1[1]]
         self.group.add(self.amo(self.images, pos1,
                        self.particle_group, [self.group]))
         self.group.add(self.amo(self.images, pos2,
                        self.particle_group, [self.group]))
-        return super().execute()
 
 
-class DubleGunEnemy(DubleGun):
-    amo = SecondShellEnemy
+class SingleRedGunEnemy(SingleRedGun):
+    amo = StarEnemyShell
+
+
+class StarGun(AbstractGun):
+    amo = StarEnemyShell
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        # image = pg.Surface((15, 15))
+        # image.fill('#71c0f2')
+        # self.images = [image]
+        self.images = [pg.image.load(IMAGES+'\shell\\star\\star1.png').convert_alpha()]
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 800
+        }
+
+    def execute(self, *args, **kwargs):
+        self.group.add(self.amo(images=self.images, particle_group=self.particle_group,**kwargs))
+
+
+class DubleGunEnemy(DubleRedGun):
+    amo = RedEnemyShell
 
     def __init__(self, group, particle_group):
         super().__init__(group, particle_group)
@@ -115,7 +156,7 @@ class DubleGunEnemy(DubleGun):
             'cooldawn': 1700
         }
 
-    def execute(self, rect):
+    def execute(self, rect, *args, **kwargs):
         if self.isExecute:
             pos1 = [rect.left, rect.top+rect.height//2]
             pos2 = [rect.right, pos1[1]]
@@ -136,11 +177,11 @@ class RocketLauncher(AbstractGun):
         self.images = [pg.image.load(
             IMAGES+'\shell\\racket\\racket.png').convert_alpha()]
         self.updatingTime = {
-        'last': 0,
-        'cooldawn': 1000
-    }
+            'last': 0,
+            'cooldawn': 1000
+        }
 
-    def execute(self, rect):
+    def execute(self, rect, *args, **kwargs):
         if self.isExecute:
             self.group.add(self.amo(self.images, rect.center,
                                     self.particle_group, [self.group]))
@@ -152,31 +193,36 @@ class BurnedLauncher(AbstractGun):
 
     def __init__(self, group, particle_group):
         super().__init__(group, particle_group)
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 100
+        }
         self.images = [pg.image.load(
             IMAGES+'\shell\\orange\\orange.png').convert_alpha()]
 
-    def execute(self, rect):
-        pos = [rect.centerx, rect.top + self.images[0].get_height()//1.5]
-        self.group.add(self.amo(self.images, pos,
-                       self.particle_group, [self.group]))
-        return super().execute()
+    def execute(self, rect, *args, **kwargs):
+        if self.isExecute:
+            pos = [rect.centerx, rect.top + self.images[0].get_height()//1.5]
+            self.group.add(self.amo(self.images, pos,
+                        self.particle_group, [self.group]))
+            return super().execute()
 # -------------------------------------------------------------------
 
 
 class Equipment:
-    _weapon_equipment = []  # Weapons
     weaponIndex = 0
-    _heal_equipment = []  # Heals
-    _ultimate = None  # Ultimates
-    _group = None  # player`s shell group
 
     def __init__(self, group, particle_group):
-        self._group = group
+        self._weapon_equipment = []  # Weapons
+        self._heal_equipment = []  # Heals
+        self._ultimate = None  # Ultimates
+        self._group = group  # player`s shell group
+
         self._particle_group = particle_group
         self._weapon_equipment.append(
             FirstGun(self._group, self._particle_group))
-        self._weapon_equipment.append(
-            DubleGun(self._group, self._particle_group))
+        # self._weapon_equipment.append(
+        #     DubleRedGun(self._group, self._particle_group))
         self._weapon_equipment.append(
             RocketLauncher(self._group, self._particle_group))
         self._weapon_equipment.append(
