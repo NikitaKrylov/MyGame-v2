@@ -1,3 +1,5 @@
+from lib2to3.pytree import Base
+from tkinter import Image
 import pygame as pg
 from pygame.sprite import Sprite, spritecollide
 from settings import IMAGES
@@ -25,6 +27,14 @@ class Text:
 
     def draw(self, display):
         display.blit(self.textsurface, self.pos)
+
+    def update(self, *args, **kwargs):
+        _text = kwargs.get('text')
+        if _text:
+            if self.text != _text:
+                self.text = _text
+                self.textsurface = self.font.render(
+                    self.text, False, self.color)
 
 
 class BaseSurface(Sprite):
@@ -104,6 +114,24 @@ class ImageButton(ImageSurface):
         return
 
 
+class ColoredCheckBox(ColoredButton):
+    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
+        super().__init__(pos, size, center, color, border_radius, func, **kwargs)
+        self.value = False
+        
+    def execute(self):
+        self.value = not self.value
+
+
+class ImageCheckBox(ImageButton):
+    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
+        super().__init__(pos, image, size, center, func, **kwargs)
+        self.value = False
+    
+    def execute(self):
+        self.value = not self.value
+
+
 class BaseMenu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator
@@ -151,6 +179,8 @@ class Menu(BaseMenu):
         super().__init__(mediator, display_size)
 
         blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
+        blured_background_image = pg.transform.scale(
+            blured_background_image, display_size)
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
@@ -159,7 +189,8 @@ class Menu(BaseMenu):
         exit_image = pg.image.load(IMAGES + '\menu\Quite.png')
         continue_image = pg.image.load(IMAGES + '\menu\Continue.png')
         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
-        settings_image = pg.image.load(IMAGES + '\menu\Settings.png')
+        # settings_image = pg.image.load(IMAGES + '\menu\Settings.png')
+        leave_image = pg.image.load(IMAGES + '\menu\Leave.png')
 
         self.blured_background = ImageSurface(
             (0, 0), blured_background_image, center=False)
@@ -169,26 +200,18 @@ class Menu(BaseMenu):
             [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
         self._continue = ImageButton([self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height(
         )*4.5], continue_image.convert_alpha(), center=True, func=self.aplication.showMenu)
-        self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                    exit_image.get_height()*6.5], settings_image.convert_alpha(), center=True, func=None)
+        # self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
+        #                             exit_image.get_height()*6.5], settings_image.convert_alpha(), center=True, func=None)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   exit_image.get_height()*8.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+                                   exit_image.get_height()*6.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+        self.leave = ImageButton(
+            [self.surface.rect.centerx, self.surface.rect.top+leave_image.get_height()*7.5], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
         self.exit = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
-        self.backgroundPiecesGroup.add(self.surface, self.label)
-        self.btnGroup.add(self._continue, self.settings,
-                          self.restart, self.exit)
-
-    def draw(self, display, *args, **kwargs):
-        self.blured_background.draw(display)
-        return super().draw(display, *args, **kwargs)
-
-    def update(self, *args, **kwargs):
-        return super().update(*args, **kwargs)
-
-    def execute(self, *args, **kwargs):
-        return super().execute(*args, **kwargs)
+        self.backgroundPiecesGroup.add(
+            self.blured_background, self.surface, self.label)
+        self.btnGroup.add(self._continue, self.restart, self.leave, self.exit)
 
 
 class DieMenu(BaseMenu):
@@ -212,11 +235,30 @@ class DieMenu(BaseMenu):
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                    exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
         self.exit = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*7.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
-        self.backgroundPiecesGroup.add(self.surface, self.label)
+        self.backgroundPiecesGroup.add(
+            self.blured_background, self.surface, self.label)
         self.btnGroup.add(self.restart, self.exit)
-        
-    def draw(self, display, *args, **kwargs):
-        self.blured_background.draw(display)
-        return super().draw(display, *args, **kwargs)
+
+
+class AplicationMenu(BaseMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+
+        surface_image = pg.Surface(display_size)
+        surface_image.fill("#182629")
+        start_image = pg.image.load(IMAGES + '\menu\Start.png')
+        change_level_image = pg.image.load(IMAGES + '\menu\ChangeLevel.png')
+        exit_image = pg.image.load(IMAGES + '\menu\Quite.png')
+
+        self.surface = ImageSurface([0, 0], surface_image, display_size)
+        self.start = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
+                                 exit_image.get_height()*3], start_image, center=True, func=self.aplication.startGame)
+        self.change_level = ImageButton(
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*5.5], change_level_image, center=True)
+        self.exit = ImageButton(
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+
+        self.backgroundPiecesGroup.add(self.surface)
+        self.btnGroup.add(self.exit, self.change_level, self.start)

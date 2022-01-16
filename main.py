@@ -3,8 +3,8 @@ from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
-from lavels import Level
-from menu import Menu, DieMenu
+from levels import Level
+from menu import Menu, DieMenu, AplicationMenu, Text
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
@@ -45,8 +45,6 @@ class BaseStrategy:
         if event.type == pg.QUIT:
             pg.quit()
             sys.exit()
-
-        self.aplication.controller.showMenu(event)
 
     @property
     def type(self):
@@ -99,6 +97,7 @@ class GameStrategy(BaseStrategy):
             self.aplication.player, event)
         self.aplication.controller.changeWeapon(
             self.aplication.player, event)
+        self.aplication.controller.showMenu(event)
 
         if event.type == self.aplication.game_timer.timer_update_event:
             self.aplication.game_timer.update()
@@ -106,13 +105,10 @@ class GameStrategy(BaseStrategy):
         return super().eventListen(event)
 
 
-class MenuStrategy(BaseStrategy):
+class BaseMenuStrategy(BaseStrategy):
     def __init__(self, mediator):
         super().__init__(mediator)
         self.menu = Menu(self.aplication, self.aplication.display_size)
-
-    def update(self):
-        return super().update()
 
     def draw(self, display):
         self.menu.draw(display)
@@ -123,10 +119,27 @@ class MenuStrategy(BaseStrategy):
         return super().eventListen(event)
 
 
-class DieMenuStrategy(MenuStrategy):
+class MenuStrategy(BaseMenuStrategy):
+    def __init__(self, mediator):
+        super().__init__(mediator)
+        self.menu = Menu(self.aplication, self.aplication.display_size)
+
+    def eventListen(self, event):
+        super().eventListen(event)
+        self.aplication.controller.showMenu(event)
+        return
+
+
+class DieMenuStrategy(BaseMenuStrategy):
     def __init__(self, mediator):
         super().__init__(mediator)
         self.menu = DieMenu(mediator, mediator.display_size)
+
+
+class GUIMenuStrategy(BaseMenuStrategy):
+    def __init__(self, mediator):
+        super().__init__(mediator)
+        self.menu = AplicationMenu(mediator, mediator.display_size)
 
 
 class Aplication:
@@ -138,6 +151,7 @@ class Aplication:
     menuStrategy: BaseStrategy = MenuStrategy
     gameStrategy: BaseStrategy = GameStrategy
     dieMenuStrategy: BaseStrategy = DieMenuStrategy
+    guiMenuStrategy: BaseStrategy = GUIMenuStrategy
     inventoryStrategy: BaseStrategy = None
     _actingStrategy = None
     isMenu = False
@@ -150,31 +164,34 @@ class Aplication:
         pg.init()
         pg.font.init()
         user32 = ctypes.windll.user32
+        self.clock = pg.time.Clock()
 
         self.game_timer = Timer()
         self.window_size = user32.GetSystemMetrics(
             0), user32.GetSystemMetrics(1)
         self.display_size = [int(0.4*self.window_size[0]),
                              int(0.9*self.window_size[1])]
-        print(self.display_size)
         self.display = pg.display.set_mode(self.display_size)
-
-        self.clock = pg.time.Clock()
-        self.groups = Groups()
-
-        self.player = Player(self.display_size, self,
-                             self.groups.playerShell, self.groups.Particles)
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
-        self.toolbar = Toolbar(self.display_size, self.player.equipment)
+        self._acting_level = level
+
+        # self.clock = pg.time.Clock()
+        # self.groups = Groups()
+
+        # self.player = Player(self.display_size, self,
+        #                      self.groups.playerShell, self.groups.Particles)
 
         self.menuStrategy = self.menuStrategy(self)
         self.dieMenuStrategy = self.dieMenuStrategy(self)
         self.gameStrategy = self.gameStrategy(self)
-        self._actingStrategy = self.gameStrategy
-        self.level = level(self, self.groups)
-        self.level.start()
+        self.guiMenuStrategy = self.guiMenuStrategy(self)
+        # self._actingStrategy = self.gameStrategy
+
+        # self.startGame(level)
+        self._actingStrategy = self.guiMenuStrategy
+        # self.level.start()
 
     def setControllerType(self, controllerType: str, *args, **kwargs):
         """set controller type by name (controllerType)"""
@@ -190,23 +207,17 @@ class Aplication:
 
         return print(f'Controller was removed to {self.controller.type()}')
 
-    def showMenu(self, value:bool=None):
+    def showMenu(self, value: bool = None):
         """Show and close menu"""
         if value != None:
-            if value:
-                self._actingStrategy = self.menuStrategy
-                self.isMenu = True
-            elif not value:
-                self._actingStrategy = self.gameStrategy
-                self.isMenu = False
-            return 
-        
-        if not self.isMenu:
+            self.isMenu = value
+        else:
+            self.isMenu = not self.isMenu
+
+        if self.isMenu:
             self._actingStrategy = self.menuStrategy
-            self.isMenu = True
         else:
             self._actingStrategy = self.gameStrategy
-            self.isMenu = False
 
     def showDieMenu(self):
         if not self.isPlayerDie:
@@ -216,8 +227,32 @@ class Aplication:
             self._actingStrategy = self.gameStrategy
             self.isPlayerDie = False
 
+    def startGame(self, *args, **kwargs):
+        self.groups = Groups()
+
+        self.player = Player(self.display_size, self,
+                             self.groups.playerShell, self.groups.Particles)
+        self.toolbar = Toolbar(self.display_size, self.player.equipment)
+        self.level = self._acting_level(self, self.groups)
+        self.level.start()
+
+        self._actingStrategy = self.gameStrategy
+
+    def quitGame(self):
+        self.level = None
+        self.player = None
+        self.game_timer.reset()
+        self.toolbar = None
+        self.groups = None
+        self.isMenu = False
+        self.isPlayerDie = False
+
+        self._actingStrategy = self.guiMenuStrategy
+
     def start(self):
         """main aplicatiodn start function"""
+        fontFPS = Text([self.display_size[0]*0.9, 20], str(int(self.clock.get_fps())),
+                       40, (0, 255, 26), False, 'hooge0554')
 
         while self.__run:
             for event in pg.event.get():
@@ -225,11 +260,19 @@ class Aplication:
 
             self._actingStrategy.update()
             self._actingStrategy.draw(self.display)
+            fontFPS.draw(self.display)
+            fontFPS.update(text=str(int(self.clock.get_fps())))
             pg.display.update()
-            self.clock.tick(60)
+            dt = self.clock.tick(60)
+            # print(self.clock.get_fps())
 
     def close(self):
+        self.quitGame()
         self.__run = False
+
+    def leaveToMenu(self):
+        self._actingStrategy = self.guiMenuStrategy
+        self.quitGame()
 
     def changeLevel(self, level: Level):
         print(f"""
@@ -238,7 +281,6 @@ class Aplication:
         self.level = level(self, self.groups)
         self.groups.Background.empty()
         self.level.start()
-        return
 
     def restart(self):
         pg.init()
@@ -253,7 +295,7 @@ class Aplication:
 
 
 if __name__ == '__main__':
-    from lavels import AsteroidWaves, Level1
+    from levels import AsteroidWaves, Level1
     aplication = Aplication(Level1)
     # aplication.changeLevel(AsteroidWaves)
     # aplication.setControllerType('joystick')
