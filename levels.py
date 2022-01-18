@@ -13,6 +13,7 @@ class Level:
     def __init__(self, mediator, grops: Groups):
         self.aplication = mediator
         self.grops = grops
+        self.__isWin = False
 
     def start(self):
         self.background = self.background_class(
@@ -52,6 +53,14 @@ class Level:
     @property
     def discription(self):
         return ''
+
+    @property
+    def isWin(self):
+        return self.__isWin
+
+    def Win(self):
+        self.__isWin = True
+        return self.__isWin
 
     def __str__(self):
         return self.__class__.__name__
@@ -112,9 +121,10 @@ class Level1(Level):
         return super().update(*args, **kwargs)
 
     def chackDone(self, *args, **kwargs):
-        if self.firstFlightFactory.information['killed'] >= 10 and self.starEnemyFactory.information['killed'] >= 5:
+        if self.firstFlightFactory.information['killed'] >= 1: #and self.starEnemyFactory.information['killed'] >= 1:
             print('You won')
-            self.aplication.close()
+            self.Win()
+            # self.aplication.close()
         return super().chackDone(*args, **kwargs)
 
 
@@ -151,5 +161,6 @@ class AsteroidWaves(Level):
     def chackDone(self, *args, **kwargs):
         if self.asteroidFactory.information['killed'] > 200:
             print('You won')
-            self.aplication.close()
+            self.__isWin
+            # self.aplication.close()
         return super().chackDone(*args, **kwargs)

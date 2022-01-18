@@ -118,7 +118,7 @@ class ColoredCheckBox(ColoredButton):
     def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
         super().__init__(pos, size, center, color, border_radius, func, **kwargs)
         self.value = False
-        
+
     def execute(self):
         self.value = not self.value
 
@@ -127,7 +127,7 @@ class ImageCheckBox(ImageButton):
     def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
         super().__init__(pos, image, size, center, func, **kwargs)
         self.value = False
-    
+
     def execute(self):
         self.value = not self.value
 
@@ -214,32 +214,88 @@ class Menu(BaseMenu):
         self.btnGroup.add(self._continue, self.restart, self.leave, self.exit)
 
 
-class DieMenu(BaseMenu):
+class FinaleMenu(BaseMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-
         blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
-        label_image = pg.image.load(IMAGES + '\menu\YouDied.png')
         exit_image = pg.image.load(IMAGES + '\menu\Quite.png')
         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
+        leave_image = pg.image.load(IMAGES + '\menu\Leave.png')
 
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.blured_background = ImageSurface(
             (0, 0), blured_background_image, center=False)
-        self.label = ImageSurface(
-            [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                    exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+        self.leave = ImageButton(
+            [self.surface.rect.centerx, self.surface.rect.top+leave_image.get_height()*6.45], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
         self.exit = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+
+        self.backgroundPiecesGroup.add(
+            self.blured_background, self.surface)
+        self.btnGroup.add(self.restart, self.exit, self.leave)
+
+
+# class DieMenu(BaseMenu):
+#     def __init__(self, mediator, display_size):
+#         super().__init__(mediator, display_size)
+
+#         blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
+#         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
+#         surface_image = pg.transform.scale(surface_image, (int(
+#             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
+#         label_image = pg.image.load(IMAGES + '\menu\YouDied.png')
+#         exit_image = pg.image.load(IMAGES + '\menu\Quite.png')
+#         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
+
+#         self.surface = ImageSurface(
+#             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
+#         self.blured_background = ImageSurface(
+#             (0, 0), blured_background_image, center=False)
+#         self.label = ImageSurface(
+#             [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
+#         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
+#                                    exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+#         self.exit = ImageButton(
+#             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+
+#         self.backgroundPiecesGroup.add(
+#             self.blured_background, self.surface, self.label)
+#         self.btnGroup.add(self.restart, self.exit)
+
+
+class DieMenu(FinaleMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+
+        label_image = pg.image.load(IMAGES + '\menu\YouDied.png')
+        self.label = ImageSurface(
+            [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
 
         self.backgroundPiecesGroup.add(
             self.blured_background, self.surface, self.label)
         self.btnGroup.add(self.restart, self.exit)
+
+
+class WinMenu(FinaleMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+
+        label_image = pg.image.load(IMAGES + '\\menu\\YouWon.png')
+        next_image = pg.image.load(IMAGES + '\\menu\\Next.png')
+        self.label = ImageSurface(
+            [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
+        self.next = ImageButton(
+            [self.surface.rect.centerx, self.surface.rect.top+next_image.get_height()*8], next_image.convert_alpha(), center=True, func=None)
+
+        self.backgroundPiecesGroup.add(
+            self.blured_background, self.surface, self.label)
+        self.btnGroup.add(self.restart, self.exit, self.next)
 
 
 class AplicationMenu(BaseMenu):
