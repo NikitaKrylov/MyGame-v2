@@ -1,5 +1,5 @@
 import ctypes, sys, pygame as pg
-from menu import ColoredButton, AplicationMenu
+from GUI.menu import ColoredButton, AplicationMenu
 from main import Aplication
 from pygame.sprite import Group
 from changed_group import CustomGroup

@@ -1,135 +1,133 @@
-from lib2to3.pytree import Base
-from tkinter import Image
 import pygame as pg
 from pygame.sprite import Sprite, spritecollide
 from settings import IMAGES
 from pygame.sprite import Group
 from changed_group import CustomGroup
+from .elements import *
+
+# class Text:
+#     def __init__(self, pos, text: str, font_size: int, color: list, center: bool = False, font_name=None, font_path=None, bold=False, italic=False):
+#         self.text = text
+#         self.pos = pos
+#         self.font_size = font_size
+#         self.color = color
+
+#         if font_name:
+#             self.font = pg.font.SysFont(
+#                 font_name, self.font_size, italic=italic, bold=bold)
+#         elif font_path:
+#             pass
+
+#         self.textsurface = self.font.render(self.text, False, self.color)
+
+#         if center:
+#             self.pos[0] -= self.textsurface.get_width()//2
+
+#     def draw(self, display):
+#         display.blit(self.textsurface, self.pos)
+
+#     def update(self, *args, **kwargs):
+#         _text = kwargs.get('text')
+#         if _text:
+#             if self.text != _text:
+#                 self.text = _text
+#                 self.textsurface = self.font.render(
+#                     self.text, False, self.color)
 
 
-class Text:
-    def __init__(self, pos, text: str, font_size: int, color: list, center: bool = False, font_name=None, font_path=None, bold=False, italic=False):
-        self.text = text
-        self.pos = pos
-        self.font_size = font_size
-        self.color = color
+# class BaseSurface(Sprite):
+#     def __init__(self, pos: list, size: list = None, center: bool = False, func=None, **kwargs):
+#         super().__init__()
+#         self.pos = pos
+#         self.size = size
+#         self.kwargs: dict = kwargs
+#         self.func = func
+#         self.isHover = False
 
-        if font_name:
-            self.font = pg.font.SysFont(
-                font_name, self.font_size, italic=italic, bold=bold)
-        elif font_path:
-            pass
+#     def draw(self, display):
+#         pass
 
-        self.textsurface = self.font.render(self.text, False, self.color)
+#     def execute(self):
+#         if self.func:
+#             self.func()
 
-        if center:
-            self.pos[0] -= self.textsurface.get_width()//2
-
-    def draw(self, display):
-        display.blit(self.textsurface, self.pos)
-
-    def update(self, *args, **kwargs):
-        _text = kwargs.get('text')
-        if _text:
-            if self.text != _text:
-                self.text = _text
-                self.textsurface = self.font.render(
-                    self.text, False, self.color)
+#     @classmethod
+#     def scale(self, surface,  scale_value):
+#         width, height = surface.get_width(), surface.get_height()
+#         return pg.transform.scale(surface, (int(width*scale_value), int(height*scale_value)))
 
 
-class BaseSurface(Sprite):
-    def __init__(self, pos: list, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__()
-        self.pos = pos
-        self.size = size
-        self.kwargs: dict = kwargs
-        self.func = func
-        self.isHover = False
+# class ColoredSurface(BaseSurface):
+#     def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
+#         super().__init__(pos, size, center, func=func, **kwargs)
+#         self.border_radius = border_radius
+#         self.color = color
+#         self.surface = pg.Surface(self.size)
 
-    def draw(self, display):
-        pass
+#         if center:
+#             self.rect = self.surface.get_rect(center=self.pos)
+#         else:
+#             self.rect = self.surface.get_rect(topleft=self.pos)
 
-    def execute(self):
-        if self.func:
-            self.func()
-
-    @classmethod
-    def scale(self, surface,  scale_value):
-        width, height = surface.get_width(), surface.get_height()
-        return pg.transform.scale(surface, (int(width*scale_value), int(height*scale_value)))
+#     def draw(self, display):
+#         pg.draw.rect(display, self.color, self.rect,
+#                      border_radius=self.border_radius)
+#         return super().draw(display)
 
 
-class ColoredSurface(BaseSurface):
-    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
-        super().__init__(pos, size, center, func=func, **kwargs)
-        self.border_radius = border_radius
-        self.color = color
-        self.surface = pg.Surface(self.size)
+# class ImageSurface(BaseSurface):
+#     def __init__(self, pos: list,  image, size: list = None, center: bool = False, func=None, **kwargs):
+#         super().__init__(pos, size, center, func=func, **kwargs)
+#         self.surface = image
 
-        if center:
-            self.rect = self.surface.get_rect(center=self.pos)
-        else:
-            self.rect = self.surface.get_rect(topleft=self.pos)
+#         if center:
+#             self.rect = self.surface.get_rect(center=self.pos)
+#         else:
+#             self.rect = self.surface.get_rect(topleft=pos)
 
-    def draw(self, display):
-        pg.draw.rect(display, self.color, self.rect,
-                     border_radius=self.border_radius)
-        return super().draw(display)
+#     def draw(self, display):
+#         display.blit(self.surface, self.rect)
+#         return super().draw(display)
 
 
-class ImageSurface(BaseSurface):
-    def __init__(self, pos: list,  image, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__(pos, size, center, func=func, **kwargs)
-        self.surface = image
-
-        if center:
-            self.rect = self.surface.get_rect(center=self.pos)
-        else:
-            self.rect = self.surface.get_rect(topleft=pos)
-
-    def draw(self, display):
-        display.blit(self.surface, self.rect)
-        return super().draw(display)
+# class ColoredButton(ColoredSurface):
+#     def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
+#         super().__init__(pos, size, center=center, color=color,
+#                          border_radius=border_radius, func=func, **kwargs)
 
 
-class ColoredButton(ColoredSurface):
-    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
-        super().__init__(pos, size, center=center, color=color,
-                         border_radius=border_radius, func=func, **kwargs)
+# class ImageButton(ImageSurface):
+#     def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
+#         super().__init__(pos, image, size=size, center=center, func=func, **kwargs)
+#         self.scaled_surface = self.scale(self.surface, 1.1)
+
+#     def draw(self, display):
+#         if self.isHover:
+#             self.rect = self.scaled_surface.get_rect(center=self.rect.center)
+#             display.blit(self.scaled_surface, self.rect)
+#         else:
+#             self.rect = self.surface.get_rect(center=self.rect.center)
+#             display.blit(self.surface, self.rect)
+
+#         return
 
 
-class ImageButton(ImageSurface):
-    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__(pos, image, size=size, center=center, func=func, **kwargs)
-        self.scaled_surface = self.scale(self.surface, 1.1)
+# class ColoredCheckBox(ColoredButton):
+#     def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
+#         super().__init__(pos, size, center, color, border_radius, func, **kwargs)
+#         self.value = False
 
-    def draw(self, display):
-        if self.isHover:
-            self.rect = self.scaled_surface.get_rect(center=self.rect.center)
-            display.blit(self.scaled_surface, self.rect)
-        else:
-            self.rect = self.surface.get_rect(center=self.rect.center)
-            display.blit(self.surface, self.rect)
-
-        return
+#     def execute(self):
+#         self.value = not self.value
 
 
-class ColoredCheckBox(ColoredButton):
-    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
-        super().__init__(pos, size, center, color, border_radius, func, **kwargs)
-        self.value = False
+# class ImageCheckBox(ImageButton):
+#     def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
+#         super().__init__(pos, image, size, center, func, **kwargs)
+#         self.value = False
 
-    def execute(self):
-        self.value = not self.value
-
-
-class ImageCheckBox(ImageButton):
-    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__(pos, image, size, center, func, **kwargs)
-        self.value = False
-
-    def execute(self):
-        self.value = not self.value
+#     def execute(self):
+#         self.value = not self.value
 
 
 class BaseMenu:
@@ -191,6 +189,12 @@ class Menu(BaseMenu):
         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
         # settings_image = pg.image.load(IMAGES + '\menu\Settings.png')
         leave_image = pg.image.load(IMAGES + '\menu\Leave.png')
+        toggle_image1 = pg.Surface((40, 40))
+        toggle_image1.fill((250, 100, 100))
+        toggle_image2 = pg.Surface((40, 40))
+        toggle_image2.fill((100, 255, 100))
+
+
 
         self.blured_background = ImageSurface(
             (0, 0), blured_background_image, center=False)
@@ -208,10 +212,15 @@ class Menu(BaseMenu):
             [self.surface.rect.centerx, self.surface.rect.top+leave_image.get_height()*7.5], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+        
+        self.toggle_controller_type = ToggleButton(
+            [self.surface.rect.left+20, self.surface.rect.top+20], toggle_image1, onClickImage=toggle_image2, func=self.aplication.changeControllerToggle)
 
         self.backgroundPiecesGroup.add(
             self.blured_background, self.surface, self.label)
-        self.btnGroup.add(self._continue, self.restart, self.leave, self.exit)
+        self.btnGroup.add(self._continue, self.restart, self.leave, self.exit, self.toggle_controller_type)
+        
+    
 
 
 class FinaleMenu(BaseMenu):
@@ -307,6 +316,10 @@ class AplicationMenu(BaseMenu):
         start_image = pg.image.load(IMAGES + '\menu\Start.png')
         change_level_image = pg.image.load(IMAGES + '\menu\ChangeLevel.png')
         exit_image = pg.image.load(IMAGES + '\menu\Quite.png')
+        toggle_image1 = pg.Surface((80, 80))
+        toggle_image1.fill((250, 100, 100))
+        toggle_image2 = pg.Surface((80, 80))
+        toggle_image2.fill((100, 255, 100))
 
         self.surface = ImageSurface([0, 0], surface_image, display_size)
         self.start = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
@@ -316,5 +329,9 @@ class AplicationMenu(BaseMenu):
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
+        self.toggle_controller_type = ToggleButton(
+            [0, 0], toggle_image1, onClickImage=toggle_image2, func=self.aplication.changeControllerToggle)
+
         self.backgroundPiecesGroup.add(self.surface)
-        self.btnGroup.add(self.exit, self.change_level, self.start)
+        self.btnGroup.add(self.toggle_controller_type,
+                          self.start, self.change_level, self.exit)

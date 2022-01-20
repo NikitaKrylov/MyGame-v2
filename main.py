@@ -4,7 +4,7 @@ from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
 from levels import Level
-from menu import Menu, DieMenu, AplicationMenu, Text, WinMenu
+from GUI.menu import Menu, DieMenu, AplicationMenu, Text, WinMenu
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
@@ -86,7 +86,7 @@ class GameStrategy(BaseStrategy):
             return
 
         self.aplication.level.update(now=_now)
-        
+
         if self.aplication.level.isWin:
             self.aplication.setWinMenuStrategy()
 
@@ -160,6 +160,7 @@ class Aplication:
         KeyboardControle.name: KeyboardControle,
         JoystickControle.name: JoystickControle
     }
+    controleRealizationIndex = 0
     menuStrategy: BaseStrategy = MenuStrategy
     gameStrategy: BaseStrategy = GameStrategy
     dieMenuStrategy: BaseStrategy = DieMenuStrategy
@@ -198,7 +199,31 @@ class Aplication:
         self.winMenuStrategy = self.winMenuStrategy(self)
         self._actingStrategy = self.guiMenuStrategy
 
-    def setControllerType(self, controllerType: str, *args, **kwargs):
+    def start(self):
+        """main aplicatiodn start function"""
+        fontFPS = Text([self.display_size[0]*0.9, 20], str(int(self.clock.get_fps())),
+                       40, (0, 255, 26), False, 'hooge0554')
+
+        while self.__run:
+            for event in pg.event.get():
+                self._actingStrategy.eventListen(event)
+
+            self._actingStrategy.draw(self.display)
+            self._actingStrategy.update()
+            fontFPS.draw(self.display)
+            fontFPS.update(text=str(int(self.clock.get_fps())))
+            pg.display.update()
+            dt = self.clock.tick(60)
+
+    def changeControllerToggle(self):
+        self.controleRealizationIndex += 1
+        if self.controleRealizationIndex >= len(self.controleRealization.values()):
+            self.controleRealizationIndex = 0
+            
+        self._setControllerType(list(self.controleRealization.keys())[
+                                self.controleRealizationIndex])
+
+    def _setControllerType(self, controllerType: str, *args, **kwargs):
         """set controller type by name (controllerType)"""
         if controllerType in self.controleRealization:
             if not self.controller:
@@ -211,9 +236,9 @@ class Aplication:
                     _controleImpl)
 
         return print(f'Controller was removed to {self.controller.type()}')
-    
-    def setWinMenuStrategy(self, value:bool=None):
-       self._actingStrategy = self.winMenuStrategy
+
+    def setWinMenuStrategy(self, value: bool = None):
+        self._actingStrategy = self.winMenuStrategy
 
     def showMenu(self, value: bool = None):
         """Show and close menu"""
@@ -238,7 +263,6 @@ class Aplication:
         else:
             self._actingStrategy = self.gameStrategy
 
-
     def startGame(self, *args, **kwargs):
         self.groups = Groups()
 
@@ -258,22 +282,6 @@ class Aplication:
         self.groups = None
         self.isMenu = False
         self.isPlayerDie = False
-
-    def start(self):
-        """main aplicatiodn start function"""
-        fontFPS = Text([self.display_size[0]*0.9, 20], str(int(self.clock.get_fps())),
-                       40, (0, 255, 26), False, 'hooge0554')
-
-        while self.__run:
-            for event in pg.event.get():
-                self._actingStrategy.eventListen(event)
-
-            self._actingStrategy.draw(self.display)
-            self._actingStrategy.update()
-            fontFPS.draw(self.display)
-            fontFPS.update(text=str(int(self.clock.get_fps())))
-            pg.display.update()
-            dt = self.clock.tick(60)
 
     def close(self):
         self.quitGame()
@@ -307,5 +315,4 @@ if __name__ == '__main__':
     from levels import AsteroidWaves, Level1
     aplication = Aplication(Level1)
     # aplication.changeLevel(AsteroidWaves)
-    # aplication.setControllerType('joystick')
     aplication.start()
