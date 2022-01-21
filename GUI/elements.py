@@ -124,6 +124,10 @@ class ToggleButton(ImageSurface):
             self.onClickImage = None
 
         self.defaultImage = self.surface
+        
+    def update(self, *args, **kwargs):
+        self.rect = self.surface.get_rect(center=self.rect.center)
+        return super().update(*args, **kwargs)
 
     def execute(self):
         self.state = not self.state
@@ -146,6 +150,23 @@ class ToggleButton(ImageSurface):
                 (self.rect.right+padding, self.rect.bottom+padding),
                 (self.rect.left-padding, self.rect.bottom+padding)
             ), width=3)
-            
         
         return super().draw(display)
+    
+
+class TextToggleButton(ToggleButton):
+    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, onClickImage=None, font=None, **kwargs):
+        super().__init__(pos, image, size, center, func, onClickImage, **kwargs)
+        self.font = font
+        
+    def changeImage(self, image=None, text=None):
+        if image or text:
+            if text:
+                self.surface = self.font.render(text, False, (255,255,255))
+            if image:
+                self.surface = image
+            
+            self.onClickImage = self.surface
+            self.defaultImage = self.surface
+        
+    

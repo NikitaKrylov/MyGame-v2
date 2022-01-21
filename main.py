@@ -4,7 +4,8 @@ from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
 from levels import Level
-from GUI.menu import Menu, DieMenu, AplicationMenu, Text, WinMenu
+from GUI.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu
+from GUI.elements import Text
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
@@ -148,10 +149,21 @@ class WinMenuStrategy(BaseMenuStrategy):
         self.menu = WinMenu(mediator, mediator.display_size)
 
 
-class GUIMenuStrategy(BaseMenuStrategy):
+class EnterMenuStrategy(BaseMenuStrategy):
     def __init__(self, mediator):
         super().__init__(mediator)
-        self.menu = AplicationMenu(mediator, mediator.display_size)
+        self.menu = EnterMenu(mediator, mediator.display_size)
+
+
+class SettingsMenuStrategy(BaseMenuStrategy):
+    def __init__(self, mediator):
+        super().__init__(mediator)
+        self.menu = SettingsMenu(mediator, mediator.display_size)
+
+    def eventListen(self, event):
+        super().eventListen(event)
+        self.aplication.controller.back(event)
+        return
 
 
 class Aplication:
@@ -165,13 +177,18 @@ class Aplication:
     gameStrategy: BaseStrategy = GameStrategy
     dieMenuStrategy: BaseStrategy = DieMenuStrategy
     winMenuStrategy: BaseStrategy = WinMenuStrategy
-    guiMenuStrategy: BaseStrategy = GUIMenuStrategy
+    guiMenuStrategy: BaseStrategy = EnterMenuStrategy
+    settingsMenuStrategy: BaseStrategy = SettingsMenuStrategy
 
     inventoryStrategy: BaseStrategy = None
     _actingStrategy = None
     isMenu = False
     isPlayerDie = False
     isInterface = False
+    isSettings = False
+    isFPS = True
+    _lastStrategy = None
+
     __run = True
     ticks = 0
 
@@ -197,7 +214,9 @@ class Aplication:
         self.gameStrategy = self.gameStrategy(self)
         self.guiMenuStrategy = self.guiMenuStrategy(self)
         self.winMenuStrategy = self.winMenuStrategy(self)
+        self.settingsMenuStrategy = self.settingsMenuStrategy(self)
         self._actingStrategy = self.guiMenuStrategy
+        self._lastStrategy = self._actingStrategy
 
     def start(self):
         """main aplicatiodn start function"""
@@ -210,8 +229,10 @@ class Aplication:
 
             self._actingStrategy.draw(self.display)
             self._actingStrategy.update()
-            fontFPS.draw(self.display)
-            fontFPS.update(text=str(int(self.clock.get_fps())))
+
+            if self.isFPS:
+                fontFPS.draw(self.display)
+                fontFPS.update(text=str(int(self.clock.get_fps())))
             pg.display.update()
             dt = self.clock.tick(60)
 
@@ -219,7 +240,7 @@ class Aplication:
         self.controleRealizationIndex += 1
         if self.controleRealizationIndex >= len(self.controleRealization.values()):
             self.controleRealizationIndex = 0
-            
+
         self._setControllerType(list(self.controleRealization.keys())[
                                 self.controleRealizationIndex])
 
@@ -237,6 +258,9 @@ class Aplication:
 
         return print(f'Controller was removed to {self.controller.type()}')
 
+    def getControllerType(self):
+        return str(self.controller.name)
+
     def setWinMenuStrategy(self, value: bool = None):
         self._actingStrategy = self.winMenuStrategy
 
@@ -252,6 +276,12 @@ class Aplication:
         else:
             self._actingStrategy = self.gameStrategy
 
+    def showFPS(self, value: bool = None):
+        if value != None:
+            self.isFPS = value
+        else:
+            self.isFPS = not self.isFPS
+
     def showDieMenu(self, value: bool = None):
         if value != None:
             self.isPlayerDie = value
@@ -262,6 +292,26 @@ class Aplication:
             self._actingStrategy = self.dieMenuStrategy
         else:
             self._actingStrategy = self.gameStrategy
+
+    def showSettings(self, value: bool = None):
+        if self._actingStrategy == self.settingsMenuStrategy:
+            self.isSettings = True
+        else:
+            self.isSettings = False
+
+        if value != None:
+            self.isSettings = value
+        else:
+            self.isSettings = not self.isSettings
+
+        if self.isSettings:
+            self._lastStrategy = self._actingStrategy
+            self._actingStrategy = self.settingsMenuStrategy
+        else:
+            self._actingStrategy = self._lastStrategy
+
+    def backToLastStrategy(self):
+        self._actingStrategy = self._lastStrategy
 
     def startGame(self, *args, **kwargs):
         self.groups = Groups()

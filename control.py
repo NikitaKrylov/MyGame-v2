@@ -15,6 +15,9 @@ class ControlImplementation:
     def __init__(self, mediator, *args, **kwargs):
         self.aplication = mediator
 
+    def back(self):
+        self.aplication.backToLastStrategy()
+
     def quit(self):
         return 'Игра завершена'
 
@@ -27,9 +30,6 @@ class ControlImplementation:
 
     def changeWeapon(self, player, update=None, value=None):
         return player.changeWeapon(value=value, update=update)
-
-    def showSettings(self):
-        return 'Настройки показаны'
 
     def changePlayerDirection(self, player: Player, *args, **kwargs):
         pass
@@ -66,11 +66,11 @@ class BaseController:  # Interface
         """call aplication showMenu"""
         return self.__implementation.showMenu()
 
-    def showSettings(self, *args, **kwargs):
-        return self.__implementation.showSettings()
-
     def setImpl(self, controlIMPL):
         self.__implementation = controlIMPL
+
+    def back(self):
+        return self.__implementation.back()
 
     def getImpl(self):
         return self.__implementation
@@ -190,6 +190,11 @@ class JoystickControle(BaseController):
                         self.btnHoverIndex -= 1
         return super().menuUpdate(event, *args, isController=True, controller=self.btnHoverIndex)
 
+    def back(self, event, *args, **kwargs):
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button == self.config['back']:
+                return super().back()
+
 
 class KeyboardControle(BaseController):
     name = 'keyboard'
@@ -259,3 +264,12 @@ class KeyboardControle(BaseController):
 
     def menuUpdate(self, event, *args, **kwargs):
         return super().menuUpdate(event, *args, **kwargs)
+
+    def back(self, event, *args, **kwargs):
+        if event.type == pg.KEYDOWN:
+            if event.key in self.config['back']:
+                super().back()
+            
+            
+            
+            
