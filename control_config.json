@@ -9,7 +9,8 @@
             "keyboard" : [49, 57]
             
         },
-        "back":[27]
+        "back":[27],
+        "select_ultimate":113
     },
 
     "joystick":{
@@ -19,6 +20,7 @@
         "showMenu":[5,6],
         "changeWeapon" : [9, 10],
         "apply" : 0,
-        "back" : 1
+        "back" : 1,
+        "select_ultimate":3
     }
 }

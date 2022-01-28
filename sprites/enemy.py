@@ -140,7 +140,10 @@ class Asteroid(AbstractEnemy):  # Sprite
         return super().kill()
 
 
-class AbstaractFlightEnemy(AbstractEnemy):
+class IInertialEnemy:
+    pass
+
+class AbstaractFlightEnemy(AbstractEnemy, IInertialEnemy):
     speed = 5
     MAX_HP = 250
     HP = MAX_HP
@@ -153,7 +156,7 @@ class AbstaractFlightEnemy(AbstractEnemy):
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
                                    self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
         self.movement = None
-        self.weapon = DubleGunEnemy(
+        self.weapon = SingleRedGunEnemy(
             self.groups()[0], kwargs.get('particle_group'))
         self.burstAnimation = Animator()
 
@@ -191,6 +194,8 @@ class AbstaractFlightEnemy(AbstractEnemy):
         self.image = self.images[self.animation.getIteration]
         self.healthBar.update(self.rect.left, self.rect.top -
                               self.healthBar.rect.height * 1.5)
+
+        
         self.weapon.execute(self.rect)
 
         return super().update(*args, **kwargs)  # updatePosition()
@@ -233,7 +238,7 @@ class FirstFlightEnemy2(AbstaractFlightEnemy):
         return super().update(*args, **kwargs)
 
 
-class StarEnemy(AbstractEnemy):
+class StarEnemy(AbstractEnemy, IInertialEnemy):
     speed = 1.5
     MAX_HP = 300
     HP = MAX_HP

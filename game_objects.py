@@ -1,6 +1,7 @@
+from math import ceil
 import pygame as pg
 from pygame import surface
-from animation import Animator
+from animation import Animator, StaticMovement
 # from sprites.shell import *
 from pygame.sprite import Sprite, AbstractGroup
 from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell
@@ -8,15 +9,22 @@ from pygame.sprite import Group
 from settings import IMAGES
 
 
+def sign(value):
+    return 1 if value > 0 else -1
+
+
 class ObjectInterface(Sprite):
-    def __init__(self, *groups: AbstractGroup):
+    def __init__(self, pos: list, image, *groups: AbstractGroup):
         super().__init__(*groups)
+        self.image = image
+        self.rect = self.image.get_rect(center=pos)
+        self.direction = pg.Vector2(0, 1)
 
     def execute(self):
         pass
 
     def draw(self, display, *args, **kwargs):
-        pass
+        display.blit(self.image, self.rect)
 
     def update(self, *args, **kwargs):
         return super().update(*args, **kwargs)
@@ -53,12 +61,91 @@ class AbstaructWeapon:
         return False
 
 
-class AbstractUltimate:
-    def __init__(self):
+class AbstractUltimate(AbstaructWeapon):
+    def __init__(self, group, particle_group):
+        super().__init__()
+        self.group = group
+        self.particle_group = particle_group
+
+    def select(self, isUsed, *args, **kwargs):
         pass
 
-    def execute(self):
-        return
+# -----------------------------------
+
+
+class AimingPoint(Sprite):
+    """Hover point class used with some ultimates"""
+
+    def __init__(self, image, *groups: AbstractGroup):
+        super().__init__(*groups)
+        self.image = image
+        self.rect = self.image.get_rect(center=pg.mouse.get_pos())
+        # self.movement = StaticMovement(pg.Vector2(0, 0))
+
+    def update(self, *args, **kwargs):
+        joystick_hover_point = kwargs.get('joystick_hover_point')
+        if joystick_hover_point:
+            self.rect.centerx = joystick_hover_point.x
+            self.rect.centery = joystick_hover_point.y
+        else:
+            self.rect.center = pg.mouse.get_pos()
+        return super().update(*args, **kwargs)
+
+    def draw(self, display):
+        display.blit(self.image, self.rect)
+
+
+class Strike(BaseShell):
+    _damage = 300
+    _speed = 0
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
+        self.movement.direction = pg.Vector2(0, 0)
+
+    def update(self, *args, **kwargs):
+        self.animation.update(
+            now=kwargs['now'], rate=200, frames_len=2, repeat=False, finiteFunction=self.kill)
+        return super().update(*args, **kwargs)
+
+
+# -----------------------------
+
+
+class StrikeUltimate(AbstractUltimate):
+
+    AimingPointInstance = None
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        self.image = pg.image.load(
+            IMAGES+"\\game_objects\\strike_point.png").convert_alpha()
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 2300
+        }
+
+    def select(self, isUsed, *args, **kwargs):
+        if not isUsed and self.AimingPointInstance != None:
+            self.AimingPointInstance.kill()
+            self.AimingPointInstance = None
+
+        if isUsed and self.AimingPointInstance == None:
+            _aimingPoint = AimingPoint(self.image)
+            self.particle_group.add(_aimingPoint)
+            self.AimingPointInstance = _aimingPoint
+
+        return super().select(isUsed, *args, **kwargs)
+
+    def execute(self, *args, **kwargs):
+        if self.isExecute:
+            image = pg.Surface((100, 100))
+            image.fill((255, 90, 20))
+            obj = Strike([image], self.AimingPointInstance.rect.center,
+                         self.particle_group)
+            self.group.add(obj)
+
+# ------------------------------------------------------------------------
 
 
 class AbstractGun(AbstaructWeapon):
@@ -119,13 +206,9 @@ class DubleRedGun(SingleRedGun):
         pos1 = [rect.left, rect.top+rect.height//2]
         pos2 = [rect.right, pos1[1]]
         self.group.add(self.amo(self.images, pos1,
-                       self.particle_group, [self.group]))
+                       self.particle_group))
         self.group.add(self.amo(self.images, pos2,
-                       self.particle_group, [self.group]))
-
-
-class SingleRedGunEnemy(SingleRedGun):
-    amo = StarEnemyShell
+                       self.particle_group))
 
 
 class StarGun(AbstractGun):
@@ -136,14 +219,25 @@ class StarGun(AbstractGun):
         # image = pg.Surface((15, 15))
         # image.fill('#71c0f2')
         # self.images = [image]
-        self.images = [pg.image.load(IMAGES+'\shell\\star\\star1.png').convert_alpha()]
+        self.images = [pg.image.load(
+            IMAGES+'\shell\\star\\star1.png').convert_alpha()]
         self.updatingTime = {
             'last': 0,
             'cooldawn': 800
         }
 
     def execute(self, *args, **kwargs):
-        self.group.add(self.amo(images=self.images, particle_group=self.particle_group,**kwargs))
+        self.group.add(self.amo(images=self.images,
+                       particle_group=self.particle_group, **kwargs))
+
+
+class SingleRedGunEnemy(SingleRedGun):
+    amo = RedEnemyShell
+
+    def execute(self, rect, *args, **kwargs):
+        if self.isExecute:
+            pos = [rect.centerx, rect.bottom]
+            self.amo(self.images, pos, self.particle_group, self.group)
 
 
 class DubleGunEnemy(DubleRedGun):
@@ -161,9 +255,9 @@ class DubleGunEnemy(DubleRedGun):
             pos1 = [rect.left, rect.top+rect.height//2]
             pos2 = [rect.right, pos1[1]]
             self.group.add(self.amo(self.images, pos1,
-                                    self.particle_group, [self.group]))
+                                    self.particle_group))
             self.group.add(self.amo(self.images, pos2,
-                                    self.particle_group, [self.group]))
+                                    self.particle_group))
         return
 
 
@@ -204,7 +298,7 @@ class BurnedLauncher(AbstractGun):
         if self.isExecute:
             pos = [rect.centerx, rect.top + self.images[0].get_height()//1.5]
             self.group.add(self.amo(self.images, pos,
-                        self.particle_group, [self.group]))
+                                    self.particle_group, [self.group]))
             return super().execute()
 # -------------------------------------------------------------------
 
@@ -215,7 +309,7 @@ class Equipment:
     def __init__(self, group, particle_group):
         self._weapon_equipment = []  # Weapons
         self._heal_equipment = []  # Heals
-        self._ultimate = None  # Ultimates
+        self.isUltimateSelected = False
         self._group = group  # player`s shell group
 
         self._particle_group = particle_group
@@ -227,24 +321,31 @@ class Equipment:
             RocketLauncher(self._group, self._particle_group))
         self._weapon_equipment.append(
             BurnedLauncher(self._group, self._particle_group))
+        self._ultimate = StrikeUltimate(
+            self._group, self._particle_group)  # Ultimate
 
-    def useUltimate(self):
-        self._ultimate.use()
+    def useUltimate(self, *args, **kwargs):
+        self.isUltimateSelected = not self.isUltimateSelected
+        self._ultimate.select(isUsed=self.isUltimateSelected)
 
     def changeWeapon(self, update=None, value=None):
-        if value:
-            if 0 <= value-1 <= len(self._weapon_equipment)-1:
-                self.weaponIndex = value - 1
-        elif update:
-            if 0 <= update+self.weaponIndex <= len(self._weapon_equipment)-1:
-                self.weaponIndex += update
-            elif update+self.weaponIndex < 0:
-                self.weaponIndex = len(self._weapon_equipment)-1
-            elif update+self.weaponIndex > len(self._weapon_equipment)-1:
-                self.weaponIndex = 0
+        if not self.isUltimateSelected:
+            if value:
+                if 0 <= value-1 <= len(self._weapon_equipment)-1:
+                    self.weaponIndex = value - 1
+            elif update:
+                if 0 <= update+self.weaponIndex <= len(self._weapon_equipment)-1:
+                    self.weaponIndex += update
+                elif update+self.weaponIndex < 0:
+                    self.weaponIndex = len(self._weapon_equipment)-1
+                elif update+self.weaponIndex > len(self._weapon_equipment)-1:
+                    self.weaponIndex = 0
 
     def useWeapon(self, rect):
-        return self._weapon_equipment[self.weaponIndex].execute(rect)
+        if not self.isUltimateSelected:
+            return self._weapon_equipment[self.weaponIndex].execute(rect)
+        if self.isUltimateSelected:
+            self._ultimate.execute()
 
     def useHeal(self):
         return

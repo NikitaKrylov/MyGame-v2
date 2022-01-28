@@ -6,7 +6,6 @@ from changed_group import CustomGroup
 from .elements import *
 
 
-
 class BaseMenu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator
@@ -21,7 +20,7 @@ class BaseMenu:
     def update(self, *args, **kwargs):
         self.backgroundPiecesGroup.update(*args, **kwargs)
         self.btnGroup.update(*args, **kwargs)
-        
+
         if kwargs.get("isController"):
             key = kwargs.get("controller")
             i = key % self.btnGroup.__len__()
@@ -66,10 +65,12 @@ class Menu(BaseMenu):
         continue_image = pg.image.load(IMAGES + '\menu\Continue.png')
         restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
         leave_image = pg.image.load(IMAGES + '\menu\Leave.png')
-        toggle_image1 = pg.Surface((40, 40))
-        toggle_image1.fill((250, 100, 100))
-        toggle_image2 = pg.Surface((40, 40))
-        toggle_image2.fill((100, 255, 100))
+        settings_image = pg.image.load(IMAGES + '\\menu\\Settings.png')
+
+        # toggle_image1 = pg.Surface((40, 40))
+        # toggle_image1.fill((250, 100, 100))
+        # toggle_image2 = pg.Surface((40, 40))
+        # toggle_image2.fill((100, 255, 100))
 
         self.blured_background = ImageSurface(
             (0, 0), blured_background_image, center=False)
@@ -79,20 +80,20 @@ class Menu(BaseMenu):
             [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
         self._continue = ImageButton([self.surface.rect.centerx, self.surface.rect.top+continue_image.get_height(
         )*4.5], continue_image.convert_alpha(), center=True, func=self.aplication.showMenu)
-        # self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-        #                             exit_image.get_height()*6.5], settings_image.convert_alpha(), center=True, func=None)
+        self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
+                                    continue_image.get_height()*6.4], settings_image.convert_alpha(), center=True, func=self.aplication.showSettings)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   continue_image.get_height()*6.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+                                   continue_image.get_height()*8.1], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
         self.leave = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+leave_image.get_height()*7.5], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
+            [self.surface.rect.centerx, self.surface.rect.top+continue_image.get_height()*10], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
 
-        self.toggle_controller_type = ToggleButton(
-            [self.surface.rect.left+20, self.surface.rect.top+20], toggle_image1, onClickImage=toggle_image2, func=self.aplication.changeControllerToggle)
+        # self.toggle_controller_type = ToggleButton(
+        #     [self.surface.rect.left+20, self.surface.rect.top+20], toggle_image1, onClickImage=toggle_image2, func=self.aplication.changeControllerToggle)
 
         self.backgroundPiecesGroup.add(
             self.blured_background, self.surface, self.label)
-        self.btnGroup.add(self._continue, self.restart,
-                          self.leave, self.toggle_controller_type)
+        self.btnGroup.add(self._continue, self.settings,
+                          self.restart, self.leave)
 
 
 class FinaleMenu(BaseMenu):
@@ -173,11 +174,13 @@ class EnterMenu(AbstractAplicationMenu):
                                  exit_image.get_height()*3], start_image, center=True, func=self.aplication.startGame)
         self.change_level = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*5.5], change_level_image, center=True)
-        self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8], settings_image, center=True, func=self.aplication.showSettings)
+        self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height(
+        )*8], settings_image, center=True, func=self.aplication.showSettings)
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
-        self.btnGroup.add(self.start, self.change_level,  self.settings, self.exit)
+        self.btnGroup.add(self.start, self.change_level,
+                          self.settings, self.exit)
 
 
 class SettingsMenu(AbstractAplicationMenu):
@@ -185,22 +188,24 @@ class SettingsMenu(AbstractAplicationMenu):
         super().__init__(mediator, display_size)
         self.font_size = 36
         font = pg.font.Font(
-                MEDIA + '\\font\\karmasuture.ttf', self.font_size)
-        
-        toggle_controller_type_image1 = font.render(self.aplication.getControllerType(), False, (255,255,255))
-        toggle_controller_type_image2 = font.render("Find...", False, (255,255,255))
-        toggle_FPS_image1 = font.render("show FPS", False, (255,255,255))
-        toggle_FPS_image2 = font.render("don`t show FPS", False, (255,255,255))
-        
+            MEDIA + '\\font\\karmasuture.ttf', self.font_size)
+
+        toggle_controller_type_image1 = font.render(
+            self.aplication.getControllerType(), False, (255, 255, 255))
+        toggle_controller_type_image2 = font.render(
+            "Find...", False, (255, 255, 255))
+        toggle_FPS_image1 = font.render("show FPS", False, (255, 255, 255))
+        toggle_FPS_image2 = font.render(
+            "don`t show FPS", False, (255, 255, 255))
 
         self.toggle_controller_type = TextToggleButton(
             [self.surface.rect.centerx, self.surface.rect.centery], toggle_controller_type_image1, onClickImage=toggle_controller_type_image2, func=self.aplication.changeControllerToggle, font=font, center=True)
         self.toggle_FPS = TextToggleButton(
             [self.surface.rect.centerx, self.surface.rect.centery+toggle_controller_type_image1.get_height()*2], toggle_FPS_image1, onClickImage=toggle_FPS_image2, func=self.aplication.showFPS, font=font, center=True)
-        
-        
+
         self.btnGroup.add(self.toggle_controller_type, self.toggle_FPS)
-        
+
     def update(self, *args, **kwargs):
-        self.toggle_controller_type.changeImage(text=self.aplication.getControllerType())
+        self.toggle_controller_type.changeImage(
+            text=self.aplication.getControllerType())
         return super().update(*args, **kwargs)

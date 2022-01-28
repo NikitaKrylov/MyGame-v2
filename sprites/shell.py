@@ -265,7 +265,7 @@ class RedEnemyShell(RedShell):
 
 
 class StarEnemyShell(BaseShell):
-    _speed = 4
+    _speed = 3
     _damage = 5
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
@@ -276,15 +276,15 @@ class StarEnemyShell(BaseShell):
 
     def kill(self):
         colors = ["#8cd7fb", "#71c9f2", "#bfe9fd"]
-        for i in range(5):
+        for i in range(4):
             self.particle_group.add(Particle(
                 pos=self.rect.center,
-                size=int(self.rect.width*0.8),
+                size=int(self.rect.width*0.7),
                 speed=random.randint(7, 11),
                 color=random.choice(colors),
                 vector=pygame.Vector2(1, 0).rotate(random.randint(1, 359)),
                 life_size=random.randint(2, 4),
-                size_rate=-random.uniform(0.3, 0.4),
+                size_rate=-random.uniform(0.5, 0.6),
                 speed_rate=-0.3,
                 shape='square'))
 

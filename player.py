@@ -4,6 +4,7 @@ import pygame as pg
 from pygame.sprite import Group, Sprite
 from settings import IMAGES
 from interface import HealthBar
+import logger
 
 
 class Player(Sprite):
@@ -23,7 +24,7 @@ class Player(Sprite):
         self.HP = self.MAX_HP
         self.mediator = mediator
         self.health = HealthBar(
-            [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.45, display_size[1]*0.02], (240, 84, 84), background=(198, 212, 217), draw_text=True)
+            [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.35, display_size[1]*0.02], (240, 84, 84), background=(198, 212, 217), draw_text=True)
         self.animation = Animator()
         self.shellGroup = shellGroup
         self.particle_group = particle_group
@@ -70,10 +71,14 @@ class Player(Sprite):
 
         return self.rect
 
-    def push(self, axis=1, direction=1):
+    def push(self, axis=1, direction=1, force: int = None):
+        _force = force
+        if _force == None:
+            _force = self.rect.height
+
         if axis == 1:
-            if self.rect.bottom + self.rect.height < self.display_size[1] and self.rect.top - self.rect.height > 0:
-                self.rect.y += self.rect.height * direction
+            if self.rect.bottom + _force < self.display_size[1] and self.rect.top - _force > 0:
+                self.rect.y += _force * direction
             else:
                 return None
 
@@ -81,8 +86,8 @@ class Player(Sprite):
             self.yspeed = self.max_speed
 
         elif axis == 0:
-            if self.rect.right + self.rect.width < self.display_size[0] and self.rect.left - self.rect.width > 0:
-                self.rect.x += self.rect.width * direction
+            if self.rect.right + _force < self.display_size[0] and self.rect.left - _force > 0:
+                self.rect.x += _force * direction
             else:
                 return None
 
@@ -173,6 +178,9 @@ class Player(Sprite):
 
     def changeWeapon(self, value=None, update=None):
         return self.equipment.changeWeapon(value=value, update=update)
+
+    def selectUltimate(self):
+        self.equipment.useUltimate()
 
     def getHeal(self, object):  # -> new XP
         """Get size healing from object and use __heal method with healing parameters"""

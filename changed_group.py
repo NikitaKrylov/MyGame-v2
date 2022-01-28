@@ -1,6 +1,6 @@
 import pygame as pg
 from pygame.sprite import Group
-from sprites.enemy import AbstaractFlightEnemy
+from sprites.enemy import AbstaractFlightEnemy, IInertialEnemy
 
 
 class CustomGroup(Group):
@@ -37,9 +37,9 @@ class Groups:
                 enemy.damage(player_shell.getDamage())
         # player and enemy collision
         enemy_sprite = spritecollide(player, self.enemyGroup)
-        
+
         if enemy_sprite:
-            if isinstance(enemy_sprite, AbstaractFlightEnemy):
+            if isinstance(enemy_sprite, IInertialEnemy):
                 # left = max(player.rect.left,  enemy_sprite.rect.left)
                 # width = min(player.rect.right,enemy_sprite.rect.right) - left
                 # top = max(player.rect.top,   enemy_sprite.rect.top)
@@ -67,7 +67,6 @@ class Groups:
     def restart(self):
         for group in self._groups:
             group.empty()
-        
 
 
 def twospritecollide(spritea, spriteb, killa=False, killb=False):

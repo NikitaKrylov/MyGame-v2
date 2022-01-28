@@ -1,3 +1,4 @@
+import logging
 import pygame as pg
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle
@@ -9,7 +10,6 @@ from GUI.elements import Text
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
-"""RenderUpdates - в методе draw возвращdaает изменения rect"""
 
 
 class Timer:
@@ -77,11 +77,13 @@ class GameStrategy(BaseStrategy):
         self.aplication.groups.update(
             now=_now,
             display_size=self.aplication.display_size,
-            player_center=self.aplication.player.rect.center)
+            player_center=self.aplication.player.rect.center,
+            joystick_hover_point=self.aplication.controller.hoverPointPos if hasattr(
+                self.aplication.controller, 'hoverPointPos') else None
+        )
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update(now=_now)
 
-        # print(self.aplication._actingStrategy)
         if self.aplication.player.HP <= 0:
             self.aplication.showDieMenu(True)
             return
@@ -103,6 +105,8 @@ class GameStrategy(BaseStrategy):
         self.aplication.controller.executeWeapon(
             self.aplication.player, event)
         self.aplication.controller.changeWeapon(
+            self.aplication.player, event)
+        self.aplication.controller.selectUltimate(
             self.aplication.player, event)
         self.aplication.controller.showMenu(event)
 
@@ -220,8 +224,12 @@ class Aplication:
 
     def start(self):
         """main aplicatiodn start function"""
+        log.info('start app')
         fontFPS = Text([self.display_size[0]*0.9, 20], str(int(self.clock.get_fps())),
                        40, (0, 255, 26), False, 'hooge0554')
+        image = pg.image.load(
+            IMAGES + "\\game_objects\\strike_point.png").convert_alpha()
+        rect = image.get_rect(center=(0, 0))
 
         while self.__run:
             for event in pg.event.get():
@@ -233,6 +241,10 @@ class Aplication:
             if self.isFPS:
                 fontFPS.draw(self.display)
                 fontFPS.update(text=str(int(self.clock.get_fps())))
+
+            # self.display.blit(image, rect)
+            # rect.center = pg.mouse.get_pos()
+
             pg.display.update()
             dt = self.clock.tick(60)
 
@@ -256,7 +268,7 @@ class Aplication:
                 self.controller = self.controleRealization[controllerType](
                     _controleImpl)
 
-        return print(f'Controller was removed to {self.controller.type()}')
+        log.info(f'Controller was removed to {self.controller.type()}')
 
     def getControllerType(self):
         return str(self.controller.name)
@@ -265,6 +277,7 @@ class Aplication:
         self._actingStrategy = self.winMenuStrategy
 
     def showMenu(self, value: bool = None):
+        log.debug('show menu')
         """Show and close menu"""
         if value != None:
             self.isMenu = value
@@ -283,6 +296,7 @@ class Aplication:
             self.isFPS = not self.isFPS
 
     def showDieMenu(self, value: bool = None):
+        log.debug('show die menu')
         if value != None:
             self.isPlayerDie = value
         else:
@@ -294,6 +308,7 @@ class Aplication:
             self._actingStrategy = self.gameStrategy
 
     def showSettings(self, value: bool = None):
+        log.debug('show settings')
         if self._actingStrategy == self.settingsMenuStrategy:
             self.isSettings = True
         else:
@@ -334,6 +349,7 @@ class Aplication:
         self.isPlayerDie = False
 
     def close(self):
+        log.info('close game')
         self.quitGame()
         self.__run = False
 
@@ -342,9 +358,6 @@ class Aplication:
         self.quitGame()
 
     def changeLevel(self, level: Level):
-        print(f"""
-              Level was removed to { self.level}
-              """)
         self.level = level(self, self.groups)
         self.groups.Background.empty()
         self.level.start()
@@ -363,6 +376,8 @@ class Aplication:
 
 if __name__ == '__main__':
     from levels import AsteroidWaves, Level1
+    import logger
+    log = logger.setup_logger()  # file_name='app_info.log' -> will write logs into file
     aplication = Aplication(Level1)
     # aplication.changeLevel(AsteroidWaves)
     aplication.start()

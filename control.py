@@ -31,6 +31,9 @@ class ControlImplementation:
     def changeWeapon(self, player, update=None, value=None):
         return player.changeWeapon(value=value, update=update)
 
+    def selectUltimate(self, player):
+        player.selectUltimate()
+
     def changePlayerDirection(self, player: Player, *args, **kwargs):
         pass
 
@@ -79,6 +82,9 @@ class BaseController:  # Interface
         """call player execiteWeapon"""
         return self.__implementation.executeWeapon(player)
 
+    def selectUltimate(self, player):
+        return self.__implementation.selectUltimate(player)
+
     def changeControl(self, previous: str, new: str):
         pass
 
@@ -124,10 +130,22 @@ class JoystickControle(BaseController):
 
         self.btnHoverIndex = 0
 
+        self.hoverPointPos = pg.Vector2(200, 200)
+        self.hoverPointSensivity = 8
+
     def getAllContrillers(self):
         return self.joysticks
 
+    def changeHoverPointPos(self):
+        jx = round(self.joystick.get_axis(2),1)
+        jy = round(self.joystick.get_axis(3),1)
+
+        self.hoverPointPos.x += jx * self.hoverPointSensivity
+        self.hoverPointPos.y += jy * self.hoverPointSensivity
+
     def changePlayerDirection(self, player: Player, *args, **kwargs):
+        self.changeHoverPointPos()
+
         jx = round(self.joystick.get_axis(0), 2)
         jy = round(self.joystick.get_axis(1), 2)
 
@@ -156,6 +174,11 @@ class JoystickControle(BaseController):
         if event.type == pg.JOYBUTTONDOWN:
             if event.button == self.config['executeWeapon']['button']:
                 return super().executeWeapon(player)
+
+    def selectUltimate(self, player, event):
+        if event.type == pg.JOYBUTTONDOWN:
+            if event.button == self.config['select_ultimate']:
+                return super().selectUltimate(player)
 
     def showMenu(self, event, *args, **kwargs):
         if event.type == pg.JOYBUTTONDOWN:
@@ -238,6 +261,11 @@ class KeyboardControle(BaseController):
             if event.button == self.config['executeWeapon']['mouse']:
                 return super().executeWeapon(player)
 
+    def selectUltimate(self, player, event):
+        if event.type == pg.KEYDOWN:
+            if event.key == self.config['select_ultimate']:
+                return super().selectUltimate(player)
+
     def showMenu(self, event, *args, **kwargs):
         if event.type == pg.KEYDOWN:
             if event.key in self.config['showMenu']:
@@ -269,7 +297,3 @@ class KeyboardControle(BaseController):
         if event.type == pg.KEYDOWN:
             if event.key in self.config['back']:
                 super().back()
-            
-            
-            
-            
