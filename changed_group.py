@@ -18,7 +18,7 @@ class CustomGroup(Group):
 class Groups:
     def __init__(self):
         self.enemyGroup = CustomGroup()
-        self.playerShell = Group()
+        self.playerShell = CustomGroup()
         self.objectsGroup = Group()
         self.Particles = CustomGroup()
         self.Background = Group()

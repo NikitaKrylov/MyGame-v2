@@ -8,6 +8,7 @@ import random
 import math
 from interface import HealthBar
 from game_objects import DubleGunEnemy, SingleRedGunEnemy, StarGun
+from AI import WanderingAI
 
 
 def sign(value):
@@ -143,6 +144,7 @@ class Asteroid(AbstractEnemy):  # Sprite
 class IInertialEnemy:
     pass
 
+
 class AbstaractFlightEnemy(AbstractEnemy, IInertialEnemy):
     speed = 5
     MAX_HP = 250
@@ -195,7 +197,6 @@ class AbstaractFlightEnemy(AbstractEnemy, IInertialEnemy):
         self.healthBar.update(self.rect.left, self.rect.top -
                               self.healthBar.rect.height * 1.5)
 
-        
         self.weapon.execute(self.rect)
 
         return super().update(*args, **kwargs)  # updatePosition()
@@ -252,11 +253,13 @@ class StarEnemy(AbstractEnemy, IInertialEnemy):
                                    self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
         self.movement = PointerMovement(pg.Vector2(1, 0))
         self.weapon = StarGun(self.groups()[0], kwargs.get('particle_group'))
-
-    def updatePosition(self, *args, **kwargs):
-        self.movement.update(self.rect, self.rects, speed=self.speed)
+        self.brain = WanderingAI(self.updateState1)
 
     def update(self, *args, **kwargs):
+        self.brain.Update(*args, **kwargs)
+        return super().update(*args, **kwargs)
+
+    def defaultUpdate(self, *args, **kwargs):
         if self.isBurst:
             self.kill()
             return
@@ -271,6 +274,12 @@ class StarEnemy(AbstractEnemy, IInertialEnemy):
 
         self.updatePoints(kwargs['display_size'])
 
+        self.healthBar.update(self.rects[0].left, self.rects[0].top -
+                              self.healthBar.rect.height)
+
+        self.movement.update(self.rect, self.rects, speed=self.speed)
+
+    def updateState1(self, *args, **kwargs):
         if self.weapon.isExecute:
             for i in range(0, 361, 90):
                 v = self.animation.rotVector.rotate_rad(math.radians(i))
@@ -279,10 +288,24 @@ class StarEnemy(AbstractEnemy, IInertialEnemy):
                 v.scale_to_length(1)
                 self.weapon.execute(self.rect, pos=point_pos, vector=v)
 
-        self.healthBar.update(self.rects[0].left, self.rects[0].top -
-                              self.healthBar.rect.height)
+        if self.HP < self.MAX_HP/3:
+            self.brain.Push(self.updateState2)
 
-        return super().update(*args, **kwargs)
+        self.defaultUpdate(*args, **kwargs)
+
+    def updateState2(self, *args, **kwargs):
+        if self.weapon.isExecute:
+            for i in range(0, 361, 40):
+                v = self.animation.rotVector.rotate_rad(math.radians(i))
+                v.scale_to_length(self.rect.width//2.5)
+                point_pos = (self.rect.centerx + v.x, self.rect.centery + v.y)
+                v.scale_to_length(1)
+                self.weapon.execute(self.rect, pos=point_pos, vector=v)
+
+        if self.HP > self.MAX_HP/3:
+            self.brain.Pop()
+
+        self.defaultUpdate(*args, **kwargs)
 
     def updatePoints(self, display_size, *args, **kwargs):
         if not self.movement.next_point:

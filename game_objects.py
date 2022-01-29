@@ -4,7 +4,7 @@ from pygame import surface
 from animation import Animator, StaticMovement
 # from sprites.shell import *
 from pygame.sprite import Sprite, AbstractGroup
-from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell
+from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell, Strike
 from pygame.sprite import Group
 from settings import IMAGES
 
@@ -93,21 +93,6 @@ class AimingPoint(Sprite):
 
     def draw(self, display):
         display.blit(self.image, self.rect)
-
-
-class Strike(BaseShell):
-    _damage = 300
-    _speed = 0
-
-    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
-        super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.movement.direction = pg.Vector2(0, 0)
-
-    def update(self, *args, **kwargs):
-        self.animation.update(
-            now=kwargs['now'], rate=200, frames_len=2, repeat=False, finiteFunction=self.kill)
-        return super().update(*args, **kwargs)
-
 
 # -----------------------------
 
@@ -329,17 +314,20 @@ class Equipment:
         self._ultimate.select(isUsed=self.isUltimateSelected)
 
     def changeWeapon(self, update=None, value=None):
-        if not self.isUltimateSelected:
-            if value:
-                if 0 <= value-1 <= len(self._weapon_equipment)-1:
-                    self.weaponIndex = value - 1
-            elif update:
-                if 0 <= update+self.weaponIndex <= len(self._weapon_equipment)-1:
-                    self.weaponIndex += update
-                elif update+self.weaponIndex < 0:
-                    self.weaponIndex = len(self._weapon_equipment)-1
-                elif update+self.weaponIndex > len(self._weapon_equipment)-1:
-                    self.weaponIndex = 0
+        if self.isUltimateSelected:
+            self.isUltimateSelected = False
+            self._ultimate.select(isUsed=self.isUltimateSelected)
+
+        if value:
+            if 0 <= value-1 <= len(self._weapon_equipment)-1:
+                self.weaponIndex = value - 1
+        elif update:
+            if 0 <= update+self.weaponIndex <= len(self._weapon_equipment)-1:
+                self.weaponIndex += update
+            elif update+self.weaponIndex < 0:
+                self.weaponIndex = len(self._weapon_equipment)-1
+            elif update+self.weaponIndex > len(self._weapon_equipment)-1:
+                self.weaponIndex = 0
 
     def useWeapon(self, rect):
         if not self.isUltimateSelected:

@@ -123,6 +123,42 @@ class BaseShell(Sprite):
 # ----------------------------------PLAYER SHELL---------------------------------------------
 
 
+class Strike(BaseShell):
+    _damage = 300
+    _speed = 0
+
+    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, particle_group, *groups, **kwargs)
+        self.movement.direction = pygame.Vector2(0, 0)
+
+    def draw(self, display):
+        pass
+
+    def update(self, *args, **kwargs):
+        self.animation.update(
+            now=kwargs['now'], rate=200, frames_len=2, repeat=False, finiteFunction=super().kill)
+        return super().update(*args, **kwargs)
+
+    def kill(self):
+        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
+        for i in range(70):
+            vector = pygame.Vector2(0, -1).rotate(random.randint(-20, 20))
+            self.particle_group.add(Particle(
+                pos=[random.randint(self.rect.left-self.rect.width//2, self.rect.right+self.rect.width//2), random.randint(
+                    self.rect.top - self.rect.height//2, self.rect.bottom + self.rect.height//2)],
+                size=random.randint(2, int(self.rect.width*0.2)),
+                speed=random.randint(7, 11),
+                color=random.choice(colors),
+                vector=vector,
+                life_size=random.randint(50, 100),
+                size_rate=random.uniform(2, 5),
+                speed_rate=-.3,
+                shape='circle'))
+        return super().kill()
+
+
+# ----------------------------------------------------------------------------------------
+
 class FirstShell(BaseShell):
     _damage = 25
     _speed = 20
