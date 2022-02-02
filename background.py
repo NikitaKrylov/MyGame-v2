@@ -74,7 +74,7 @@ class StarsBackground(AbstaractBackground):
 
 
 class FustStarsBackground(StarsBackground):
-    scene_speed = 4
+    scene_speed = 3
     element_speed = scene_speed
 
 

@@ -10,25 +10,8 @@ from GUI.elements import Text
 from interface import Toolbar
 from changed_group import Groups, spritecollide
 from settings import IMAGES
+from timer import Timer
 
-
-class Timer:
-    def __init__(self):
-        self.ticks = 0
-        self.timer_update_event = pg.USEREVENT+1
-        pg.time.set_timer(self.timer_update_event, 1)
-
-    def update(self):
-        self.ticks += 1
-
-    def reset(self):
-        self.ticks = 0
-
-    def get_ticks(self):
-        return self.ticks
-
-    def __str__(self):
-        return str(self.ticks)
 
 
 class BaseStrategy:
@@ -39,6 +22,7 @@ class BaseStrategy:
         pass
 
     def update(self):
+        # self.aplication.controller.update()
         """default update aplication function"""
 
     def eventListen(self, event):
@@ -68,11 +52,10 @@ class InventoryStrategy(BaseStrategy):
 
 class GameStrategy(BaseStrategy):
     def update(self, *args, **kwargs):
-        # _now = pg.time.get_ticks()
-
-        _now = self.aplication.game_timer.get_ticks()
+        _now = Timer.get_ticks()
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
+        self.aplication.controller.update()
         self.aplication.toolbar.update()
         self.aplication.groups.update(
             now=_now,
@@ -120,6 +103,10 @@ class BaseMenuStrategy(BaseStrategy):
     def __init__(self, mediator):
         super().__init__(mediator)
         self.menu = Menu(self.aplication, self.aplication.display_size)
+
+    def update(self):
+        self.aplication.controller.update()
+        return super().update()
 
     def draw(self, display):
         self.menu.draw(display)

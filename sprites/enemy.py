@@ -49,7 +49,7 @@ class AbstractEnemy(Sprite):  # Sprite Interface
         # pg.draw.rect(display, (0, 255, 20), self.rect, width=3)
 
         # for rect in self.rects:
-        #     pg.draw.rect(display, (0, 255, 0), rect, width=2)
+        #     pg.draw.rect(display, (255, 0, 0), rect, width=2)
 
     def getDamage(self):
         if self.isDamage:
@@ -156,7 +156,7 @@ class AbstaractFlightEnemy(AbstractEnemy, IInertialEnemy):
         self.rects = [pg.Rect(self.rect.x, self.rect.y, self.rect.width, self.rect.height*0.55),
                       pg.Rect(self.rect.x+self.rect.width/3, self.rect.y, self.rect.width//3, self.rect.height)]
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
-                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
+                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.09], (240, 45, 45))
         self.movement = None
         self.weapon = SingleRedGunEnemy(
             self.groups()[0], kwargs.get('particle_group'))

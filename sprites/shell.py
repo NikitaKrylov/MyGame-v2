@@ -1,6 +1,7 @@
-from math import sin
+from math import sin, pi, cos
 import pygame
 from pygame.sprite import Sprite, AbstractGroup
+from scipy import rand
 from animation import Animator
 from animation import StaticMovement, Animator
 import random
@@ -140,20 +141,40 @@ class Strike(BaseShell):
         return super().update(*args, **kwargs)
 
     def kill(self):
-        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
+        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0), (217, 114, 17), (245, 96, 10), (255, 30, 0)]
         for i in range(70):
-            vector = pygame.Vector2(0, -1).rotate(random.randint(-20, 20))
+            alpha = random.random() * 2 * pi
+            pos = [int(self.rect.centerx + self.rect.width*0.2 * cos(alpha)),
+                   int(self.rect.centery + self.rect.height*0.2 * sin(alpha))]
+            vector = pygame.Vector2(0, -1).rotate(random.randint(0, 360))
             self.particle_group.add(Particle(
-                pos=[random.randint(self.rect.left-self.rect.width//2, self.rect.right+self.rect.width//2), random.randint(
-                    self.rect.top - self.rect.height//2, self.rect.bottom + self.rect.height//2)],
+                pos=pos,
                 size=random.randint(2, int(self.rect.width*0.2)),
                 speed=random.randint(7, 11),
                 color=random.choice(colors),
                 vector=vector,
-                life_size=random.randint(50, 100),
-                size_rate=random.uniform(2, 5),
-                speed_rate=-.3,
-                shape='circle'))
+                life_size=random.randint(
+                    int(self.rect.width*0.3), int(self.rect.width*0.7)),
+                size_rate=random.uniform(.5, 2),
+                speed_rate=-random.uniform(.05, .3),
+                shape='square'))
+
+        for i in range(200):
+            alpha = random.random() * 2 * pi
+            pos = [int(self.rect.centerx + self.rect.width/2 * cos(alpha)),
+                   int(self.rect.centery + self.rect.height/2 * sin(alpha))]
+            vector = pygame.Vector2(0, -1).rotate(random.randint(0, 360))
+            self.particle_group.add(Particle(
+                pos=pos,
+                size=random.randint(2, int(self.rect.width*0.2)),
+                speed=random.randint(7, 11),
+                color=random.choice(colors),
+                vector=vector,
+                life_size=random.randint(
+                    int(self.rect.width*0.1), int(self.rect.width*0.6)),
+                size_rate=random.uniform(1, 4),
+                speed_rate=-random.uniform(.05, .3),
+                shape='square'))
         return super().kill()
 
 

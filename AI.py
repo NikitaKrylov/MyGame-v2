@@ -1,24 +1,24 @@
 
-from pygame.sprite import Sprite
-
-
 class WanderingAI:
     def __init__(self, instance=None):
-        self.stack = []
+        self.__stack = []
 
         if instance:
             self.Push(instance)
 
     def Update(self, *args, **kwargs):
-        if len(self.stack) > 0:
-            self.stack[-1](*args, **kwargs)
+        if len(self.__stack) > 0:
+            self.__stack[-1](*args, **kwargs)
 
     def Get(self):
-        return self.stack[-1] if len(self.stack) > 0 else None
+        return self.__stack[-1] if len(self.__stack) > 0 else None
+
+    def Show(self):
+        return '[' + ', '.join(list(map(lambda f: f.__name__, self.__stack))) + ']'
 
     def Push(self, instence):
-        self.stack.append(instence)
+        self.__stack.append(instence)
 
     def Pop(self):
-        if len(self.stack) > 0:
-            self.stack.pop(len(self.stack)-1)
+        if len(self.__stack) > 0:
+            self.__stack.pop(len(self.__stack)-1)

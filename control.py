@@ -56,6 +56,12 @@ class BaseController:  # Interface
         self.__implementation = controlIMPL
         self.config = self.load_config(os.getcwd()+'\control_config.json')
 
+    def cursor_set_visible(self):
+        pg.mouse.set_visible(True)
+        
+    def cursor_set_invisible(self):
+        pg.mouse.set_visible(False)
+
     def load_config(self, path=None):
         with open(path, 'r') as file:
             _config = json.load(file)
@@ -132,13 +138,17 @@ class JoystickControle(BaseController):
 
         self.hoverPointPos = pg.Vector2(200, 200)
         self.hoverPointSensivity = 8
+        self.cursor_set_invisible()
 
     def getAllContrillers(self):
         return self.joysticks
+    
+    def update(self):
+        self.cursor_set_invisible()
 
     def changeHoverPointPos(self):
-        jx = round(self.joystick.get_axis(2),1)
-        jy = round(self.joystick.get_axis(3),1)
+        jx = round(self.joystick.get_axis(2), 1)
+        jy = round(self.joystick.get_axis(3), 1)
 
         self.hoverPointPos.x += jx * self.hoverPointSensivity
         self.hoverPointPos.y += jy * self.hoverPointSensivity
@@ -225,6 +235,11 @@ class KeyboardControle(BaseController):
     def __init__(self, controlIMPL: ControlImplementation, *args, **kwargs):
         super().__init__(controlIMPL, *args, **kwargs)
         self.config = self.config[self.name]
+        self.cursor_set_visible()
+        # self.cursor_set_invisible()
+
+    def update(self):
+        self.cursor_set_visible()
 
     def changePlayerDirection(self, player: Player, *args, **kwargs):
         """Update player direction by axis"""

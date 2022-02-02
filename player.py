@@ -5,7 +5,7 @@ from pygame.sprite import Group, Sprite
 from settings import IMAGES
 from interface import HealthBar
 import logger
-
+from timer import Timer
 
 class Player(Sprite):
     mediator = None
@@ -158,6 +158,7 @@ class Player(Sprite):
 
     def update(self, *args, **kwargs):
         """Updating all player states"""
+        print(Timer.ticks)
         self.updatePosition()
         self.updateActingImage(threshold=.35)
         self.animation.update(now=kwargs['now'], rate=80, frames_len=len(

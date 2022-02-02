@@ -1,3 +1,4 @@
+
 import pygame as pg
 import pygame.gfxdraw
 
@@ -48,39 +49,45 @@ class HealthBar:
 
 
 class ToolbarCell:
-    def __init__(self, isSelected=False, isUltimate=False, **pos):
-        self.images = [pg.image.load(
-            IMAGES + f'\menu\\toolbar_section_{i}.png').convert_alpha() for i in range(1, 3)]
-        self.images = [pg.transform.scale(image, (int(image.get_width(
-        )*0.65), int(image.get_height()*0.65))) for image in self.images]
-        self.images.append(pg.image.load(
-            IMAGES + '\menu\\toolbar_section_3.png').convert_alpha())
-        self.rect = self.images[0].get_rect(**pos)
+    def __init__(self, images: list, isSelected=False, isUltimate=False,  **pos):
+        self.images = images
+
+        if not isUltimate:
+            self.images = [pg.transform.scale(image, (int(image.get_width(
+            )*0.65), int(image.get_height()*0.65))) for image in self.images]
+
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(**pos)
         self.isSelected = isSelected
         self.isUltimate = isUltimate
 
-    def draw(self, display):
+    def draw(self, display, label: pg.Surface = None):
+        display.blit(self.image, self.rect)
+
+        if label != None:
+            display.blit(label, label.get_rect(center=self.rect.center))
+
+    def update(self, *args, **kwargs):
         if self.isSelected:
-            display.blit(self.images[0], self.rect)
-        elif self.isUltimate:
-            display.blit(self.images[2], self.rect)
+            self.image = self.images[1]
         else:
-            display.blit(self.images[1], self.rect)
+            self.image = self.images[0]
 
 
 class Toolbar:
     def __init__(self, display_size, player_equipment):
         self.display_size = display_size
         self.equipment = player_equipment
-        self.cells = [ToolbarCell(center=[0, self.display_size[1]*.95])
+
+        images = [pg.image.load(
+            IMAGES + f'\menu\\toolbar_section_{i}.png').convert_alpha() for i in range(1, 5)]
+
+        self.cells = [ToolbarCell(images=images[:2], center=[0, self.display_size[1]*.95])
                       for i in range(self.equipment.countWeapons())]
         self.special_cell = ToolbarCell(
-            bottomright=[0, self.display_size[1]*.95], isUltimate=True)
-        # self.cells.append(ToolbarCell(
-        #     bottomright=[0, self.display_size[1]*.95], isUltimate=True))
+            images=images[-2:], bottomright=[0, self.cells[0].rect.bottom], isUltimate=True)
 
         margin = self.cells[0].rect.width // 2
-
         self.special_cell.rect.right = display_size[0] - margin*2
         last_pos = self.special_cell.rect.left - margin
         for cell in self.cells:
@@ -89,14 +96,28 @@ class Toolbar:
         self.cells.reverse()
 
     def draw(self, display):
-        for cell in self.cells:
-            cell.draw(display)
+        for i in range(len(self.cells)):
+            self.cells[i].draw(display, label=self.equipment._weapon_equipment[i].label_image)
 
-        self.special_cell.draw(display)
+        self.special_cell.draw(
+            display, label=self.equipment._ultimate.label_image)
 
     def update(self, *args, **kwargs):
+        self.special_cell.update()
+
+        if self.equipment.isUltimateSelected:
+            self.special_cell.isSelected = True
+            for cell in self.cells:
+                cell.isSelected = False
+                cell.update()
+            return
+        else:
+            self.special_cell.isSelected = False
+
         for i in range(len(self.cells)):
             if self.equipment.weaponIndex == i:
                 self.cells[i].isSelected = True
             else:
                 self.cells[i].isSelected = False
+
+            self.cells[i].update(*args, **kwargs)

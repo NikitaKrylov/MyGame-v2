@@ -7,6 +7,7 @@ from pygame.sprite import Sprite, AbstractGroup
 from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell, Strike
 from pygame.sprite import Group
 from settings import IMAGES
+from timer import Timer
 
 
 def sign(value):
@@ -43,18 +44,22 @@ class AbstructHeal(ObjectInterface):
 class AbstaructWeapon:
 
     def __init__(self):
+        self.label_image = None
         self.__isExecute = True
         self.updatingTime = {
             'last': 0,
             'cooldawn': 0
         }
+    
+    def GetCooldawnDelta(self):
+        return None
 
     def execute(self, *args, **kwargs):
         return
 
     @property
     def isExecute(self):
-        now = pg.time.get_ticks()
+        now = Timer.get_ticks()
         if now - self.updatingTime['last'] > self.updatingTime['cooldawn']:
             self.updatingTime['last'] = now
             return True
@@ -83,6 +88,7 @@ class AimingPoint(Sprite):
         # self.movement = StaticMovement(pg.Vector2(0, 0))
 
     def update(self, *args, **kwargs):
+        pg.mouse.set_visible(False)
         joystick_hover_point = kwargs.get('joystick_hover_point')
         if joystick_hover_point:
             self.rect.centerx = joystick_hover_point.x
@@ -100,15 +106,19 @@ class AimingPoint(Sprite):
 class StrikeUltimate(AbstractUltimate):
 
     AimingPointInstance = None
+    amo = Strike
 
     def __init__(self, group, particle_group):
         super().__init__(group, particle_group)
         self.image = pg.image.load(
             IMAGES+"\\game_objects\\strike_point.png").convert_alpha()
+        self.label_image = pg.image.load(
+            IMAGES+"\\menu\\labels\\strike_point.png").convert_alpha()
         self.updatingTime = {
             'last': 0,
-            'cooldawn': 2300
+            'cooldawn': 6000
         }
+    
 
     def select(self, isUsed, *args, **kwargs):
         if not isUsed and self.AimingPointInstance != None:
@@ -126,8 +136,8 @@ class StrikeUltimate(AbstractUltimate):
         if self.isExecute:
             image = pg.Surface((100, 100))
             image.fill((255, 90, 20))
-            obj = Strike([image], self.AimingPointInstance.rect.center,
-                         self.particle_group)
+            obj = self.amo([image], self.AimingPointInstance.rect.center,
+                           self.particle_group)
             self.group.add(obj)
 
 # ------------------------------------------------------------------------
@@ -156,6 +166,8 @@ class FirstGun(AbstractGun):
         super().__init__(group, particle_group)
         self.images = [pg.image.load(
             IMAGES+'\shell\lite\shell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
+        self.label_image = pg.image.load(
+            IMAGES+'\\menu\\labels\\lite.png').convert_alpha()
 
     def execute(self, rect, *args, **kwargs):
         pos = [rect.centerx, int(rect.top+self.images[0].get_rect().height//2)]
