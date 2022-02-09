@@ -1,13 +1,12 @@
-from math import ceil
+
 import pygame as pg
-from pygame import surface
-from animation import Animator, StaticMovement
-# from sprites.shell import *
+from typing import Union, Tuple, List, Sequence
 from pygame.sprite import Sprite, AbstractGroup
 from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell, Strike
-from pygame.sprite import Group
 from settings import IMAGES
 from timer import Timer
+from GameObjects.weapons import RocketLauncher, LiteGun, BurnedLauncher, IWeapon
+from GameObjects.ultimates import IUltimate, Striker
 
 
 def sign(value):
@@ -50,12 +49,12 @@ class AbstaructWeapon:
             'last': 0,
             'cooldawn': 0
         }
-    
+
     def GetCooldawnDelta(self):
         return None
 
     def execute(self, *args, **kwargs):
-        return
+        pass
 
     @property
     def isExecute(self):
@@ -74,6 +73,17 @@ class AbstractUltimate(AbstaructWeapon):
 
     def select(self, isUsed, *args, **kwargs):
         pass
+
+    def execute(self, player=None, *args, **kwargs):
+        return super().execute(*args, **kwargs)
+
+
+class EffectUltimate(AbstractUltimate):
+    duration = None
+    instance = None
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
 
 # -----------------------------------
 
@@ -100,12 +110,13 @@ class AimingPoint(Sprite):
     def draw(self, display):
         display.blit(self.image, self.rect)
 
+
 # -----------------------------
 
 
 class StrikeUltimate(AbstractUltimate):
 
-    AimingPointInstance = None
+    instance = None
     amo = Strike
 
     def __init__(self, group, particle_group):
@@ -118,27 +129,26 @@ class StrikeUltimate(AbstractUltimate):
             'last': 0,
             'cooldawn': 6000
         }
-    
 
     def select(self, isUsed, *args, **kwargs):
-        if not isUsed and self.AimingPointInstance != None:
-            self.AimingPointInstance.kill()
-            self.AimingPointInstance = None
+        if not isUsed and self.instance != None:
+            self.instance.kill()
+            self.instance = None
 
-        if isUsed and self.AimingPointInstance == None:
-            _aimingPoint = AimingPoint(self.image)
-            self.particle_group.add(_aimingPoint)
-            self.AimingPointInstance = _aimingPoint
+        if isUsed and self.instance == None:
+            self.instance = AimingPoint(self.image)
+            self.particle_group.add(self.instance)
 
         return super().select(isUsed, *args, **kwargs)
 
-    def execute(self, *args, **kwargs):
+    def execute(self, player=None, *args, **kwargs):
         if self.isExecute:
             image = pg.Surface((100, 100))
             image.fill((255, 90, 20))
-            obj = self.amo([image], self.AimingPointInstance.rect.center,
+            obj = self.amo([image], self.instance.rect.center,
                            self.particle_group)
             self.group.add(obj)
+
 
 # ------------------------------------------------------------------------
 
@@ -159,21 +169,21 @@ class AbstractGun(AbstaructWeapon):
         return super().execute()
 
 
-class FirstGun(AbstractGun):
-    amo = FirstShell
+# class FirstGun(AbstractGun):
+#     amo = FirstShell
 
-    def __init__(self, group, particle_group):
-        super().__init__(group, particle_group)
-        self.images = [pg.image.load(
-            IMAGES+'\shell\lite\shell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
-        self.label_image = pg.image.load(
-            IMAGES+'\\menu\\labels\\lite.png').convert_alpha()
+#     def __init__(self, group, particle_group):
+#         super().__init__(group, particle_group)
+#         self.images = [pg.image.load(
+#             IMAGES+'\shell\lite\shell'+str(i)+'.png').convert_alpha() for i in range(1, 6)]
+#         self.label_image = pg.image.load(
+#             IMAGES+'\\menu\\labels\\lite.png').convert_alpha()
 
-    def execute(self, rect, *args, **kwargs):
-        pos = [rect.centerx, int(rect.top+self.images[0].get_rect().height//2)]
-        self.group.add(self.amo(self.images, pos,
-                       self.particle_group, [self.group]))
-        return super().execute()
+#     def execute(self, rect, *args, **kwargs):
+#         pos = [rect.centerx, int(rect.top+self.images[0].get_rect().height//2)]
+#         self.group.add(self.amo(self.images, pos,
+#                        self.particle_group, [self.group]))
+#         return super().execute()
 
 
 class SingleRedGun(AbstractGun):
@@ -220,7 +230,7 @@ class StarGun(AbstractGun):
             IMAGES+'\shell\\star\\star1.png').convert_alpha()]
         self.updatingTime = {
             'last': 0,
-            'cooldawn': 800
+            'cooldawn': 1000
         }
 
     def execute(self, *args, **kwargs):
@@ -258,77 +268,140 @@ class DubleGunEnemy(DubleRedGun):
         return
 
 
-class RocketLauncher(AbstractGun):
-    amo = Rocket
+# class RocketLauncher(AbstractGun):
+#     amo = Rocket
 
-    def __init__(self, group, particle_group):
-        super().__init__(group, particle_group)
-        # self.images = [pg.image.load(
-        # IMAGES+'\shell\\racket\\racket'+str(i)+'.png').convert_alpha() for i in range(1, 7)]
-        self.images = [pg.image.load(
-            IMAGES+'\shell\\racket\\racket.png').convert_alpha()]
-        self.updatingTime = {
-            'last': 0,
-            'cooldawn': 1000
-        }
+#     def __init__(self, group, particle_group):
+#         super().__init__(group, particle_group)
+#         # self.images = [pg.image.load(
+#         # IMAGES+'\shell\\racket\\racket'+str(i)+'.png').convert_alpha() for i in range(1, 7)]
+#         self.images = [pg.image.load(
+#             IMAGES+'\shell\\racket\\racket.png').convert_alpha()]
+#         self.updatingTime = {
+#             'last': 0,
+#             'cooldawn': 1000
+#         }
 
-    def execute(self, rect, *args, **kwargs):
-        if self.isExecute:
-            self.group.add(self.amo(self.images, rect.center,
-                                    self.particle_group, [self.group]))
-            return super().execute()
+#     def execute(self, rect, *args, **kwargs):
+#         if self.isExecute:
+#             self.group.add(self.amo(self.images, rect.center,
+#                                     self.particle_group, [self.group]))
+#             return super().execute()
 
 
-class BurnedLauncher(AbstractGun):
-    amo = BurnedShell
+# class BurnedLauncher(AbstractGun):
+#     amo = BurnedShell
 
-    def __init__(self, group, particle_group):
-        super().__init__(group, particle_group)
-        self.updatingTime = {
-            'last': 0,
-            'cooldawn': 100
-        }
-        self.images = [pg.image.load(
-            IMAGES+'\shell\\orange\\orange.png').convert_alpha()]
+#     def __init__(self, group, particle_group):
+#         super().__init__(group, particle_group)
+#         self.updatingTime = {
+#             'last': 0,
+#             'cooldawn': 100
+#         }
+#         self.images = [pg.image.load(
+#             IMAGES+'\shell\\orange\\orange.png').convert_alpha()]
 
-    def execute(self, rect, *args, **kwargs):
-        if self.isExecute:
-            pos = [rect.centerx, rect.top + self.images[0].get_height()//1.5]
-            self.group.add(self.amo(self.images, pos,
-                                    self.particle_group, [self.group]))
-            return super().execute()
-# -------------------------------------------------------------------
+#     def execute(self, rect, *args, **kwargs):
+#         if self.isExecute:
+#             pos = [rect.centerx, rect.top + self.images[0].get_height()//1.5]
+#             self.group.add(self.amo(self.images, pos,
+#                                     self.particle_group, [self.group]))
+#             return super().execute()
+# # -------------------------------------------------------------------
+
+
+# class Equipment:
+#     weaponIndex = 0
+
+#     def __init__(self, group, particle_group):
+#         self._weapon_equipment = []  # Weapons
+#         self._heal_equipment = []  # Heals
+#         self.isUltimateSelected = False
+#         self._group = group  # player`s shell group
+
+#         self._particle_group = particle_group
+#         self._weapon_equipment.append(
+#             LiteGun(self._group, self._particle_group))
+#         # self._weapon_equipment.append(
+#         #     DubleRedGun(self._group, self._particle_group))
+#         self._weapon_equipment.append(
+#             RocketLauncher(self._group, self._particle_group))
+#         self._weapon_equipment.append(
+#             BurnedLauncher(self._group, self._particle_group))
+#         self._ultimate = StrikeUltimate(
+#             self._group, self._particle_group)  # Ultimate
+
+#     def selectUltimate(self, *args, **kwargs):
+#         self.isUltimateSelected = not self.isUltimateSelected
+#         self._ultimate.select(isUsed=self.isUltimateSelected)
+
+#     def changeWeapon(self, update=None, value=None):
+#         if self.isUltimateSelected:
+#             self.isUltimateSelected = False
+#             self._ultimate.select(isUsed=self.isUltimateSelected)
+
+#         if value:
+#             if 0 <= value-1 <= len(self._weapon_equipment)-1:
+#                 self.weaponIndex = value - 1
+#         elif update:
+#             if 0 <= update+self.weaponIndex <= len(self._weapon_equipment)-1:
+#                 self.weaponIndex += update
+#             elif update+self.weaponIndex < 0:
+#                 self.weaponIndex = len(self._weapon_equipment)-1
+#             elif update+self.weaponIndex > len(self._weapon_equipment)-1:
+#                 self.weaponIndex = 0
+
+#     def useWeapon(self, rect):
+#         if not self.isUltimateSelected:
+#             return self._weapon_equipment[self.weaponIndex].execute(rect)
+
+#     def useUltimate(self, player, *args, **kwargs):
+#         if self.isUltimateSelected:
+#             self._ultimate.execute(player, *args, **kwargs)
+
+#     def useHeal(self):
+#         return
+
+#     def addWeapon(self, instance):
+#         self._weapon_equipment.append(instance)
+#         return self._weapon_equipment
+
+#     def addHeal(self, instance):
+#         self._heal_equipment.append(instance)
+#         return self._heal_equipment
+
+#     def setUltimate(self, instance):
+#         self._ultimate = instance
+#         return self._ultimate
+
+#     def countWeapons(self):
+#         return len(self._weapon_equipment)
 
 
 class Equipment:
-    weaponIndex = 0
-
-    def __init__(self, group, particle_group):
-        self._weapon_equipment = []  # Weapons
-        self._heal_equipment = []  # Heals
-        self.isUltimateSelected = False
-        self._group = group  # player`s shell group
-
+    def __init__(self, group: AbstractGroup, particle_group: AbstractGroup):
+        self._group = group
         self._particle_group = particle_group
-        self._weapon_equipment.append(
-            FirstGun(self._group, self._particle_group))
-        # self._weapon_equipment.append(
-        #     DubleRedGun(self._group, self._particle_group))
-        self._weapon_equipment.append(
-            RocketLauncher(self._group, self._particle_group))
-        self._weapon_equipment.append(
-            BurnedLauncher(self._group, self._particle_group))
-        self._ultimate = StrikeUltimate(
-            self._group, self._particle_group)  # Ultimate
+        
+        self.weaponIndex = 0
+        self._weapon_equipment: List[IWeapon] = []
+        self._heal_equipment = []
+        self._ultimate: IUltimate = None
+        self.isUltimateSelected = False
 
-    def useUltimate(self, *args, **kwargs):
-        self.isUltimateSelected = not self.isUltimateSelected
-        self._ultimate.select(isUsed=self.isUltimateSelected)
+        self.AddWeapon(LiteGun, RocketLauncher, BurnedLauncher)
+        self.AddUltimate(Striker)
 
-    def changeWeapon(self, update=None, value=None):
+    def SelectUltimate(self):
+        pass
+
+    def SelectWeapon(self):
+        pass
+
+    def SelectObject(self, update=None, value=None):
         if self.isUltimateSelected:
             self.isUltimateSelected = False
-            self._ultimate.select(isUsed=self.isUltimateSelected)
+            self._ultimate.Select(isUsed=self.isUltimateSelected)
 
         if value:
             if 0 <= value-1 <= len(self._weapon_equipment)-1:
@@ -341,26 +414,24 @@ class Equipment:
             elif update+self.weaponIndex > len(self._weapon_equipment)-1:
                 self.weaponIndex = 0
 
-    def useWeapon(self, rect):
-        if not self.isUltimateSelected:
-            return self._weapon_equipment[self.weaponIndex].execute(rect)
+    def UseWeapon(self, rect, *args, **kwargs):
+        self._weapon_equipment[self.weaponIndex].Use(rect)
+
+    def UseUltimate(self):
+        pass
+
+    def UseObject(self, rect, *args, **kwargs):
         if self.isUltimateSelected:
-            self._ultimate.execute()
+            return self.UseUltimate()
 
-    def useHeal(self):
-        return
+        return self.UseWeapon(rect, *args, **kwargs)
 
-    def addWeapon(self, instance):
-        self._weapon_equipment.append(instance)
-        return self._weapon_equipment
-
-    def addHeal(self, instance):
-        self._heal_equipment.append(instance)
-        return self._heal_equipment
-
-    def setUltimate(self, instance):
-        self._ultimate = instance
-        return self._ultimate
+    def AddWeapon(self, *prefabs:Tuple[IWeapon]):
+        for prefab in prefabs:
+            self._weapon_equipment.append(
+                prefab(group=self._group, particle_group=self._particle_group))
+    def AddUltimate(self, prefabs:IUltimate):
+        self._ultimate = prefabs(group=self._group, particle_group=self._particle_group)
 
     def countWeapons(self):
         return len(self._weapon_equipment)

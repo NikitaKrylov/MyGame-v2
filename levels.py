@@ -5,6 +5,7 @@ from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFac
 from changed_group import Groups
 from background import *
 import logger
+from timer import Timer
 log = get_logger(__name__)
 
 
@@ -67,8 +68,8 @@ class Level1(Level):
     def __init__(self, mediator, grops: Groups):
         super().__init__(mediator, grops)
         self.spawn_rates = {
-            'asteroid': 2500,
-            'flightEnemy': 7000
+            'asteroid': 3000,
+            'flightEnemy': 10000
         }
         self.last_spawn_time = {i: 0 for i in self.spawn_rates.keys()}
 
@@ -91,7 +92,7 @@ class Level1(Level):
         return super().start()
 
     def update(self, *args, **kwargs):
-        now = kwargs.get('now')
+        now = Timer.get_ticks()
 
         if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
             self.last_spawn_time['asteroid'] = now
@@ -102,15 +103,10 @@ class Level1(Level):
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
 
-        if now//1000 > 15:
+        if now//1000 > 20:
             if self.starEnemyFactory.information['killed'] < 5:
                 if self.starEnemyFactory.count() < 1:
                     self.starEnemyFactory.createObject()
-
-        # print("FlightEnemy: {}|10    StarEnemy: {}|5".format(
-        #     self.firstFlightFactory.information['killed'], self.starEnemyFactory.information['killed']))
-
-        # print(self.starEnemyFactory.information)
 
         return super().update(*args, **kwargs)
 
@@ -144,7 +140,7 @@ class AsteroidWaves(Level):
         return super().start()
 
     def update(self, *args, **kwargs):
-        now = kwargs.get('now')
+        now = Timer.get_ticks()
         if now - self.last_spawn_time['asteroid'] > self.spawn_rates['asteroid']:
             self.last_spawn_time['asteroid'] = now
             self.asteroidFactory.createObject()

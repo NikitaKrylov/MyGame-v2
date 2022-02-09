@@ -13,7 +13,6 @@ from settings import IMAGES
 from timer import Timer
 
 
-
 class BaseStrategy:
     def __init__(self, mediator):
         self.aplication = mediator
@@ -198,7 +197,7 @@ class Aplication:
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
-        self._acting_level = level
+        self._acting_level: Level = level
 
         self.menuStrategy = self.menuStrategy(self)
         self.dieMenuStrategy = self.dieMenuStrategy(self)
@@ -262,6 +261,8 @@ class Aplication:
 
     def setWinMenuStrategy(self, value: bool = None):
         self._actingStrategy = self.winMenuStrategy
+        log.info(
+            f"level <{self._acting_level.__class__.__name__}> was completed")
 
     def showMenu(self, value: bool = None):
         log.debug('show menu')
@@ -316,6 +317,7 @@ class Aplication:
         self._actingStrategy = self._lastStrategy
 
     def startGame(self, *args, **kwargs):
+        log.info('start level')
         self.groups = Groups()
 
         self.player = Player(self.display_size, self,
@@ -336,7 +338,7 @@ class Aplication:
         self.isPlayerDie = False
 
     def close(self):
-        log.info('close game')
+        log.info('close app')
         self.quitGame()
         self.__run = False
 
@@ -350,6 +352,7 @@ class Aplication:
         self.level.start()
 
     def restart(self):
+        log.info("restart level")
         pg.init()
         self.clock = pg.time.Clock()
         self.groups.restart()
@@ -364,7 +367,8 @@ class Aplication:
 if __name__ == '__main__':
     from levels import AsteroidWaves, Level1
     import logger
-    log = logger.setup_logger()  # file_name='app_info.log' -> will write logs into file
+    # file_name='app_info.log' -> will write logs into file
+    log = logger.setup_logger()
     aplication = Aplication(Level1)
     # aplication.changeLevel(AsteroidWaves)
     aplication.start()

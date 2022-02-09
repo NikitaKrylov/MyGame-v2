@@ -1,6 +1,6 @@
 import pygame as pg
 from pygame.sprite import Group
-from sprites.enemy import AbstaractFlightEnemy, IInertialEnemy
+from sprites.enemy import AbstaractFlightEnemy, IInertial
 
 
 class CustomGroup(Group):
@@ -35,20 +35,18 @@ class Groups:
             player_shell = spritecollide(enemy, self.playerShell)
             if player_shell:
                 enemy.damage(player_shell.getDamage())
+
         # player and enemy collision
         enemy_sprite = spritecollide(player, self.enemyGroup)
 
         if enemy_sprite:
-            if isinstance(enemy_sprite, IInertialEnemy):
-                # left = max(player.rect.left,  enemy_sprite.rect.left)
-                # width = min(player.rect.right,enemy_sprite.rect.right) - left
-                # top = max(player.rect.top,   enemy_sprite.rect.top)
-                # height = min(player.rect.bottom,enemy_sprite.rect.bottom) - top
-                # player.pushByRect(
-                #     pg.Rect(left, top, width, height))
-                player.push(axis=1, direction=1)
-
-            player.damage(enemy_sprite.getDamage())
+            if not player.isGodMod:
+                player.damage(enemy_sprite.getDamage())
+                if isinstance(enemy_sprite, IInertial):
+                    player.ReactToDamage(
+                        direction=pg.Vector2(0, 1),
+                        force=enemy_sprite.rect.height*1.1,
+                        enemy_rect=enemy_sprite.rect)
 
     def update(self, *args, **kwargs):
         for _group in self._groups:

@@ -141,11 +141,11 @@ class Asteroid(AbstractEnemy):  # Sprite
         return super().kill()
 
 
-class IInertialEnemy:
+class IInertial:
     pass
 
 
-class AbstaractFlightEnemy(AbstractEnemy, IInertialEnemy):
+class AbstaractFlightEnemy(AbstractEnemy, IInertial):
     speed = 5
     MAX_HP = 250
     HP = MAX_HP
@@ -239,7 +239,7 @@ class FirstFlightEnemy2(AbstaractFlightEnemy):
         return super().update(*args, **kwargs)
 
 
-class StarEnemy(AbstractEnemy, IInertialEnemy):
+class StarEnemy(AbstractEnemy, IInertial):
     speed = 1.5
     MAX_HP = 300
     HP = MAX_HP

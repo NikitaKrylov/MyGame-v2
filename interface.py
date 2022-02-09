@@ -1,4 +1,3 @@
-
 import pygame as pg
 import pygame.gfxdraw
 
@@ -49,7 +48,7 @@ class HealthBar:
 
 
 class ToolbarCell:
-    def __init__(self, images: list, isSelected=False, isUltimate=False,  **pos):
+    def __init__(self, images: list, isSelected=False, isUltimate=False, drawTimeDelta: bool = False,  **pos):
         self.images = images
 
         if not isUltimate:
@@ -60,12 +59,25 @@ class ToolbarCell:
         self.rect = self.image.get_rect(**pos)
         self.isSelected = isSelected
         self.isUltimate = isUltimate
+        self.drawTimeDelta = drawTimeDelta
 
-    def draw(self, display, label: pg.Surface = None):
+        if self.drawTimeDelta:
+            # self.font = pg.font.Font(
+                # MEDIA + '\\font\\karmasuture.ttf', int(self.rect.height*0.2))
+            self.font = pg.font.SysFont(
+                'Comic Sans MS', int(self.rect.height*0.2))
+
+    def draw(self, display, label: pg.Surface = None, timeDelta:int=None, *args, **kwargs):
         display.blit(self.image, self.rect)
 
         if label != None:
             display.blit(label, label.get_rect(center=self.rect.center))
+
+        if self.isSelected:
+            if self.drawTimeDelta:
+                timeDelta = str(timeDelta)
+                texture = self.font.render(timeDelta, False, (255, 255, 255))
+                display.blit(texture, (self.rect.centerx-texture.get_width()//2, self.rect.bottom))
 
     def update(self, *args, **kwargs):
         if self.isSelected:
@@ -82,7 +94,7 @@ class Toolbar:
         images = [pg.image.load(
             IMAGES + f'\menu\\toolbar_section_{i}.png').convert_alpha() for i in range(1, 5)]
 
-        self.cells = [ToolbarCell(images=images[:2], center=[0, self.display_size[1]*.95])
+        self.cells = [ToolbarCell(images=images[:2], center=[0, self.display_size[1]*.95], drawTimeDelta=True)
                       for i in range(self.equipment.countWeapons())]
         self.special_cell = ToolbarCell(
             images=images[-2:], bottomright=[0, self.cells[0].rect.bottom], isUltimate=True)
@@ -97,10 +109,14 @@ class Toolbar:
 
     def draw(self, display):
         for i in range(len(self.cells)):
-            self.cells[i].draw(display, label=self.equipment._weapon_equipment[i].label_image)
+            self.cells[i].draw(
+                display,
+                label=self.equipment._weapon_equipment[i].label_image,
+                timeDelta=self.equipment._weapon_equipment[i].GetCooldawnDelta)
 
-        self.special_cell.draw(
-            display, label=self.equipment._ultimate.label_image)
+        if self.equipment._ultimate:
+            self.special_cell.draw(
+                display, label=self.equipment._ultimate.label_image)
 
     def update(self, *args, **kwargs):
         self.special_cell.update()

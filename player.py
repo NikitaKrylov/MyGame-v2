@@ -1,3 +1,4 @@
+from sklearn.linear_model import enet_path
 from animation import Animator
 from game_objects import Equipment
 import pygame as pg
@@ -7,9 +8,9 @@ from interface import HealthBar
 import logger
 from timer import Timer
 
+
 class Player(Sprite):
     mediator = None
-    ability = None
 
     MAX_HP = 100
     HP = MAX_HP
@@ -18,10 +19,10 @@ class Player(Sprite):
     xspeed = 0
     yspeed = 0
     accel = 0.4
+    isGodMod = False
 
     def __init__(self, display_size, mediator, shellGroup: Group, particle_group, *args, **kwargs):
         super().__init__()
-        self.HP = self.MAX_HP
         self.mediator = mediator
         self.health = HealthBar(
             [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.35, display_size[1]*0.02], (240, 84, 84), background=(198, 212, 217), draw_text=True)
@@ -70,42 +71,6 @@ class Player(Sprite):
         ]
 
         return self.rect
-
-    def push(self, axis=1, direction=1, force: int = None):
-        _force = force
-        if _force == None:
-            _force = self.rect.height
-
-        if axis == 1:
-            if self.rect.bottom + _force < self.display_size[1] and self.rect.top - _force > 0:
-                self.rect.y += _force * direction
-            else:
-                return None
-
-            self.direction.y = direction
-            self.yspeed = self.max_speed
-
-        elif axis == 0:
-            if self.rect.right + _force < self.display_size[0] and self.rect.left - _force > 0:
-                self.rect.x += _force * direction
-            else:
-                return None
-
-            self.direction.x = direction
-            self.xspeed = self.max_speed
-
-    def pushByRect(self, pushed_rect):
-        if pushed_rect.width > pushed_rect.height:
-
-            if pushed_rect.top == self.rect.top:
-                self.push(axis=1, direction=1)
-            else:
-                self.push(axis=1, direction=-1)
-        else:
-            if pushed_rect.left == self.rect.left:
-                self.push(axis=0, direction=1)
-            else:
-                self.push(axis=0, direction=-1)
 
     def updateActingImage(self, threshold):
         if self.direction.x > threshold:
@@ -158,30 +123,28 @@ class Player(Sprite):
 
     def update(self, *args, **kwargs):
         """Updating all player states"""
-        print(Timer.ticks)
         self.updatePosition()
         self.updateActingImage(threshold=.35)
         self.animation.update(now=kwargs['now'], rate=80, frames_len=len(
             self.acting_images), repeat=True)
+        
 
     def draw(self, dispaly):
         dispaly.blit(
             self.acting_images[self.animation.getIteration], self.rect)
-        # for rect in self.rects:
-        #     pg.draw.rect(dispaly, (0, 255, 0), rect, width=1)
-
         self.health.draw(dispaly, border_radius=self.rect.height //
                          2, border_top_right_radius=self.rect.height//2)
-        # self.health.draw(dispaly, border_bottom_right_radius=self.rect.height//2, border_top_right_radius=self.rect.height//2)
 
     def executeWeapon(self):
-        return self.equipment.useWeapon(self.rect)
+        if self.equipment.isUltimateSelected:
+            return self.equipment.useUltimate(self, self)
+        return self.equipment.UseWeapon(self.rect)
 
     def changeWeapon(self, value=None, update=None):
-        return self.equipment.changeWeapon(value=value, update=update)
+        return self.equipment.SelectObject(value=value, update=update)
 
     def selectUltimate(self):
-        self.equipment.useUltimate()
+        self.equipment.SelectUltimate()
 
     def getHeal(self, object):  # -> new XP
         """Get size healing from object and use __heal method with healing parameters"""
@@ -194,12 +157,47 @@ class Player(Sprite):
         return self.health.HP
 
     def damage(self, value):
-        if self.HP - value > 0:
-            self.HP -= value
-        else:
-            self.HP = 0
+        if not self.isGodMod:
+            if self.HP - value > 0:
+                self.HP -= value
+            else:
+                self.HP = 0
 
-        self.health.updateHP(self.HP)
+            self.health.updateHP(self.HP)
+
+    def AddForce(self, direction: pg.Vector2, force=None, *args, **kwargs):
+        _force = force
+        if _force == None:
+            _force = self.rect.height
+
+        if direction.y > 0 and self.rect.bottom + int(self.rect.height*0.6) + _force > self.display_size[1]:
+            direction.y = -1
+            return self.AddForce(direction, _force)
+        if direction.y < 0 and self.rect.top - int(self.rect.height*0.6) - _force < 0:
+            direction.y = 1
+            return self.AddForce(direction, _force)
+        if direction.x > 0:
+            pass
+        if direction.x < 0:
+            pass
+
+        self.rect.centerx += direction.x * (_force + int(self.rect.width*0.6))
+        self.rect.centery += direction.y * (_force + int(self.rect.height*0.6))
+
+        self.direction = direction.normalize()
+        self.yspeed = self.max_speed
+        self.xspeed = self.max_speed
+
+    def ReactToDamage(self, *args, **kwargs):
+        if not self.isGodMod:
+
+            if kwargs.get('enemy_rect') and kwargs.get('direction'):
+                if self.rect.centery > kwargs['enemy_rect'].centery:
+                    kwargs['direction'].y = 1
+                elif self.rect.centery < kwargs['enemy_rect'].centery:
+                    kwargs['direction'].y = -1
+
+            self.AddForce(*args, **kwargs)
 
     def kill(self):
         return super().kill()
