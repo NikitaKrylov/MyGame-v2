@@ -262,7 +262,7 @@ class Aplication:
     def setWinMenuStrategy(self, value: bool = None):
         self._actingStrategy = self.winMenuStrategy
         log.info(
-            f"level <{self._acting_level.__class__.__name__}> was completed")
+            f"level <{self.level.__class__.__name__}> was completed")
 
     def showMenu(self, value: bool = None):
         log.debug('show menu')

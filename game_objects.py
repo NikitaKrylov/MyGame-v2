@@ -6,7 +6,7 @@ from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Roc
 from settings import IMAGES
 from timer import Timer
 from GameObjects.weapons import RocketLauncher, LiteGun, BurnedLauncher, IWeapon
-from GameObjects.ultimates import IUltimate, Striker
+from GameObjects.ultimates import IUltimate, Striker, InvisibleEffectSender
 
 
 def sign(value):
@@ -135,7 +135,7 @@ class StrikeUltimate(AbstractUltimate):
             self.instance.kill()
             self.instance = None
 
-        if isUsed and self.instance == None:
+        if isUsed and self.instance is None:
             self.instance = AimingPoint(self.image)
             self.particle_group.add(self.instance)
 
@@ -390,10 +390,12 @@ class Equipment:
         self.isUltimateSelected = False
 
         self.AddWeapon(LiteGun, RocketLauncher, BurnedLauncher)
-        self.AddUltimate(Striker)
+        # self.AddUltimate(Striker)
+        self.AddUltimate(InvisibleEffectSender)
 
-    def SelectUltimate(self):
-        pass
+    def SelectUltimate(self, player_instance):
+        self.isUltimateSelected = not self.isUltimateSelected
+        self._ultimate.Select(self.isUltimateSelected, player_instance)
 
     def SelectWeapon(self):
         pass
@@ -417,8 +419,8 @@ class Equipment:
     def UseWeapon(self, rect, *args, **kwargs):
         self._weapon_equipment[self.weaponIndex].Use(rect)
 
-    def UseUltimate(self):
-        pass
+    def UseUltimate(self, player_instance):
+        self._ultimate.Use(player_instance)
 
     def UseObject(self, rect, *args, **kwargs):
         if self.isUltimateSelected:

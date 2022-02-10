@@ -1,4 +1,4 @@
-from sklearn.linear_model import enet_path
+from typing import List, Tuple
 from animation import Animator
 from game_objects import Equipment
 import pygame as pg
@@ -7,6 +7,9 @@ from settings import IMAGES
 from interface import HealthBar
 import logger
 from timer import Timer
+from GameObjects.prefabs import IEffect
+
+log = logger.get_logger(__name__)
 
 
 class Player(Sprite):
@@ -23,6 +26,7 @@ class Player(Sprite):
 
     def __init__(self, display_size, mediator, shellGroup: Group, particle_group, *args, **kwargs):
         super().__init__()
+        self.HP = Player.MAX_HP
         self.mediator = mediator
         self.health = HealthBar(
             [10, 10], self.HP, self.MAX_HP, [display_size[0]*0.35, display_size[1]*0.02], (240, 84, 84), background=(198, 212, 217), draw_text=True)
@@ -31,6 +35,8 @@ class Player(Sprite):
         self.particle_group = particle_group
         self.equipment = Equipment(self.shellGroup, self.particle_group)
         self.display_size = display_size
+
+        self.Effects = Effects()
 
         self.images = {
             "default": [pg.image.load(
@@ -123,11 +129,11 @@ class Player(Sprite):
 
     def update(self, *args, **kwargs):
         """Updating all player states"""
+        self.Effects.update()
         self.updatePosition()
         self.updateActingImage(threshold=.35)
         self.animation.update(now=kwargs['now'], rate=80, frames_len=len(
             self.acting_images), repeat=True)
-        
 
     def draw(self, dispaly):
         dispaly.blit(
@@ -137,14 +143,14 @@ class Player(Sprite):
 
     def executeWeapon(self):
         if self.equipment.isUltimateSelected:
-            return self.equipment.useUltimate(self, self)
+            return self.equipment.UseUltimate(self)
         return self.equipment.UseWeapon(self.rect)
 
     def changeWeapon(self, value=None, update=None):
         return self.equipment.SelectObject(value=value, update=update)
 
     def selectUltimate(self):
-        self.equipment.SelectUltimate()
+        self.equipment.SelectUltimate(self)
 
     def getHeal(self, object):  # -> new XP
         """Get size healing from object and use __heal method with healing parameters"""
@@ -167,7 +173,7 @@ class Player(Sprite):
 
     def AddForce(self, direction: pg.Vector2, force=None, *args, **kwargs):
         _force = force
-        if _force == None:
+        if _force is None:
             _force = self.rect.height
 
         if direction.y > 0 and self.rect.bottom + int(self.rect.height*0.6) + _force > self.display_size[1]:
@@ -199,9 +205,39 @@ class Player(Sprite):
 
             self.AddForce(*args, **kwargs)
 
+    def AddEffect(self, effect):
+        self.Effects.add(effect)
+
     def kill(self):
         return super().kill()
+
+    def SetGodMode(self, value: bool = None):
+        self.isGodMod = value if value is not None else not self.isGodMod
 
     def restart(self):
         self.__init__(self.display_size, self.mediator,
                       self.shellGroup, self.particle_group)
+
+
+class Effects(Group):
+    def __init__(self, *sprites: Tuple[IEffect]):
+        super().__init__(*sprites)
+
+    def empty(self):
+        for ef in self.sprites():
+            pass
+        return super().empty()
+
+   
+    # def __init__(self, *instances: Tuple[IEffect]):
+    #     self.__effects: List[IEffect] = list(instances)
+
+    # def Update(self, player_instance, *args, **kwargs):
+    #     try:
+    #         for ef in self.__effects:
+    #             ef.Use(player_instance, *args, **kwargs)
+    #     except:
+    #         log.warning("effect using doesnt work!")
+
+    # def RemoveEffects(self):
+    #     self.__effects.clear()

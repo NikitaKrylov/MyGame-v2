@@ -63,21 +63,24 @@ class ToolbarCell:
 
         if self.drawTimeDelta:
             # self.font = pg.font.Font(
-                # MEDIA + '\\font\\karmasuture.ttf', int(self.rect.height*0.2))
+            # MEDIA + '\\font\\karmasuture.ttf', int(self.rect.height*0.2))
             self.font = pg.font.SysFont(
                 'Comic Sans MS', int(self.rect.height*0.2))
 
-    def draw(self, display, label: pg.Surface = None, timeDelta:int=None, *args, **kwargs):
+    def draw(self, display, label: pg.Surface = None, timeDelta: int = None, *args, **kwargs):
         display.blit(self.image, self.rect)
 
         if label != None:
             display.blit(label, label.get_rect(center=self.rect.center))
 
-        if self.isSelected:
+        if self.isSelected or self.isUltimate:
             if self.drawTimeDelta:
+                if timeDelta is None:
+                    return
                 timeDelta = str(timeDelta)
                 texture = self.font.render(timeDelta, False, (255, 255, 255))
-                display.blit(texture, (self.rect.centerx-texture.get_width()//2, self.rect.bottom))
+                display.blit(texture, (self.rect.centerx -
+                             texture.get_width()//2, self.rect.bottom))
 
     def update(self, *args, **kwargs):
         if self.isSelected:
@@ -97,7 +100,7 @@ class Toolbar:
         self.cells = [ToolbarCell(images=images[:2], center=[0, self.display_size[1]*.95], drawTimeDelta=True)
                       for i in range(self.equipment.countWeapons())]
         self.special_cell = ToolbarCell(
-            images=images[-2:], bottomright=[0, self.cells[0].rect.bottom], isUltimate=True)
+            images=images[-2:], bottomright=[0, self.cells[0].rect.bottom], isUltimate=True, drawTimeDelta=True)
 
         margin = self.cells[0].rect.width // 2
         self.special_cell.rect.right = display_size[0] - margin*2
@@ -116,7 +119,9 @@ class Toolbar:
 
         if self.equipment._ultimate:
             self.special_cell.draw(
-                display, label=self.equipment._ultimate.label_image)
+                display,
+                label=self.equipment._ultimate.label_image,
+                timeDelta=self.equipment._ultimate.GetCooldawnDelta)
 
     def update(self, *args, **kwargs):
         self.special_cell.update()
