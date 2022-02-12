@@ -136,8 +136,7 @@ class Strike(BaseShell):
         pass
 
     def update(self, *args, **kwargs):
-        self.animation.update(
-            now=kwargs['now'], rate=200, frames_len=2, repeat=False, finiteFunction=super().kill)
+        self.animation.update(rate=200, frames_len=2, repeat=False, finiteFunction=super().kill)
         return super().update(*args, **kwargs)
 
     def kill(self):

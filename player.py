@@ -3,6 +3,7 @@ from animation import Animator
 from game_objects import Equipment
 import pygame as pg
 from pygame.sprite import Group, Sprite
+from changed_group import CustomGroup
 from settings import IMAGES
 from interface import HealthBar
 import logger
@@ -132,7 +133,7 @@ class Player(Sprite):
         self.Effects.update()
         self.updatePosition()
         self.updateActingImage(threshold=.35)
-        self.animation.update(now=kwargs['now'], rate=80, frames_len=len(
+        self.animation.update(rate=80, frames_len=len(
             self.acting_images), repeat=True)
 
     def draw(self, dispaly):
@@ -140,6 +141,7 @@ class Player(Sprite):
             self.acting_images[self.animation.getIteration], self.rect)
         self.health.draw(dispaly, border_radius=self.rect.height //
                          2, border_top_right_radius=self.rect.height//2)
+        self.Effects.draw(dispaly)
 
     def executeWeapon(self):
         if self.equipment.isUltimateSelected:
@@ -219,7 +221,7 @@ class Player(Sprite):
                       self.shellGroup, self.particle_group)
 
 
-class Effects(Group):
+class Effects(CustomGroup):
     def __init__(self, *sprites: Tuple[IEffect]):
         super().__init__(*sprites)
 
@@ -228,7 +230,6 @@ class Effects(Group):
             pass
         return super().empty()
 
-   
     # def __init__(self, *instances: Tuple[IEffect]):
     #     self.__effects: List[IEffect] = list(instances)
 

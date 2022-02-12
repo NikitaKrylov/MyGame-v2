@@ -32,7 +32,7 @@ class IWeapon:
         return False
 
     @property
-    def GetCooldawnDelta(self):
+    def TimeDelta(self):
         delta = (self.updatingTime['last'] + self.updatingTime['cooldawn']) - Timer.get_ticks()
         return  delta if delta >= 0 else 0
 

@@ -382,7 +382,7 @@ class Equipment:
     def __init__(self, group: AbstractGroup, particle_group: AbstractGroup):
         self._group = group
         self._particle_group = particle_group
-        
+
         self.weaponIndex = 0
         self._weapon_equipment: List[IWeapon] = []
         self._heal_equipment = []
@@ -393,9 +393,18 @@ class Equipment:
         # self.AddUltimate(Striker)
         self.AddUltimate(InvisibleEffectSender)
 
+    def BoolSelectUltimate(self):
+        """set isUltimateSelected - True"""
+        self.isUltimateSelected = True
+
+    def BoolDiselectUltimate(self):
+        """set isUltimateSelected - False"""
+        self.isUltimateSelected = False
+
     def SelectUltimate(self, player_instance):
-        self.isUltimateSelected = not self.isUltimateSelected
-        self._ultimate.Select(self.isUltimateSelected, player_instance)
+        if self._ultimate.isExecute:
+            self.BoolSelectUltimate()
+            self._ultimate.Select(self.isUltimateSelected, player_instance)
 
     def SelectWeapon(self):
         pass
@@ -428,12 +437,14 @@ class Equipment:
 
         return self.UseWeapon(rect, *args, **kwargs)
 
-    def AddWeapon(self, *prefabs:Tuple[IWeapon]):
+    def AddWeapon(self, *prefabs: Tuple[IWeapon]):
         for prefab in prefabs:
             self._weapon_equipment.append(
                 prefab(group=self._group, particle_group=self._particle_group))
-    def AddUltimate(self, prefabs:IUltimate):
-        self._ultimate = prefabs(group=self._group, particle_group=self._particle_group)
+
+    def AddUltimate(self, prefabs: IUltimate):
+        self._ultimate = prefabs(
+            group=self._group, particle_group=self._particle_group, BoolDeselectFubnc=self.BoolDiselectUltimate)
 
     def countWeapons(self):
         return len(self._weapon_equipment)

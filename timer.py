@@ -29,3 +29,22 @@ class Timer:
     @staticmethod
     def __str__(*args):
         return str(Timer.ticks)
+
+
+class STimer:
+    def Start(self, rate: int, finite_func=None):
+        self.rate = rate
+        self.finite_func = finite_func
+        self.finiteTime = Timer.get_ticks() + self.rate
+
+    def Update(self, *args, **kwargs):
+        if Timer.get_ticks() > self.finiteTime:
+            if self.finite_func:
+                self.finite_func()
+            return True
+        return False
+
+    @property
+    def TimeDelta(self):
+        delta = self.finiteTime - Timer.get_ticks()
+        return delta if delta > 0 else 0

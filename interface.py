@@ -115,13 +115,13 @@ class Toolbar:
             self.cells[i].draw(
                 display,
                 label=self.equipment._weapon_equipment[i].label_image,
-                timeDelta=self.equipment._weapon_equipment[i].GetCooldawnDelta)
+                timeDelta=self.equipment._weapon_equipment[i].TimeDelta)
 
         if self.equipment._ultimate:
             self.special_cell.draw(
                 display,
                 label=self.equipment._ultimate.label_image,
-                timeDelta=self.equipment._ultimate.GetCooldawnDelta)
+                timeDelta=self.equipment._ultimate.TimeDelta)
 
     def update(self, *args, **kwargs):
         self.special_cell.update()

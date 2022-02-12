@@ -98,7 +98,6 @@ class Asteroid(AbstractEnemy):  # Sprite
 
     def update(self, *args, **kwargs):
         self.rect, self.image, = self.animation.rotate(
-            now=kwargs['now'],
             rot_speed=self.rot_speed,
             rect=self.rect,
             image=self.images[0],
@@ -106,7 +105,7 @@ class Asteroid(AbstractEnemy):  # Sprite
             cooldawn=15)
 
         if self.isBurst:
-            self.animation.update(now=kwargs['now'], rate=100, frames_len=len(
+            self.animation.update( rate=100, frames_len=len(
                 self.burst_images), repeat=False, finiteFunction=self.kill)
             self.image = self.burst_images[self.animation.getIteration]
             return
@@ -184,11 +183,10 @@ class AbstaractFlightEnemy(AbstractEnemy, IInertial):
 
     def update(self, *args, **kwargs):
 
-        self.animation.update(
-            now=kwargs['now'], rate=50, frames_len=len(self.images), repeat=True)
+        self.animation.update( rate=50, frames_len=len(self.images), repeat=True)
 
         if self.isBurst:
-            self.burstAnimation.update(now=kwargs['now'], rate=80, frames_len=len(
+            self.burstAnimation.update( rate=80, frames_len=len(
                 self.burst_images), repeat=False, finiteFunction=self.kill)
             self.image = self.burst_images[self.burstAnimation.getIteration]
             return
@@ -265,7 +263,6 @@ class StarEnemy(AbstractEnemy, IInertial):
             return
 
         self.rect, self.image, = self.animation.rotate(
-            now=kwargs['now'],
             rot_speed=self.rot_speed,
             rect=self.rect,
             image=self.images[0],

@@ -1,8 +1,6 @@
-from math import sin
 import pygame as pg
-from pygame import Vector2, sprite
 import math
-from pygame import math as mathPg
+from timer import Timer
 
 
 class Animator:
@@ -13,7 +11,8 @@ class Animator:
         self.rot = 0
         self.__rotVector = pg.Vector2(1, 0)
 
-    def update(self, now: int, rate: int, frames_len: int, repeat: bool = True, finiteFunction=None):
+    def update(self, rate: int, frames_len: int, repeat: bool = True, finiteFunction=None):
+        now = Timer.get_ticks()
         if now - self.updatingTime > rate:
             self.updatingTime = now
 
@@ -28,7 +27,8 @@ class Animator:
     def getIteration(self):
         return self.frame
 
-    def rotate(self, now, rot_speed, rect, image, image_copy, cooldawn):
+    def rotate(self, rot_speed, rect, image, image_copy, cooldawn):
+        now = Timer.get_ticks()
         if now - self.rotationTime > cooldawn:
             self.rotationTime = now
             self.rot = (self.rot + rot_speed) % 360
@@ -39,7 +39,7 @@ class Animator:
             rect.center = old_center
 
         return rect, image_copy
-    
+
     @property
     def rotVector(self):
         return self.__rotVector.rotate_rad(math.radians(-self.rot))
@@ -128,7 +128,7 @@ class PointerMovement(StaticMovement):
 
 # class AbstractParticle(sprite.Sprite):
 #     def __init__(self, pos: list, speed, rate, life_time=None, *groups: sprite.AbstractGroup):
-#         super().__init__(*groups) 
+#         super().__init__(*groups)
 #         self.speed = speed
 #         self.rate = rate
 #         self.life_time = life_time

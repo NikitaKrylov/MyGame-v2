@@ -51,26 +51,24 @@ class InventoryStrategy(BaseStrategy):
 
 class GameStrategy(BaseStrategy):
     def update(self, *args, **kwargs):
-        _now = Timer.get_ticks()
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
         self.aplication.controller.update()
         self.aplication.toolbar.update()
         self.aplication.groups.update(
-            now=_now,
             display_size=self.aplication.display_size,
             player_center=self.aplication.player.rect.center,
             joystick_hover_point=self.aplication.controller.hoverPointPos if hasattr(
                 self.aplication.controller, 'hoverPointPos') else None
         )
         self.aplication.groups.collide(self.aplication.player)
-        self.aplication.player.update(now=_now)
+        self.aplication.player.update()
 
         if self.aplication.player.HP <= 0:
             self.aplication.showDieMenu(True)
             return
 
-        self.aplication.level.update(now=_now)
+        self.aplication.level.update()
 
         if self.aplication.level.isWin:
             self.aplication.setWinMenuStrategy()
