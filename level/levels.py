@@ -9,7 +9,7 @@ from timer import Timer
 log = get_logger(__name__)
 
 
-class Level:
+class BaseLevel:
     factories = []
     mediator = None
     background_class = None
@@ -61,7 +61,7 @@ class Level:
         return self.__class__.__name__
 
 
-class Level1(Level):
+class Level1(BaseLevel):
     factories = []
     background_class = FustStarsBackground
 
@@ -117,7 +117,7 @@ class Level1(Level):
         return super().chackDone(*args, **kwargs)
 
 
-class AsteroidWaves(Level):
+class AsteroidWaves(BaseLevel):
     factories = []
     background_class = StarsBackground
 

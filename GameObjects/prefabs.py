@@ -3,6 +3,7 @@ import pygame as pg
 from pygame.sprite import AbstractGroup, Sprite
 from timer import STimer, Timer
 from pygame import Color, gfxdraw
+from settings import IMAGES
 # ----------Ultimate prefabs------------------
 
 
@@ -34,16 +35,15 @@ class AimingPoint(Sprite):
 class IEffect(Sprite):
     duration: int = None
 
-    def __init__(self, duration=None, _effect_func=None, *groups: AbstractGroup):
+    def __init__(self, player_instance, duration=None, _effect_func=None, *groups: AbstractGroup):
         super().__init__(*groups)
         self.duration = duration if duration is not None else self.__class__.duration
         self._effect_func = _effect_func
-        self.player_instance = None
+        self.player_instance = player_instance
         self.sTimer = STimer()
         self.finiteEvent = [self._revoke]
 
-    def Use(self, player_instance, *args, **kwargs):
-        self.player_instance = player_instance
+    def Use(self, *args, **kwargs):
         self._apply()
         self.sTimer.Start(self.duration, self.kill)
 
@@ -78,6 +78,7 @@ class InvisibleEffect(IEffect):
     def _apply(self):
         if self.player_instance is not None:
             self._effect_func(value=True)
+
         return super()._apply()
 
     def _revoke(self):
@@ -92,4 +93,5 @@ class InvisibleEffect(IEffect):
                               int(max(self.player_instance.rect.height,
                                   self.player_instance.rect.width)*0.6),
                               Color(30, 168, 247, 73))
+
         return super().draw(display)

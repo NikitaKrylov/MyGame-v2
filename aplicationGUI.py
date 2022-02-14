@@ -57,7 +57,7 @@ class AplicationGUI:
                     sys.exit()
                     
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    from levels import AsteroidWaves, Level1
+                    from level.levels import AsteroidWaves, Level1
                     aplication = Aplication(Level1)
                     # aplication.changeLevel(AsteroidWaves)
                     # aplication.setControllerType('joystick')

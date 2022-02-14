@@ -47,6 +47,7 @@ class Player(Sprite):
             "right": [pg.image.load(
                 IMAGES+'\player\\right'+str(i)+'.png').convert_alpha() for i in range(1, 3)]
         }
+        
         self.acting_images = self.images['default']
 
         self.rect = self.acting_images[0].get_rect(

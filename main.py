@@ -4,7 +4,8 @@ from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
-from levels import Level
+from level.levels import BaseLevel
+from level.levelManager import LevelManager
 from GUI.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu
 from GUI.elements import Text
 from interface import Toolbar
@@ -180,7 +181,7 @@ class Aplication:
     __run = True
     ticks = 0
 
-    def __init__(self, level: Level, controllerType: str = 'keyboard', *args, **kwargs):
+    def __init__(self, level: BaseLevel, controllerType: str = 'keyboard', *args, **kwargs):
         pg.init()
         pg.font.init()
         user32 = ctypes.windll.user32
@@ -195,7 +196,8 @@ class Aplication:
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
-        self._acting_level: Level = level
+        self.levelManager = LevelManager()
+        self._acting_level: BaseLevel = level
 
         self.menuStrategy = self.menuStrategy(self)
         self.dieMenuStrategy = self.dieMenuStrategy(self)
@@ -344,7 +346,7 @@ class Aplication:
         self._actingStrategy = self.guiMenuStrategy
         self.quitGame()
 
-    def changeLevel(self, level: Level):
+    def changeLevel(self, level: BaseLevel):
         self.level = level(self, self.groups)
         self.groups.Background.empty()
         self.level.start()
@@ -363,7 +365,7 @@ class Aplication:
 
 
 if __name__ == '__main__':
-    from levels import AsteroidWaves, Level1
+    from level.levels import AsteroidWaves, Level1
     import logger
     # file_name='app_info.log' -> will write logs into file
     log = logger.setup_logger()

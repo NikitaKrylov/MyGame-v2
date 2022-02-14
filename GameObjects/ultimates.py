@@ -133,6 +133,8 @@ class InvisibleEffectSender(IEffectSender):
             'last': 0,
             'cooldawn': 6000
         }
+        self.label_image = pg.image.load(
+            IMAGES+"\\menu\\labels\\invisible_area.png").convert_alpha()
 
     def _use(self, player_instance, *args, **kwargs):
         if self.instance is not None and not self.instance.alive():
@@ -140,9 +142,11 @@ class InvisibleEffectSender(IEffectSender):
 
         if self.instance is None:
             self.instance = self.prefab(
-                duration=self.duration, _effect_func=player_instance.SetGodMode,)
+                player_instance=player_instance,
+                duration=self.duration, 
+                _effect_func=player_instance.SetGodMode,)
             self.instance.AddfiniteEvent(self.BoolDeselectFubnc)
-            self.instance.Use(player_instance)
+            self.instance.Use()
             player_instance.AddEffect(self.instance)
             self.BoolDeselectFubnc()
 
