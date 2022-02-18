@@ -7,7 +7,7 @@ from settings import IMAGES
 import random
 import math
 from interface import HealthBar
-from game_objects import DubleGunEnemy, SingleRedGunEnemy, StarGun
+from GameObjects.weapons import DubleGunEnemy, SingleRedGunEnemy, StarGun
 from AI import WanderingAI
 
 
@@ -105,7 +105,7 @@ class Asteroid(AbstractEnemy):  # Sprite
             cooldawn=15)
 
         if self.isBurst:
-            self.animation.update( rate=100, frames_len=len(
+            self.animation.update(rate=100, frames_len=len(
                 self.burst_images), repeat=False, finiteFunction=self.kill)
             self.image = self.burst_images[self.animation.getIteration]
             return
@@ -183,10 +183,11 @@ class AbstaractFlightEnemy(AbstractEnemy, IInertial):
 
     def update(self, *args, **kwargs):
 
-        self.animation.update( rate=50, frames_len=len(self.images), repeat=True)
+        self.animation.update(
+            rate=50, frames_len=len(self.images), repeat=True)
 
         if self.isBurst:
-            self.burstAnimation.update( rate=80, frames_len=len(
+            self.burstAnimation.update(rate=80, frames_len=len(
                 self.burst_images), repeat=False, finiteFunction=self.kill)
             self.image = self.burst_images[self.burstAnimation.getIteration]
             return
@@ -195,7 +196,7 @@ class AbstaractFlightEnemy(AbstractEnemy, IInertial):
         self.healthBar.update(self.rect.left, self.rect.top -
                               self.healthBar.rect.height * 1.5)
 
-        self.weapon.execute(self.rect)
+        self.weapon.Use(self.rect)
 
         return super().update(*args, **kwargs)  # updatePosition()
 
@@ -283,7 +284,7 @@ class StarEnemy(AbstractEnemy, IInertial):
                 v.scale_to_length(self.rect.width//2.5)
                 point_pos = (self.rect.centerx + v.x, self.rect.centery + v.y)
                 v.scale_to_length(1)
-                self.weapon.execute(self.rect, pos=point_pos, vector=v)
+                self.weapon.Use(self.rect, pos=point_pos, vector=v)
 
         if self.HP < self.MAX_HP/3:
             self.brain.Push(self.updateState2)
@@ -297,7 +298,7 @@ class StarEnemy(AbstractEnemy, IInertial):
                 v.scale_to_length(self.rect.width//2.5)
                 point_pos = (self.rect.centerx + v.x, self.rect.centery + v.y)
                 v.scale_to_length(1)
-                self.weapon.execute(self.rect, pos=point_pos, vector=v)
+                self.weapon.Use(self.rect, pos=point_pos, vector=v)
 
         if self.HP > self.MAX_HP/3:
             self.brain.Pop()

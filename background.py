@@ -74,7 +74,7 @@ class StarsBackground(AbstaractBackground):
 
 
 class FustStarsBackground(StarsBackground):
-    scene_speed = 3
+    scene_speed = 2
     element_speed = scene_speed
 
 
@@ -92,7 +92,6 @@ class BackgroundParticle(Sprite):
         self.direction = direction
         self.speed = random.choice(speed) if isinstance(
             speed, (list, tuple)) else speed
-    
 
     def update(self, *args, **kwargs):
         self.rect.centerx += self.direction.x * self.speed
@@ -113,3 +112,46 @@ class ImageBackgroundParticle(BackgroundParticle):
         self.images = images
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=center)
+
+# ------------------------------------------------------------------------------------------------------
+
+
+class Scene(Sprite):
+    def __init__(self, pos, display_size, image, speed, *groups: AbstractGroup):
+        super().__init__(*groups)
+        self.image = image
+        self.display_size = display_size
+        self.speed = speed
+
+        self.rect = self.image.get_rect(topleft=pos)
+
+    def draw(self, display):
+        display.blit(self.image, self.rect)
+
+    def update(self, **kwargs):
+        pass
+
+
+# ------------------------------------------------------------------------------------------------------
+
+class BackgroundManager:
+
+    def __init__(self,  display_size, group: AbstractGroup):
+        self.display_size = display_size
+        self.group = group
+        self.speed = 3
+
+        image = pg.Surface(self.display_size)
+        image.blit(pg.Color(2, 12, 11))
+
+        self.backgroundManagerGroup = Group()
+
+        Scene([0, 0], self.display_size, image, self.speed,
+              self.group, self.backgroundManagerGroup)
+        Scene([0, -self.display_size[1]], self.display_size, image,
+              self.speed, self.group, self.backgroundManagerGroup)
+
+    def update(self, **kwargs):
+        for scene in self.backgroundManagerGroup.sprites():
+            if scene.rect.top > self.display_size[1]:
+                scene.rect.top = -self.display_size[1]

@@ -21,20 +21,24 @@ class IWeapon:
         self.images = []
 
     def Use(self, rect, *args, **kwargs):
+        self.UpdateExecuteTime()
         """Using weapon"""
 
     @property
     def isExecute(self):
         now = Timer.get_ticks()
         if now - self.updatingTime['last'] > self.updatingTime['cooldawn']:
-            self.updatingTime['last'] = now
             return True
         return False
 
+    def UpdateExecuteTime(self):
+        self.updatingTime['last'] = Timer.get_ticks()
+
     @property
     def TimeDelta(self):
-        delta = (self.updatingTime['last'] + self.updatingTime['cooldawn']) - Timer.get_ticks()
-        return  delta if delta >= 0 else 0
+        delta = (self.updatingTime['last'] +
+                 self.updatingTime['cooldawn']) - Timer.get_ticks()
+        return delta if delta >= 0 else 0
 
 
 # --------------------BASE-----------------------
@@ -107,7 +111,7 @@ class LiteGun(IWeapon):
             pos = [rect.centerx, int(
                 rect.top+self.images[0].get_rect().height//2)]
             self.prefab(self.images, pos, self.particle_group, self.group)
-        return super().Use(rect, *args, **kwargs)
+            return super().Use(rect, *args, **kwargs)
 
 
 class RocketLauncher(IWeapon):
@@ -130,3 +134,87 @@ class RocketLauncher(IWeapon):
 
 
 # --------------------ENEMY-----------------------
+
+
+class StarGun(IWeapon):
+    prefab = StarEnemyShell
+
+    def __init__(self, group: AbstractGroup, particle_group: AbstractGroup):
+        super().__init__(group, particle_group)
+        self.images = [pg.image.load(
+            IMAGES+'\shell\\star\\star1.png').convert_alpha()]
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 1000
+        }
+
+    def Use(self, rect, *args, **kwargs):
+        self.group.add(self.prefab(images=self.images,
+                       particle_group=self.particle_group, **kwargs))
+        return super().Use(rect, *args, **kwargs)
+
+
+class SingleRedGun(IWeapon):
+    prefab = RedShell
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 1700
+        }
+        self.images = [pg.image.load(
+            IMAGES+'\shell\\red\\redshell'+str(i)+'.png').convert_alpha() for i in range(1, 2)]
+
+    def Use(self, rect, *args, **kwargs):
+        if self.isExecute:
+            pos = rect.center if not kwargs.get('pos') else kwargs.get('pos')
+
+            self.prefab(images=self.images,
+                        particle_group=self.particle_group,
+                        groups=[self.group],
+                        pos=pos,
+                        **kwargs)
+            return super().Use(rect, *args, **kwargs)
+
+
+class DubleRedGun(SingleRedGun):
+    prefab = RedShell
+
+    def Use(self, rect, *args, **kwargs):
+        if self.isExecute:
+            pos1 = [rect.left, rect.top+rect.height//2]
+            pos2 = [rect.right, pos1[1]]
+            self.prefab(self.images, pos1, self.particle_group, self.group)
+            self.prefab(self.images, pos2, self.particle_group, self.group)
+            return super().Use(rect, *args, **kwargs)
+
+
+class SingleRedGunEnemy(SingleRedGun):
+    prefab = RedEnemyShell
+
+    def Use(self, rect, *args, **kwargs):
+        if self.isExecute:
+            pos = [rect.centerx, rect.bottom]
+            self.prefab(self.images, pos, self.particle_group, self.group)
+            return super().Use(rect, *args, **kwargs)
+
+
+class DubleGunEnemy(DubleRedGun):
+    prefab = RedEnemyShell
+
+    def __init__(self, group, particle_group):
+        super().__init__(group, particle_group)
+        self.updatingTime = {
+            'last': 0,
+            'cooldawn': 1700
+        }
+
+    def Use(self, rect, *args, **kwargs):
+        if self.isExecute:
+            pos1 = [rect.left, rect.top+rect.height//2]
+            pos2 = [rect.right, pos1[1]]
+
+            self.prefab(self.images, pos1, self.particle_group, self.group)
+            self.prefab(self.images, pos2, self.particle_group, self.group)
+            return super().Use(rect, *args, **kwargs)

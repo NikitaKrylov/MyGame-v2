@@ -56,12 +56,12 @@ class GameStrategy(BaseStrategy):
             self.aplication.player)
         self.aplication.controller.update()
         self.aplication.toolbar.update()
-        self.aplication.groups.update(
-            display_size=self.aplication.display_size,
-            player_center=self.aplication.player.rect.center,
-            joystick_hover_point=self.aplication.controller.hoverPointPos if hasattr(
-                self.aplication.controller, 'hoverPointPos') else None
-        )
+        # self.aplication.groups.update(
+        #     display_size=self.aplication.display_size,
+        #     player_center=self.aplication.player.rect.center,
+        #     joystick_hover_point=self.aplication.controller.hoverPointPos if hasattr(
+        #         self.aplication.controller, 'hoverPointPos') else None
+        # )
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update()
 
@@ -93,6 +93,14 @@ class GameStrategy(BaseStrategy):
 
         if event.type == self.aplication.game_timer.timer_update_event:
             self.aplication.game_timer.update()
+
+        if event.type == self.aplication.game_timer.sprite_group_update_event:
+            self.aplication.groups.update(
+                display_size=self.aplication.display_size,
+                player_center=self.aplication.player.rect.center,
+                joystick_hover_point=self.aplication.controller.hoverPointPos if hasattr(
+                    self.aplication.controller, 'hoverPointPos') else None
+            )
 
         return super().eventListen(event)
 
@@ -232,7 +240,7 @@ class Aplication:
             # rect.center = pg.mouse.get_pos()
 
             pg.display.update()
-            dt = self.clock.tick(60)
+            dt = self.clock.tick(90)
 
     def changeControllerToggle(self):
         self.controleRealizationIndex += 1

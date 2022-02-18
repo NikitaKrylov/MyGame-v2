@@ -1,5 +1,5 @@
 from math import sin, pi, cos
-import pygame
+import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
 from scipy import rand
 from animation import Animator
@@ -20,7 +20,7 @@ class Particle(Sprite):
         self.speed_rate = speed_rate
         self.shape = shape
         self.speed = speed
-        self.image = pygame.Surface((self.size, self.size))
+        self.image = pg.Surface((self.size, self.size))
         self.color = color
         self.image.fill(self.color)
         self.rect = self.image.get_rect(center=pos)
@@ -34,7 +34,7 @@ class Particle(Sprite):
             if self.speed <= 0:
                 self.kill()
 
-        self.image = pygame.Surface((self.size, self.size))
+        self.image = pg.Surface((self.size, self.size))
         self.image.fill(self.color)
         self.rect = self.image.get_rect(center=self.rect.center)
         self.rect.x += self.direction.x * self.speed
@@ -52,8 +52,8 @@ class Particle(Sprite):
         if self.shape == 'square':
             display.blit(self.image, self.rect)
         elif self.shape == 'circle':
-            pygame.draw.circle(display, self.color,
-                               self.rect.center, self.size//2)
+            pg.draw.circle(display, self.color,
+                           self.rect.center, self.size//2)
 
 
 class ParticleShell(Particle):
@@ -88,7 +88,7 @@ class BaseShell(Sprite):
         self.animation = self.animation()
         self.images = images
         self.image = images[0]
-        self.movement = StaticMovement(pygame.Vector2(0.0, -1.0))
+        self.movement = StaticMovement(pg.Vector2(0.0, -1.0))
         """Изображение, которое должно рисоваться в данный момент,
         должно быть названо image для нормально работы группы
         """
@@ -130,22 +130,24 @@ class Strike(BaseShell):
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.movement.direction = pygame.Vector2(0, 0)
+        self.movement.direction = pg.Vector2(0, 0)
 
     def draw(self, display):
         pass
 
     def update(self, *args, **kwargs):
-        self.animation.update(rate=200, frames_len=2, repeat=False, finiteFunction=super().kill)
+        self.animation.update(rate=200, frames_len=2,
+                              repeat=False, finiteFunction=super().kill)
         return super().update(*args, **kwargs)
 
     def kill(self):
-        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0), (217, 114, 17), (245, 96, 10), (255, 30, 0)]
+        colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0),
+                  (217, 114, 17), (245, 96, 10), (255, 30, 0)]
         for i in range(70):
             alpha = random.random() * 2 * pi
             pos = [int(self.rect.centerx + self.rect.width*0.2 * cos(alpha)),
                    int(self.rect.centery + self.rect.height*0.2 * sin(alpha))]
-            vector = pygame.Vector2(0, -1).rotate(random.randint(0, 360))
+            vector = pg.Vector2(0, -1).rotate(random.randint(0, 360))
             self.particle_group.add(Particle(
                 pos=pos,
                 size=random.randint(2, int(self.rect.width*0.2)),
@@ -162,7 +164,7 @@ class Strike(BaseShell):
             alpha = random.random() * 2 * pi
             pos = [int(self.rect.centerx + self.rect.width/2 * cos(alpha)),
                    int(self.rect.centery + self.rect.height/2 * sin(alpha))]
-            vector = pygame.Vector2(0, -1).rotate(random.randint(0, 360))
+            vector = pg.Vector2(0, -1).rotate(random.randint(0, 360))
             self.particle_group.add(Particle(
                 pos=pos,
                 size=random.randint(2, int(self.rect.width*0.2)),
@@ -185,14 +187,14 @@ class FirstShell(BaseShell):
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.15, self.rect.y +
-                                  self.rect.height * 0.15, self.rect.width*0.7, self.rect.height*0.7)]
+        self.rects = [pg.Rect(self.rect.x + self.rect.width * 0.15, self.rect.y +
+                              self.rect.height * 0.15, self.rect.width*0.7, self.rect.height*0.7)]
 
     def kill(self):
         """create particles when sprite die"""
         colors = [(170, 238, 255), (127, 233, 247), (180, 248, 255)]
         for i in range(9):
-            vector = pygame.Vector2(1, 0).rotate(random.randint(1, 359))
+            vector = pg.Vector2(1, 0).rotate(random.randint(1, 359))
             self.particle_group.add(Particle(
                 pos=self.rect.center,
                 size=random.randint(6, int(self.rect.width/2)),
@@ -211,14 +213,14 @@ class RedShell(BaseShell):
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
-        self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.3, self.rect.y +
-                                  self.rect.height * 0.3, self.rect.width*0.6, self.rect.height*0.6)]
+        self.rects = [pg.Rect(self.rect.x + self.rect.width * 0.3, self.rect.y +
+                              self.rect.height * 0.3, self.rect.width*0.6, self.rect.height*0.6)]
 
     def kill(self):
         """create particles when sprite die"""
         colors = [(200, 20, 20), (180, 11, 11), (200, 0, 0)]
         for i in range(7):
-            vector = pygame.Vector2(1, 0).rotate(random.randint(1, 359))
+            vector = pg.Vector2(1, 0).rotate(random.randint(1, 359))
             self.particle_group.add(Particle(
                 pos=self.rect.center,
                 size=random.randint(6, self.rect.width//2.5),
@@ -242,7 +244,7 @@ class Rocket(BaseShell):
         colors = [(190, 192, 194), (164, 165, 166),
                   (206, 206, 214), (129, 129, 130)]
         for i in range(2):
-            vector = pygame.Vector2(0, -1).rotate(random.randint(-20, 20))
+            vector = pg.Vector2(0, -1).rotate(random.randint(-20, 20))
             self.particle_group.add(Particle(
                 pos=[self.rect.centerx, self.rect.bottom],
                 size=random.randint(6, self.rect.width//2.5),
@@ -258,7 +260,7 @@ class Rocket(BaseShell):
     def kill(self):
         colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
         for i in range(70):
-            vector = pygame.Vector2(0, -1).rotate(random.randint(-20, 20))
+            vector = pg.Vector2(0, -1).rotate(random.randint(-20, 20))
             self.particle_group.add(Particle(
                 pos=[random.randint(self.rect.left-self.rect.width//2, self.rect.right+self.rect.width//2), random.randint(
                     self.rect.top - self.rect.height//2, self.rect.bottom + self.rect.height//2)],
@@ -282,8 +284,8 @@ class BurnedShell(BaseShell):
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
 
-        self.rects = [pygame.Rect(self.rect.x + self.rect.width * 0.375, self.rect.y +
-                                  self.rect.height * 0.375, self.rect.width*0.25, self.rect.height*0.25)]
+        self.rects = [pg.Rect(self.rect.x + self.rect.width * 0.375, self.rect.y +
+                              self.rect.height * 0.375, self.rect.width*0.25, self.rect.height*0.25)]
 
     def kill(self):
         colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]
@@ -295,7 +297,7 @@ class BurnedShell(BaseShell):
                 size=self.rect.width//5,
                 speed=random.randint(12, 16),
                 color=random.choice(colors),
-                vector=pygame.Vector2(1, 0).rotate(random.randint(1, 359)),
+                vector=pg.Vector2(1, 0).rotate(random.randint(1, 359)),
                 damage=self.PARTICLE_DAMAGE,
                 life_size=2,
                 size_rate=-0.4,
@@ -324,9 +326,8 @@ class StarEnemyShell(BaseShell):
     _speed = 3
     _damage = 5
 
-    def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
+    def __init__(self, images: list, pos, vector: pg.Vector2, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
-        vector = kwargs.get('vector')
         self.movement.changeDirection(update_y=vector.y)
         self.movement.changeDirection(update_x=vector.x)
 
@@ -338,7 +339,7 @@ class StarEnemyShell(BaseShell):
                 size=int(self.rect.width*0.7),
                 speed=random.randint(7, 11),
                 color=random.choice(colors),
-                vector=pygame.Vector2(1, 0).rotate(random.randint(1, 359)),
+                vector=pg.Vector2(1, 0).rotate(random.randint(1, 359)),
                 life_size=random.randint(2, 4),
                 size_rate=-random.uniform(0.5, 0.6),
                 speed_rate=-0.3,

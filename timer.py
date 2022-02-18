@@ -7,6 +7,11 @@ class Timer:
 
     def __init__(self):
         self.timer_update_event = pg.USEREVENT+1
+        self.sprite_group_update_event = pg.USEREVENT+2
+        
+        self.FPSUpdate = 20
+        
+        pg.time.set_timer(self.sprite_group_update_event, self.FPSUpdate)
         pg.time.set_timer(self.timer_update_event, 1)
 
     def __new__(cls):

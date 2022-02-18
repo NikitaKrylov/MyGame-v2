@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from animation import Animator
-from game_objects import Equipment
+from GameObjects.equipment import Equipment
 import pygame as pg
 from pygame.sprite import Group, Sprite
 from changed_group import CustomGroup
@@ -19,7 +19,7 @@ class Player(Sprite):
     MAX_HP = 100
     HP = MAX_HP
 
-    max_speed = 8.5
+    max_speed = 7.5
     xspeed = 0
     yspeed = 0
     accel = 0.4

@@ -121,21 +121,6 @@ class PointerMovement(StaticMovement):
             self.next_point = None
             _vector = pg.Vector2(self.point) - pg.Vector2(rect.center)
 
-        _vector.scale_to_length(kwargs['speed'])
+        _vector.scale_to_length(1)
         self.direction = _vector
         return super().update(rect, rects, *args, **kwargs)
-
-
-# class AbstractParticle(sprite.Sprite):
-#     def __init__(self, pos: list, speed, rate, life_time=None, *groups: sprite.AbstractGroup):
-#         super().__init__(*groups)
-#         self.speed = speed
-#         self.rate = rate
-#         self.life_time = life_time
-
-
-# class RectParticle(AbstractParticle):
-#     def __init__(self, pos: list, speed, rate, surface_size: list, life_time=None, *groups: sprite.AbstractGroup):
-#         super().__init__(pos, speed, rate, life_time=life_time, *groups)
-#         self.image = pg.Surface(surface_size)
-#         self.rect = self.image.get_rect(center=pos)
