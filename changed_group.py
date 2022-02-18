@@ -21,7 +21,7 @@ class Groups:
         self.playerShell = CustomGroup()
         self.objectsGroup = Group()
         self.Particles = CustomGroup()
-        self.Background = Group()
+        self.Background = CustomGroup()
         self._groups = [
             self.Background,
             self.enemyGroup,
@@ -51,6 +51,7 @@ class Groups:
     def update(self, *args, **kwargs):
         for _group in self._groups:
             _group.update(*args, **kwargs)
+        # print(self.Background)
 
     def draw(self, display, *args, **kwargs):
         for _group in self._groups:

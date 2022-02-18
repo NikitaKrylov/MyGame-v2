@@ -3,8 +3,7 @@ from pygame import key
 from logger.logger import get_logger
 from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFactory
 from changed_group import Groups
-from background import *
-import logger
+from background import BackgroundManager
 from timer import Timer
 log = get_logger(__name__)
 
@@ -21,7 +20,7 @@ class BaseLevel:
 
     def start(self):
         self.background = self.background_class(
-            self.aplication, self.aplication.display_size, self.grops.Background)
+            self.aplication.display_size, self.grops.Background)
 
     def close(self):
         pass
@@ -63,7 +62,7 @@ class BaseLevel:
 
 class Level1(BaseLevel):
     factories = []
-    background_class = FustStarsBackground
+    background_class = BackgroundManager
 
     def __init__(self, mediator, grops: Groups):
         super().__init__(mediator, grops)
@@ -119,7 +118,7 @@ class Level1(BaseLevel):
 
 class AsteroidWaves(BaseLevel):
     factories = []
-    background_class = StarsBackground
+    background_class = BackgroundManager
 
     def __init__(self, mediator, grops: Groups):
         super().__init__(mediator, grops)
