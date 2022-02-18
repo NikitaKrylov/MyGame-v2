@@ -8,13 +8,11 @@
 It`s my first python project with pygame library which I have ever done.
 It was created in summer of 2021.
 
----
 
 ## Project discription
 
 Some discription
 
----
 
 ## Installation
 
@@ -26,13 +24,11 @@ Do it with this command:
 pip install -r requirements.txt
 ```
 
----
 
 ## Usage
 
 Just run the main.py file
 
----
 
 ## Control
 
