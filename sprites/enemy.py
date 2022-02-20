@@ -66,7 +66,7 @@ class AbstractEnemy(Sprite):  # Sprite Interface
         return self.HP
 
 
-class Asteroid(AbstractEnemy):  # Sprite
+class Asteroid(AbstractEnemy): 
     MAX_HP = 70
     HP = MAX_HP
     DAMAGE = 10
@@ -169,7 +169,6 @@ class AbstaractFlightEnemy(AbstractEnemy, IInertial):
             self.factory.spriteWasKilled(self)
             self.isDamage = False
             self.isBurst = True
-            # super().kill()
             return False
         else:
             return self.HP
@@ -345,24 +344,19 @@ class AbstarctFactory:
     object = None
 
     def __init__(self, display_size, group=None, *args, **kwargs):
-
+        self.information = FactoryInformation()
         self.display_size = display_size
         self.group = group
-        self.information = {
-            'alive': 0,
-            'killed': 0,
-            'spawned': 0
-        }
 
         self.particle_group = kwargs.get('particle_group')
 
     def createObject(self, amount=1, *args, **kwargs):
         """create and add object to group"""
-        self.information['spawned'] += amount
-        self.information['alive'] += amount
+        self.information.spawned += amount
+        self.information.alive += amount
 
     def count(self):
-        return self.information['alive']
+        return self.information.alive
 
     def updateAllObjectCondition(self, func):
         """apply fuction to all gropu object 
@@ -371,11 +365,11 @@ class AbstarctFactory:
         pass
 
     def spriteWasKilled(self, instance=None):
-        self.information['killed'] += 1
-        self.information['alive'] -= 1
+        self.information.killed += 1
+        self.information.alive -= 1
 
     def spriteWasDestroy(self, instance=None):
-        self.information['alive'] -= 1
+        self.information.alive -= 1
 
     def __destroyAllObject(self):
         pass
@@ -437,3 +431,11 @@ class StarEnemyFactory(AbstarctFactory):
         _obj = self.object(
             self.images, pos, self, self.group, particle_group=self.particle_group)
         return super().createObject(amount=1, *args, **kwargs)
+
+
+class FactoryInformation:
+    killed: int = 0
+    alive: int = 0
+    spawned: int = 0
+
+   

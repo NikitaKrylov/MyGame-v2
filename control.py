@@ -1,10 +1,9 @@
 import pygame as pg
-from pygame.display import update
-from pygame.sprite import DirtySprite
-from pygame.transform import threshold
 from player import Player
 import json
 import os
+from logger import get_logger
+log = get_logger(__name__)
 
 
 def sign(value):
@@ -43,6 +42,9 @@ class ControlImplementation:
     def menuUpdate(self, *args, **kwargs):
         return self.aplication._actingStrategy.menu.update(*args, **kwargs)
 
+    def showInventory(self):
+        return self.aplication.showInventory()
+
     def __str__(self):
         return 'Базовая реализация функций управления'
 
@@ -58,7 +60,7 @@ class BaseController:  # Interface
 
     def cursor_set_visible(self):
         pg.mouse.set_visible(True)
-        
+
     def cursor_set_invisible(self):
         pg.mouse.set_visible(False)
 
@@ -74,6 +76,9 @@ class BaseController:  # Interface
     def showMenu(self, event, *args, **kwargs):
         """call aplication showMenu"""
         return self.__implementation.showMenu()
+
+    def showInventory(self, event, *args, **kwargs):
+        return self.__implementation.showInventory()
 
     def setImpl(self, controlIMPL):
         self.__implementation = controlIMPL
@@ -132,7 +137,7 @@ class JoystickControle(BaseController):
         try:
             self.joystick = self.joysticks[0]
         except IndexError:
-            print('\n\n', 'Геймпад не обнаружен!'.upper(), '\n\n')
+            log.error('Геймпад не обнаружен!')
 
         self.btnHoverIndex = 0
 
@@ -142,7 +147,7 @@ class JoystickControle(BaseController):
 
     def getAllContrillers(self):
         return self.joysticks
-    
+
     def update(self):
         self.cursor_set_invisible()
 
@@ -228,6 +233,10 @@ class JoystickControle(BaseController):
             if event.button == self.config['back']:
                 return super().back()
 
+    def showInventory(self, event):
+        if event.type == pg.JOYBUTTONDOWN:
+            pass
+
 
 class KeyboardControle(BaseController):
     name = 'keyboard'
@@ -312,3 +321,8 @@ class KeyboardControle(BaseController):
         if event.type == pg.KEYDOWN:
             if event.key in self.config['back']:
                 super().back()
+
+    def showInventory(self, event):
+        if event.type == pg.KEYDOWN:
+            if event.key in self.config['showInventory']:
+                return super().showInventory(event)

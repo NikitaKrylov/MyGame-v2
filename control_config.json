@@ -4,6 +4,7 @@
             "mouse" : 1
         },
         "showMenu":[27],
+        "showInventory" : [105],
         "changeWeapon" : {
             "mouse" :  [4, 5],
             "keyboard" : [49, 57]

@@ -1,12 +1,13 @@
 import pygame as pg
-from pygame.sprite import Sprite, spritecollide
 from settings import IMAGES, MEDIA
-from pygame.sprite import Group
 from changed_group import CustomGroup
-from .elements import *
+from .surface import ImageSurface, ColoredSurface, Text
+from .button import ImageButton, TextToggleButton
 
 
 class BaseMenu:
+    background_color = pg.Color(21, 37, 46, 35)
+
     def __init__(self, mediator, display_size):
         self.aplication = mediator
         self.display_size = (self.width, self.height) = display_size
@@ -50,14 +51,15 @@ class BaseMenu:
                 if btn.rect.collidepoint(pg.mouse.get_pos()):
                     btn.execute()
 
+    @staticmethod
+    def ImageScale(surface: pg.Surface, scale_index: float):
+        width, height = surface.get_size()
+        return pg.transform.scale(surface, int(width*scale_index), int(height*scale_index))
+
 
 class Menu(BaseMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-
-        blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
-        blured_background_image = pg.transform.scale(
-            blured_background_image, display_size)
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
@@ -72,8 +74,8 @@ class Menu(BaseMenu):
         # toggle_image2 = pg.Surface((40, 40))
         # toggle_image2.fill((100, 255, 100))
 
-        self.blured_background = ImageSurface(
-            (0, 0), blured_background_image, center=False)
+        self.blured_background = ColoredSurface(
+            (0, 0), self.display_size, center=False, color=Menu.background_color)
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.label = ImageSurface(
@@ -99,7 +101,6 @@ class Menu(BaseMenu):
 class FinaleMenu(BaseMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-        blured_background_image = pg.image.load(IMAGES + '\menu\\font3.png')
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
@@ -109,8 +110,8 @@ class FinaleMenu(BaseMenu):
 
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
-        self.blured_background = ImageSurface(
-            (0, 0), blured_background_image, center=False)
+        self.blured_background = ColoredSurface(
+            (0, 0), self.display_size, center=False, color=Menu.background_color)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                    exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
         self.leave = ImageButton(
@@ -132,7 +133,7 @@ class DieMenu(FinaleMenu):
             [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
 
         self.backgroundPiecesGroup.add(
-            self.blured_background, self.surface, self.label)
+            self.label)  # self.blured_background, self.surface,
         self.btnGroup.add(self.restart)
 
 
@@ -147,8 +148,7 @@ class WinMenu(FinaleMenu):
         self.next = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+next_image.get_height()*8], next_image.convert_alpha(), center=True, func=None)
 
-        self.backgroundPiecesGroup.add(
-            self.blured_background, self.surface, self.label)
+        self.backgroundPiecesGroup.add(self.label)
         self.btnGroup.add(self.restart, self.next)
 
 
@@ -158,7 +158,8 @@ class AbstractAplicationMenu(BaseMenu):
         surface_image = pg.Surface(display_size)
         surface_image.fill("#182629")
 
-        self.surface = ImageSurface([0, 0], surface_image, display_size)
+        self.surface = ColoredSurface(
+            (0, 0), self.display_size, False, (24, 38, 41))
         self.backgroundPiecesGroup.add(self.surface)
 
 
@@ -209,3 +210,22 @@ class SettingsMenu(AbstractAplicationMenu):
         self.toggle_controller_type.changeImage(
             text=self.aplication.getControllerType())
         return super().update(*args, **kwargs)
+
+
+class InventoryMenu(BaseMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+
+        surface = pg.image.load(IMAGES + '\\menu\\backgroundMenu.png')
+        self.surface = ImageSurface(
+            (self.width//2, self.height//2), surface, center=True)
+        self.font_surface = ColoredSurface(
+            (0, 0), self.display_size, center=False, color=InventoryMenu.background_color)
+
+        font = pg.font.Font(
+            MEDIA + '\\font\\karmasuture.ttf', 36)
+        self.label = Text((self.width//2, int(self.surface.rect.top+self.surface.rect.height*0.2)),
+                          "Inventory", 36, (255, 255, 255), center=True, font_object=font)
+
+        self.backgroundPiecesGroup.add(
+            self.font_surface, self.surface, self.label)

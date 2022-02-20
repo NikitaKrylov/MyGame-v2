@@ -1,11 +1,11 @@
 import sys
 import logging
-from settings import APP_NAME
+from settings import APP_NAME, LOGGERLEVEL
 
 APP_LOGGER_NAME = APP_NAME
 
 
-def setup_logger(logger_name=APP_LOGGER_NAME, level: int = logging.INFO, file_name=None, mode: str = 'a'):
+def setup_logger(logger_name=APP_LOGGER_NAME, level: int = LOGGERLEVEL, file_name=None, mode: str = 'a'):
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
 

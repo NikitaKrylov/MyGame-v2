@@ -144,7 +144,6 @@ class SurfaceComponent(IBackgroundComponent):
     def __init__(self, display_size, speed, *groups: AbstractGroup):
         super().__init__(display_size, *groups)
         self.speed = speed
-        print(speed)
 
     def Start(self):
         self._createScene()

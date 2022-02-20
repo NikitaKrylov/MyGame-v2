@@ -1,5 +1,4 @@
 import pygame as pg
-from pygame import key
 from logger.logger import get_logger
 from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFactory
 from changed_group import Groups
@@ -102,17 +101,16 @@ class Level1(BaseLevel):
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
 
-        if now//1000 > 20:
-            if self.starEnemyFactory.information['killed'] < 5:
+        if now//1000 > 20 and self.starEnemyFactory.information.killed >= 3:
+            if self.starEnemyFactory.information.killed < 5:
                 if self.starEnemyFactory.count() < 1:
                     self.starEnemyFactory.createObject()
 
         return super().update(*args, **kwargs)
 
     def chackDone(self, *args, **kwargs):
-        if self.firstFlightFactory.information['killed'] >= 5 and self.starEnemyFactory.information['killed'] >= 2:
+        if self.firstFlightFactory.information.killed >= 5 and self.starEnemyFactory.information.killed >= 2:
             self.Win()
-            # self.aplication.close()
         return super().chackDone(*args, **kwargs)
 
 
@@ -147,7 +145,7 @@ class AsteroidWaves(BaseLevel):
         return super().update(*args, **kwargs)
 
     def chackDone(self, *args, **kwargs):
-        if self.asteroidFactory.information['killed'] > 200:
+        if self.asteroidFactory.information.killed > 200:
             self.__isWin
             # self.aplication.close()
         return super().chackDone(*args, **kwargs)

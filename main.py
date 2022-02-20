@@ -1,4 +1,3 @@
-import logging
 import pygame as pg
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle
@@ -6,11 +5,11 @@ import sys
 import ctypes
 from level.levels import BaseLevel
 from level.levelManager import LevelManager
-from GUI.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu
-from GUI.elements import Text
+from gui.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu, InventoryMenu
+from gui.surface import Text
 from interface import Toolbar
-from changed_group import Groups, spritecollide
-from settings import IMAGES
+from changed_group import Groups
+from settings import IMAGES, LOGGERLEVEL
 from timer import Timer
 
 
@@ -22,12 +21,12 @@ class BaseStrategy:
         pass
 
     def update(self):
-        # self.aplication.controller.update()
         """default update aplication function"""
 
     def eventListen(self, event):
         """update aplication function with event attributs"""
         if event.type == pg.QUIT:
+            log.info('close app')
             pg.quit()
             sys.exit()
 
@@ -39,29 +38,12 @@ class BaseStrategy:
         return self.__class__.__name__
 
 
-class InventoryStrategy(BaseStrategy):
-    def draw(self, display, *args, **kwargs):
-        pass
-
-    def update(self):
-        pass
-
-    def eventListen(self, event):
-        return super().eventListen(event)
-
-
 class GameStrategy(BaseStrategy):
     def update(self, *args, **kwargs):
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
         self.aplication.controller.update()
         self.aplication.toolbar.update()
-        # self.aplication.groups.update(
-        #     display_size=self.aplication.display_size,
-        #     player_center=self.aplication.player.rect.center,
-        #     joystick_hover_point=self.aplication.controller.hoverPointPos if hasattr(
-        #         self.aplication.controller, 'hoverPointPos') else None
-        # )
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update()
 
@@ -89,6 +71,7 @@ class GameStrategy(BaseStrategy):
             self.aplication.player, event)
         self.aplication.controller.selectUltimate(
             self.aplication.player, event)
+        self.aplication.controller.showInventory(event)
         self.aplication.controller.showMenu(event)
 
         if event.type == self.aplication.game_timer.timer_update_event:
@@ -106,9 +89,13 @@ class GameStrategy(BaseStrategy):
 
 
 class BaseMenuStrategy(BaseStrategy):
+    menu_class = Menu
+
     def __init__(self, mediator):
         super().__init__(mediator)
-        self.menu = Menu(self.aplication, self.aplication.display_size)
+
+        self.menu = self.__class__.menu_class(
+            self.aplication, self.aplication.display_size)
 
     def update(self):
         self.aplication.controller.update()
@@ -124,9 +111,7 @@ class BaseMenuStrategy(BaseStrategy):
 
 
 class MenuStrategy(BaseMenuStrategy):
-    def __init__(self, mediator):
-        super().__init__(mediator)
-        self.menu = Menu(self.aplication, self.aplication.display_size)
+    menu_class = Menu
 
     def eventListen(self, event):
         super().eventListen(event)
@@ -135,31 +120,34 @@ class MenuStrategy(BaseMenuStrategy):
 
 
 class DieMenuStrategy(BaseMenuStrategy):
-    def __init__(self, mediator):
-        super().__init__(mediator)
-        self.menu = DieMenu(mediator, mediator.display_size)
+    menu_class = DieMenu
 
 
 class WinMenuStrategy(BaseMenuStrategy):
-    def __init__(self, mediator):
-        super().__init__(mediator)
-        self.menu = WinMenu(mediator, mediator.display_size)
+    menu_class = WinMenu
 
 
 class EnterMenuStrategy(BaseMenuStrategy):
-    def __init__(self, mediator):
-        super().__init__(mediator)
-        self.menu = EnterMenu(mediator, mediator.display_size)
+    menu_class = EnterMenu
 
 
 class SettingsMenuStrategy(BaseMenuStrategy):
-    def __init__(self, mediator):
-        super().__init__(mediator)
-        self.menu = SettingsMenu(mediator, mediator.display_size)
+    menu_class = SettingsMenu
 
     def eventListen(self, event):
         super().eventListen(event)
         self.aplication.controller.back(event)
+        return
+
+
+class InventoryStrategy(BaseMenuStrategy):
+    menu_class = InventoryMenu
+
+    def eventListen(self, event):
+        super().eventListen(event)
+        self.aplication.controller.showInventory(event)
+        self.aplication.controller.back(event)
+        
         return
 
 
@@ -176,12 +164,13 @@ class Aplication:
     winMenuStrategy: BaseStrategy = WinMenuStrategy
     guiMenuStrategy: BaseStrategy = EnterMenuStrategy
     settingsMenuStrategy: BaseStrategy = SettingsMenuStrategy
+    inventoryStrategy: BaseStrategy = InventoryStrategy
 
-    inventoryStrategy: BaseStrategy = None
     _actingStrategy = None
+
     isMenu = False
     isPlayerDie = False
-    isInterface = False
+    isInventory = False
     isSettings = False
     isFPS = True
     _lastStrategy = None
@@ -213,6 +202,7 @@ class Aplication:
         self.guiMenuStrategy = self.guiMenuStrategy(self)
         self.winMenuStrategy = self.winMenuStrategy(self)
         self.settingsMenuStrategy = self.settingsMenuStrategy(self)
+        self.inventoryStrategy = self.inventoryStrategy(self)
         self._actingStrategy = self.guiMenuStrategy
         self._lastStrategy = self._actingStrategy
 
@@ -222,24 +212,22 @@ class Aplication:
         fontFPS = Text([self.display_size[0]*0.9, 20], str(int(self.clock.get_fps())),
                        40, (0, 255, 26), False, 'hooge0554')
         image = pg.image.load(
-            IMAGES + "\\game_objects\\strike_point.png").convert_alpha()
+            IMAGES + "\\game_objects\\strike_point.png").convert_alpha() 
         rect = image.get_rect(center=(0, 0))
 
         while self.__run:
             for event in pg.event.get():
                 self._actingStrategy.eventListen(event)
 
-            self._actingStrategy.draw(self.display)
             self._actingStrategy.update()
+            self._actingStrategy.draw(self.display)
 
             if self.isFPS:
                 fontFPS.draw(self.display)
                 fontFPS.update(text=str(int(self.clock.get_fps())))
 
-            # self.display.blit(image, rect)
-            # rect.center = pg.mouse.get_pos()
-
             pg.display.update()
+
             dt = self.clock.tick(90)
 
     def changeControllerToggle(self):
@@ -285,11 +273,24 @@ class Aplication:
         else:
             self._actingStrategy = self.gameStrategy
 
+    def showInventory(self, value: bool = None):
+        if value != None:
+            self.isInventory = value
+        else:
+            self.isInventory = not self.isInventory
+
+        if self.isInventory:
+            self._lastStrategy = self._actingStrategy
+            self._actingStrategy = self.inventoryStrategy
+        else:
+            self._actingStrategy = self._lastStrategy
+
     def showFPS(self, value: bool = None):
         if value != None:
             self.isFPS = value
         else:
             self.isFPS = not self.isFPS
+            
 
     def showDieMenu(self, value: bool = None):
         log.debug('show die menu')
@@ -375,8 +376,6 @@ class Aplication:
 if __name__ == '__main__':
     from level.levels import AsteroidWaves, Level1
     import logger
-    # file_name='app_info.log' -> will write logs into file
     log = logger.setup_logger()
     aplication = Aplication(Level1)
-    # aplication.changeLevel(AsteroidWaves)
     aplication.start()
