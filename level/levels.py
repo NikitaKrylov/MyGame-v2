@@ -67,7 +67,7 @@ class Level1(BaseLevel):
         super().__init__(mediator, grops)
         self.spawn_rates = {
             'asteroid': 3000,
-            'flightEnemy': 10000
+            'flightEnemy': 8000
         }
         self.last_spawn_time = {i: 0 for i in self.spawn_rates.keys()}
 
@@ -87,6 +87,8 @@ class Level1(BaseLevel):
         self.factories.append(self.firstFlightFactory)
         self.factories.append(self.starEnemyFactory)
 
+        self.last_spawn_time['flightEnemy'] = -5000
+
         return super().start()
 
     def update(self, *args, **kwargs):
@@ -101,7 +103,7 @@ class Level1(BaseLevel):
             if self.firstFlightFactory.count() < 3:
                 self.firstFlightFactory.createObject()
 
-        if now//1000 > 20 and self.starEnemyFactory.information.killed >= 3:
+        if now//1000 > 10 and self.firstFlightFactory.information.killed >= 3:
             if self.starEnemyFactory.information.killed < 5:
                 if self.starEnemyFactory.count() < 1:
                     self.starEnemyFactory.createObject()

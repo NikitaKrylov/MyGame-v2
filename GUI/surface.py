@@ -1,25 +1,20 @@
 import pygame as pg
 from pygame.sprite import Sprite
 from pygame import gfxdraw
+from pygame.font import Font
+from logger import get_logger
+log = get_logger(__name__)
 
 
 class Text(Sprite):
-    def __init__(self, pos:list, text: str, font_size: int, color: list, center: bool = False, font_name: str = None, font_path: str = None, font_object:pg.font.Font=None, bold=False, italic=False):
+    def __init__(self, pos: list, text: str, color: list, font: Font, center: bool = False):
         super().__init__()
         self.text = text
-        self.font_size = font_size
         self.color = color
-
-        if font_name is not None:
-            self.font = pg.font.SysFont(
-                font_name, self.font_size, italic=italic, bold=bold)
-        elif font_path is not None:
-            pass
-        elif isinstance(font_object, pg.font.Font):
-            self.font = font_object
+        self.font = font
+        self.center = center
 
         self.textsurface = self.font.render(self.text, False, self.color)
-
         self.rect = self.textsurface.get_rect(topleft=pos)
         if center:
             self.rect.center = pos
@@ -35,39 +30,50 @@ class Text(Sprite):
                 self.textsurface = self.font.render(
                     self.text, False, self.color)
 
+    def updateText(self, text: str):
+        if not isinstance(text, str):
+            return log.error("text to render must be string")
+
+        self.text = text
+        self.textsurface = self.font.render(self.text, False, self.color)
+
+        if self.center:
+            self.rect = self.textsurface.get_rect(center=self.rect.center)
+        else:
+            self.rect = self.textsurface.get_rect(topleft=self.rect.topleft)
+
 
 class BaseSurface(Sprite):
-    def __init__(self, pos: list, size: list = None, center: bool = False, func=None, **kwargs):
+    def __init__(self, pos: list, size: list = None, center: bool = False, **kwargs):
         super().__init__()
         self.pos = pos
         self.size = size
         self.kwargs: dict = kwargs
-        self.func = func
         self.isHover = False
 
     def draw(self, display):
         pass
 
     @classmethod
-    def scale(self, surface,  scale_value):
-        width, height = surface.get_width(), surface.get_height()
-        return pg.transform.scale(surface, (int(width*scale_value), int(height*scale_value)))
+    def scale(self, image,  scale_value):
+        width, height = image.get_width(), image.get_height()
+        return pg.transform.scale(image, (int(width*scale_value), int(height*scale_value)))
 
 
 class ColoredSurface(BaseSurface):
-    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
-        super().__init__(pos, size, center, func=func, **kwargs)
+    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0,  **kwargs):
+        super().__init__(pos, size, center,  **kwargs)
         self.border_radius = border_radius
         self.color = color
-        self.surface = pg.Surface(self.size)
+        self.image = pg.Surface(self.size)
 
         if self.color is not None:
-            self.surface.fill(self.color)
+            self.image.fill(self.color)
 
         if center:
-            self.rect = self.surface.get_rect(center=self.pos)
+            self.rect = self.image.get_rect(center=self.pos)
         else:
-            self.rect = self.surface.get_rect(topleft=self.pos)
+            self.rect = self.image.get_rect(topleft=self.pos)
 
     def draw(self, display):
         # pg.draw.rect(display, self.color, self.rect,
@@ -77,40 +83,18 @@ class ColoredSurface(BaseSurface):
 
 
 class ImageSurface(BaseSurface):
-    def __init__(self, pos: list,  image, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__(pos, size, center, func=func, **kwargs)
-        self.surface = image
+    def __init__(self, pos: list,  image, size: list = None, center: bool = False,  **kwargs):
+        super().__init__(pos, size, center,  **kwargs)
+        self.image = image
 
         if center:
-            self.rect = self.surface.get_rect(center=self.pos)
+            self.rect = self.image.get_rect(center=self.pos)
         else:
-            self.rect = self.surface.get_rect(topleft=pos)
+            self.rect = self.image.get_rect(topleft=pos)
 
     def draw(self, display):
-        display.blit(self.surface, self.rect)
+        display.blit(self.image, self.rect)
         return super().draw(display)
-
-
-# class ColoredButton(ColoredSurface):
-#     def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
-#         super().__init__(pos, size, center=center, color=color,
-#                          border_radius=border_radius, func=func, **kwargs)
-
-
-# class ImageButton(ImageSurface):
-#     def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
-#         super().__init__(pos, image, size=size, center=center, func=func, **kwargs)
-#         self.scaled_surface = self.scale(self.surface, 1.1)
-
-#     def draw(self, display):
-#         if self.isHover:
-#             self.rect = self.scaled_surface.get_rect(center=self.rect.center)
-#             display.blit(self.scaled_surface, self.rect)
-#         else:
-#             self.rect = self.surface.get_rect(center=self.rect.center)
-#             display.blit(self.surface, self.rect)
-
-#         return
 
 
 class ToggleButton(ImageSurface):
@@ -118,26 +102,22 @@ class ToggleButton(ImageSurface):
         super().__init__(pos, image, size, center, func, **kwargs)
         self.state = False
 
-        if onClickImage:
-            self.onClickImage = onClickImage
-        else:
-            self.onClickImage = None
-
-        self.defaultImage = self.surface
+        self.onClickImage = onClickImage if onClickImage is not None else self.image
+        self.defaultImage = self.image
 
     def update(self, *args, **kwargs):
-        self.rect = self.surface.get_rect(center=self.rect.center)
+        self.rect = self.image.get_rect(center=self.rect.center)
         return super().update(*args, **kwargs)
 
     def execute(self):
         self.state = not self.state
 
         if self.state:
-            self.surface = self.onClickImage
+            self.image = self.onClickImage
         else:
-            self.surface = self.defaultImage
+            self.image = self.defaultImage
 
-        self.rect = self.surface.get_rect(center=self.rect.center)
+        self.rect = self.image.get_rect(center=self.rect.center)
 
         return super().execute()
 
@@ -162,9 +142,9 @@ class TextToggleButton(ToggleButton):
     def changeImage(self, image=None, text=None):
         if image or text:
             if text:
-                self.surface = self.font.render(text, False, (255, 255, 255))
+                self.image = self.font.render(text, False, (255, 255, 255))
             if image:
-                self.surface = image
+                self.image = image
 
-            self.onClickImage = self.surface
-            self.defaultImage = self.surface
+            self.onClickImage = self.image
+            self.defaultImage = self.image

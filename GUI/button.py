@@ -24,6 +24,9 @@ def hasattribute(name: str = None):
 
 
 class IButton:
+    def __init__(self, func=None):
+        self.func = func
+
     def execute(self):
         if self.func is not None:
             self.func()
@@ -45,18 +48,21 @@ class IHoveredButton(IButton):
             self.rect = self.scaled_surface.get_rect(center=self.rect.center)
             display.blit(self.scaled_surface, self.rect)
         else:
-            self.rect = self.surface.get_rect(center=self.rect.center)
-            display.blit(self.surface, self.rect)
+            self.rect = self.image.get_rect(center=self.rect.center)
+            display.blit(self.image, self.rect)
 
 
 class ColoredButton(ColoredSurface, IHoveredButton):
-    pass
+    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
+        super().__init__(pos, size, center, color, border_radius, **kwargs)
+        super(IHoveredButton, self).__init__(func)
 
 
 class ImageButton(ImageSurface, IHoveredButton):
     def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__(pos, image, size, center, func, **kwargs)
-        self.scaled_surface = self.scale(self.surface, 1.1)
+        super().__init__(pos, image, size, center, **kwargs)
+        super(IHoveredButton, self).__init__(func)
+        self.scaled_surface = self.scale(self.image, 1.1)
 
     def draw(self, display):
         return IHoveredButton.draw(self, display)
@@ -64,29 +70,25 @@ class ImageButton(ImageSurface, IHoveredButton):
 
 class ToggleButton(ImageSurface, IButton):
     def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, onClickImage=None, **kwargs):
-        super().__init__(pos, image, size, center, func, **kwargs)
+        super().__init__(pos, image, size, center, **kwargs)
+        self.func = func
+
         self.state = False
 
-        if onClickImage:
-            self.onClickImage = onClickImage
-        else:
-            self.onClickImage = None
-
-        self.defaultImage = self.surface
+        self.onClickImage = onClickImage if onClickImage is not None else self.image
+        self.defaultImage = self.image
 
     def update(self, *args, **kwargs):
-        self.rect = self.surface.get_rect(center=self.rect.center)
+        self.rect = self.image.get_rect(center=self.rect.center)
         return super().update(*args, **kwargs)
 
     def execute(self):
         self.state = not self.state
-
         if self.state:
-            self.surface = self.onClickImage
+            self.image = self.onClickImage
         else:
-            self.surface = self.defaultImage
-
-        self.rect = self.surface.get_rect(center=self.rect.center)
+            self.image = self.defaultImage
+        self.rect = self.image.get_rect(center=self.rect.center)
 
         return super().execute()
 
@@ -111,9 +113,9 @@ class TextToggleButton(ToggleButton):
     def changeImage(self, image=None, text=None):
         if image or text:
             if text:
-                self.surface = self.font.render(text, False, (255, 255, 255))
+                self.image = self.font.render(text, False, (255, 255, 255))
             if image:
-                self.surface = image
+                self.image = image
 
-            self.onClickImage = self.surface
-            self.defaultImage = self.surface
+            self.onClickImage = self.image
+            self.defaultImage = self.image

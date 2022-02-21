@@ -1,16 +1,18 @@
 import pygame as pg
+from pygame.font import SysFont
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
 from level.levels import BaseLevel
 from level.levelManager import LevelManager
-from gui.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu, InventoryMenu
+from gui.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu, InventoryMenu, LevelManagerMenu
 from gui.surface import Text
 from interface import Toolbar
 from changed_group import Groups
-from settings import IMAGES, LOGGERLEVEL
 from timer import Timer
+
+"""----------------------------BASE MENU------------------------------------"""
 
 
 class BaseStrategy:
@@ -38,6 +40,9 @@ class BaseStrategy:
         return self.__class__.__name__
 
 
+"""----------------------------GAME------------------------------------"""
+
+
 class GameStrategy(BaseStrategy):
     def update(self, *args, **kwargs):
         self.aplication.controller.changePlayerDirection(
@@ -51,9 +56,9 @@ class GameStrategy(BaseStrategy):
             self.aplication.showDieMenu(True)
             return
 
-        self.aplication.level.update()
+        self.aplication.levelManager.Update()
 
-        if self.aplication.level.isWin:
+        if self.aplication.levelManager.GetActingLevel().isWin:
             self.aplication.setWinMenuStrategy()
 
         return super().update()
@@ -86,6 +91,9 @@ class GameStrategy(BaseStrategy):
             )
 
         return super().eventListen(event)
+
+
+"""----------------------------GAME MENU------------------------------------"""
 
 
 class BaseMenuStrategy(BaseStrategy):
@@ -127,17 +135,31 @@ class WinMenuStrategy(BaseMenuStrategy):
     menu_class = WinMenu
 
 
+"""----------------------------APLICATION MENU------------------------------------"""
+
+
 class EnterMenuStrategy(BaseMenuStrategy):
     menu_class = EnterMenu
 
 
-class SettingsMenuStrategy(BaseMenuStrategy):
-    menu_class = SettingsMenu
+class BaseAplicationMenuStrategy(BaseMenuStrategy):
+    menu_class = None
 
     def eventListen(self, event):
         super().eventListen(event)
         self.aplication.controller.back(event)
         return
+
+
+class SettingsMenuStrategy(BaseAplicationMenuStrategy):
+    menu_class = SettingsMenu
+
+
+class LevelManagerStrategy(BaseAplicationMenuStrategy):
+    menu_class = LevelManagerMenu
+
+
+"""----------------------------GAME COMPONENTS MENU------------------------------------"""
 
 
 class InventoryStrategy(BaseMenuStrategy):
@@ -146,9 +168,9 @@ class InventoryStrategy(BaseMenuStrategy):
     def eventListen(self, event):
         super().eventListen(event)
         self.aplication.controller.showInventory(event)
-        self.aplication.controller.back(event)
-        
-        return
+
+
+"""----------------------------APLICATION------------------------------------"""
 
 
 class Aplication:
@@ -165,6 +187,7 @@ class Aplication:
     guiMenuStrategy: BaseStrategy = EnterMenuStrategy
     settingsMenuStrategy: BaseStrategy = SettingsMenuStrategy
     inventoryStrategy: BaseStrategy = InventoryStrategy
+    levelManagerStrategy: BaseStrategy = LevelManagerStrategy
 
     _actingStrategy = None
 
@@ -178,7 +201,7 @@ class Aplication:
     __run = True
     ticks = 0
 
-    def __init__(self, level: BaseLevel, controllerType: str = 'keyboard', *args, **kwargs):
+    def __init__(self, controllerType: str = 'keyboard', *args, **kwargs):
         pg.init()
         pg.font.init()
         user32 = ctypes.windll.user32
@@ -193,8 +216,8 @@ class Aplication:
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
-        self.levelManager = LevelManager()
-        self._acting_level: BaseLevel = level
+        self.groups = Groups()
+        self.levelManager = LevelManager(self, self.groups)
 
         self.menuStrategy = self.menuStrategy(self)
         self.dieMenuStrategy = self.dieMenuStrategy(self)
@@ -203,17 +226,16 @@ class Aplication:
         self.winMenuStrategy = self.winMenuStrategy(self)
         self.settingsMenuStrategy = self.settingsMenuStrategy(self)
         self.inventoryStrategy = self.inventoryStrategy(self)
+        self.levelManagerStrategy = self.levelManagerStrategy(self)
+
         self._actingStrategy = self.guiMenuStrategy
         self._lastStrategy = self._actingStrategy
 
     def start(self):
         """main aplicatiodn start function"""
         log.info('start app')
-        fontFPS = Text([self.display_size[0]*0.9, 20], str(int(self.clock.get_fps())),
-                       40, (0, 255, 26), False, 'hooge0554')
-        image = pg.image.load(
-            IMAGES + "\\game_objects\\strike_point.png").convert_alpha() 
-        rect = image.get_rect(center=(0, 0))
+        fontFPS = Text((self.display_size[0]*0.9, 20), str(
+            int(self.clock.get_fps())),  (0, 255, 26), SysFont("hooge0553", 36), False)
 
         while self.__run:
             for event in pg.event.get():
@@ -223,12 +245,16 @@ class Aplication:
             self._actingStrategy.draw(self.display)
 
             if self.isFPS:
-                fontFPS.draw(self.display)
-                fontFPS.update(text=str(int(self.clock.get_fps())))
+                self.drawFPS(fontFPS)
 
             pg.display.update()
+            self.clock.tick(90)
 
-            dt = self.clock.tick(90)
+    def drawFPS(self, text: Text):
+        text.draw(self.display)
+        fps = str(int(self.clock.get_fps()))
+        if fps != text.text:
+            text.updateText(text=str(int(self.clock.get_fps())))
 
     def changeControllerToggle(self):
         self.controleRealizationIndex += 1
@@ -258,10 +284,11 @@ class Aplication:
     def setWinMenuStrategy(self, value: bool = None):
         self._actingStrategy = self.winMenuStrategy
         log.info(
-            f"level <{self.level.__class__.__name__}> was completed")
+            f"level <{self.levelManager.GetActingLevel().__class__.__name__}> was completed")
 
     def showMenu(self, value: bool = None):
         log.debug('show menu')
+
         """Show and close menu"""
         if value != None:
             self.isMenu = value
@@ -274,23 +301,17 @@ class Aplication:
             self._actingStrategy = self.gameStrategy
 
     def showInventory(self, value: bool = None):
-        if value != None:
-            self.isInventory = value
+        if self._actingStrategy == self.inventoryStrategy:
+            self._actingStrategy = self._lastStrategy
         else:
-            self.isInventory = not self.isInventory
-
-        if self.isInventory:
             self._lastStrategy = self._actingStrategy
             self._actingStrategy = self.inventoryStrategy
-        else:
-            self._actingStrategy = self._lastStrategy
 
     def showFPS(self, value: bool = None):
         if value != None:
             self.isFPS = value
         else:
             self.isFPS = not self.isFPS
-            
 
     def showDieMenu(self, value: bool = None):
         log.debug('show die menu')
@@ -304,41 +325,37 @@ class Aplication:
         else:
             self._actingStrategy = self.gameStrategy
 
+    def showLevelManager(self, value: bool = None):
+        if self._actingStrategy == self.levelManagerStrategy:
+            self._actingStrategy = self._lastStrategy
+        else:
+            self._lastStrategy = self._actingStrategy
+            self._actingStrategy = self.levelManagerStrategy
+
     def showSettings(self, value: bool = None):
         log.debug('show settings')
+
         if self._actingStrategy == self.settingsMenuStrategy:
-            self.isSettings = True
+            self._actingStrategy = self._lastStrategy
         else:
-            self.isSettings = False
-
-        if value != None:
-            self.isSettings = value
-        else:
-            self.isSettings = not self.isSettings
-
-        if self.isSettings:
             self._lastStrategy = self._actingStrategy
             self._actingStrategy = self.settingsMenuStrategy
-        else:
-            self._actingStrategy = self._lastStrategy
 
     def backToLastStrategy(self):
         self._actingStrategy = self._lastStrategy
 
     def startGame(self, *args, **kwargs):
         log.info('start level')
-        self.groups = Groups()
 
         self.player = Player(self.display_size, self,
                              self.groups.playerShell, self.groups.Particles)
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
-        self.level = self._acting_level(self, self.groups)
-        self.level.start()
-
+        self.levelManager.SetLevel("Level1")
+        self.levelManager.Start()
         self._actingStrategy = self.gameStrategy
 
     def quitGame(self):
-        self.level = None
+        self.levelManager.Reset()
         self.player = None
         self.game_timer.reset()
         self.toolbar = None
@@ -355,18 +372,18 @@ class Aplication:
         self._actingStrategy = self.guiMenuStrategy
         self.quitGame()
 
-    def changeLevel(self, level: BaseLevel):
-        self.level = level(self, self.groups)
+    def changeLevel(self, name: str):
         self.groups.Background.empty()
-        self.level.start()
+        self.levelManager.SetLevel(name)
 
     def restart(self):
         log.info("restart level")
         pg.init()
+
         self.clock = pg.time.Clock()
         self.groups.restart()
-        self.level.restart()
-        self.level.start()
+        self.levelManager.Restart()
+        self.levelManager.Start()
         self.player.restart()
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
         self.game_timer.reset()
@@ -374,8 +391,7 @@ class Aplication:
 
 
 if __name__ == '__main__':
-    from level.levels import AsteroidWaves, Level1
     import logger
     log = logger.setup_logger()
-    aplication = Aplication(Level1)
+    aplication = Aplication()
     aplication.start()

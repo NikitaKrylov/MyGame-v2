@@ -1,13 +1,14 @@
+import random
+from typing import Tuple
 import pygame as pg
+from pygame.font import Font
 from settings import IMAGES, MEDIA
 from changed_group import CustomGroup
-from .surface import ImageSurface, ColoredSurface, Text
+from .surface import ImageSurface, ColoredSurface, Text, BaseSurface
 from .button import ImageButton, TextToggleButton
 
 
 class BaseMenu:
-    background_color = pg.Color(21, 37, 46, 35)
-
     def __init__(self, mediator, display_size):
         self.aplication = mediator
         self.display_size = (self.width, self.height) = display_size
@@ -57,7 +58,19 @@ class BaseMenu:
         return pg.transform.scale(surface, int(width*scale_index), int(height*scale_index))
 
 
-class Menu(BaseMenu):
+"""---------------------------GAME MENU--------------------------------"""
+
+
+class GameMenu(BaseMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+        self.background = ColoredSurface(
+            (0, 0), self.display_size, center=False, color=pg.Color(21, 37, 46, 35))
+
+        self.backgroundPiecesGroup.add(self.background)
+
+
+class Menu(GameMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
         surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
@@ -69,13 +82,6 @@ class Menu(BaseMenu):
         leave_image = pg.image.load(IMAGES + '\menu\Leave.png')
         settings_image = pg.image.load(IMAGES + '\\menu\\Settings.png')
 
-        # toggle_image1 = pg.Surface((40, 40))
-        # toggle_image1.fill((250, 100, 100))
-        # toggle_image2 = pg.Surface((40, 40))
-        # toggle_image2.fill((100, 255, 100))
-
-        self.blured_background = ColoredSurface(
-            (0, 0), self.display_size, center=False, color=Menu.background_color)
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.label = ImageSurface(
@@ -89,11 +95,7 @@ class Menu(BaseMenu):
         self.leave = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+continue_image.get_height()*10], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
 
-        # self.toggle_controller_type = ToggleButton(
-        #     [self.surface.rect.left+20, self.surface.rect.top+20], toggle_image1, onClickImage=toggle_image2, func=self.aplication.changeControllerToggle)
-
-        self.backgroundPiecesGroup.add(
-            self.blured_background, self.surface, self.label)
+        self.backgroundPiecesGroup.add(self.surface, self.label)
         self.btnGroup.add(self._continue, self.settings,
                           self.restart, self.leave)
 
@@ -110,8 +112,6 @@ class FinaleMenu(BaseMenu):
 
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
-        self.blured_background = ColoredSurface(
-            (0, 0), self.display_size, center=False, color=Menu.background_color)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                    exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
         self.leave = ImageButton(
@@ -119,8 +119,7 @@ class FinaleMenu(BaseMenu):
         self.exit = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
 
-        self.backgroundPiecesGroup.add(
-            self.blured_background, self.surface)
+        self.backgroundPiecesGroup.add(self.surface)
         self.btnGroup.add(self.restart,  self.leave)
 
 
@@ -132,8 +131,7 @@ class DieMenu(FinaleMenu):
         self.label = ImageSurface(
             [self.surface.rect.centerx, self.surface.rect.top+label_image.get_height()*1.5], label_image.convert_alpha(), center=True)
 
-        self.backgroundPiecesGroup.add(
-            self.label)  # self.blured_background, self.surface,
+        self.backgroundPiecesGroup.add(self.label)
         self.btnGroup.add(self.restart)
 
 
@@ -152,15 +150,39 @@ class WinMenu(FinaleMenu):
         self.btnGroup.add(self.restart, self.next)
 
 
+class InventoryMenu(GameMenu):
+    def __init__(self, mediator, display_size):
+        super().__init__(mediator, display_size)
+
+        surface = pg.image.load(IMAGES + '\\menu\\backgroundMenu.png')
+        self.surface = ImageSurface(
+            (self.width//2, self.height//2), surface, center=True)
+        self.label = Text((self.width//2, int(self.surface.rect.top+self.surface.rect.height*0.2)),
+                          "Inventory", (255, 255, 255), Font(MEDIA + '\\font\\karmasuture.ttf', 36), True)
+
+        self.backgroundPiecesGroup.add(self.surface, self.label)
+
+
+"""---------------------------APLICATION MENU--------------------------------"""
+
+
 class AbstractAplicationMenu(BaseMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-        surface_image = pg.Surface(display_size)
-        surface_image.fill("#182629")
-
         self.surface = ColoredSurface(
             (0, 0), self.display_size, False, (24, 38, 41))
         self.backgroundPiecesGroup.add(self.surface)
+
+        for _ in range(random.randint(13, 23)):
+            width = random.randint(
+                int(self.display_size[0]*0.01), int(self.display_size[0]*0.15))
+            ColoredSurface(
+                (random.randint(1, self.display_size[0]), random.randint(
+                    1, self.display_size[1])),
+                (width, width),
+                center=True,
+                color=(17, 31,  34)
+            ).add(self.backgroundPiecesGroup)
 
 
 class EnterMenu(AbstractAplicationMenu):
@@ -174,7 +196,7 @@ class EnterMenu(AbstractAplicationMenu):
         self.start = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                  exit_image.get_height()*3], start_image, center=True, func=self.aplication.startGame)
         self.change_level = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*5.5], change_level_image, center=True)
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*5.5], change_level_image, center=True, func=self.aplication.showLevelManager)
         self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height(
         )*8], settings_image, center=True, func=self.aplication.showSettings)
         self.exit = ImageButton(
@@ -187,9 +209,8 @@ class EnterMenu(AbstractAplicationMenu):
 class SettingsMenu(AbstractAplicationMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-        self.font_size = 36
         font = pg.font.Font(
-            MEDIA + '\\font\\karmasuture.ttf', self.font_size)
+            MEDIA + '\\font\\karmasuture.ttf', 36)
 
         toggle_controller_type_image1 = font.render(
             self.aplication.getControllerType(), False, (255, 255, 255))
@@ -203,6 +224,8 @@ class SettingsMenu(AbstractAplicationMenu):
             [self.surface.rect.centerx, self.surface.rect.centery], toggle_controller_type_image1, onClickImage=toggle_controller_type_image2, func=self.aplication.changeControllerToggle, font=font, center=True)
         self.toggle_FPS = TextToggleButton(
             [self.surface.rect.centerx, self.surface.rect.centery+toggle_controller_type_image1.get_height()*2], toggle_FPS_image1, onClickImage=toggle_FPS_image2, func=self.aplication.showFPS, font=font, center=True)
+        
+        # Grid(self.display_size, 120, 100, self.toggle_controller_type, self.toggle_FPS).Set()
 
         self.btnGroup.add(self.toggle_controller_type, self.toggle_FPS)
 
@@ -212,20 +235,32 @@ class SettingsMenu(AbstractAplicationMenu):
         return super().update(*args, **kwargs)
 
 
-class InventoryMenu(BaseMenu):
+class LevelManagerMenu(AbstractAplicationMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
 
-        surface = pg.image.load(IMAGES + '\\menu\\backgroundMenu.png')
-        self.surface = ImageSurface(
-            (self.width//2, self.height//2), surface, center=True)
-        self.font_surface = ColoredSurface(
-            (0, 0), self.display_size, center=False, color=InventoryMenu.background_color)
 
-        font = pg.font.Font(
-            MEDIA + '\\font\\karmasuture.ttf', 36)
-        self.label = Text((self.width//2, int(self.surface.rect.top+self.surface.rect.height*0.2)),
-                          "Inventory", 36, (255, 255, 255), center=True, font_object=font)
+"""---------------------------GRIDS--------------------------------"""
 
-        self.backgroundPiecesGroup.add(
-            self.font_surface, self.surface, self.label)
+
+class Grid:
+    margin = 0
+    padding = 0
+
+    def __init__(self, display_size: list, margin=0, padding=0, *objects: Tuple[BaseSurface]):
+        self.display_size = display_size
+        self.margin = margin
+        self.padding = padding
+        self.objects = objects
+
+    def Set(self):
+        xpos = self.margin
+        for obj in self.objects:
+            if xpos + obj.rect.width + self.padding < self.display_size[0] - self.margin:
+                obj.rect.left = xpos + self.margin
+                xpos = obj.rect.right
+
+
+class CenterGrid(Grid):
+    margin = 0
+    padding = 0
