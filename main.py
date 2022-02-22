@@ -14,6 +14,9 @@ from timer import Timer
 
 """----------------------------BASE MENU------------------------------------"""
 
+# The base strategy class is the base class for all the other strategy classes.
+# It contains the basic functions that are needed to run the aplication.
+
 
 class BaseStrategy:
     def __init__(self, mediator):
@@ -171,6 +174,8 @@ class InventoryStrategy(BaseMenuStrategy):
 
 
 """----------------------------APLICATION------------------------------------"""
+
+# The main class of the game
 
 
 class Aplication:
@@ -350,7 +355,7 @@ class Aplication:
         self.player = Player(self.display_size, self,
                              self.groups.playerShell, self.groups.Particles)
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
-        self.levelManager.SetLevel("Level1")
+        self.levelManager.SetLevel("StrikerField")
         self.levelManager.Start()
         self._actingStrategy = self.gameStrategy
 

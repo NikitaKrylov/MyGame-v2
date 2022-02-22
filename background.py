@@ -8,6 +8,7 @@ from logger import get_logger
 log = get_logger(__name__)
 
 
+# Creates a particle that moves in a direction at a speed
 class BackgroundParticle(Sprite):
     def __init__(self, center: list, direction, speed, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
@@ -33,6 +34,7 @@ class BackgroundParticle(Sprite):
         display.blit(self.image, self.rect)
 
 
+# The ImageBackgroundParticle class is a subclass of the BackgroundParticle class.
 class ImageBackgroundParticle(BackgroundParticle):
     def __init__(self, center: list, direction, speed, images: list, *groups: AbstractGroup, **kwargs):
         super().__init__(center, direction, speed, *groups, **kwargs)
@@ -43,6 +45,7 @@ class ImageBackgroundParticle(BackgroundParticle):
 # ------------------------------------------------------------------------------------------------------
 
 
+# Create a component that add some functionality to background
 class IBackgroundComponent(Sprite):
     def __init__(self, display_size, *groups: AbstractGroup):
         super().__init__(*groups)
@@ -121,6 +124,7 @@ class ImageStarComponent(ParticleStarComponent):
 
 # ------------------------------------------------------------------------------------------------------
 
+# A surface that moves in a direction at a speed
 class BackgroundSurface(Sprite):
     def __init__(self, topleft, image, speed, direction=pg.Vector2(0, 1), *groups: AbstractGroup):
         super().__init__(*groups)
@@ -137,6 +141,7 @@ class BackgroundSurface(Sprite):
         display.blit(self.image, self.rect)
 
 
+# The `SurfaceComponent` class is a subclass of `IBackgroundComponent` that creates a BackgroundSurface
 class SurfaceComponent(IBackgroundComponent):
     prefab = BackgroundSurface
     color = (2, 4, 5)
@@ -178,7 +183,7 @@ class SurfaceComponent(IBackgroundComponent):
 
 # ------------------------------------------------------------------------------------------------------
 
-
+# This class used to manage all background components
 class BackgroundManager:
     surface = SurfaceComponent
 

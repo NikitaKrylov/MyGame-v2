@@ -7,7 +7,7 @@ from changed_group import CustomGroup
 from .surface import ImageSurface, ColoredSurface, Text, BaseSurface
 from .button import ImageButton, TextToggleButton
 
-
+# This class is the base class for all menus. It contains all the basic functions that all menus share
 class BaseMenu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator

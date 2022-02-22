@@ -95,3 +95,7 @@ class InvisibleEffect(IEffect):
                               Color(30, 168, 247, 73))
 
         return super().draw(display)
+
+
+class RageEffect(IEffect):
+    duration = 6000

@@ -6,6 +6,17 @@ APP_LOGGER_NAME = APP_NAME
 
 
 def setup_logger(logger_name=APP_LOGGER_NAME, level: int = LOGGERLEVEL, file_name=None, mode: str = 'a'):
+    """
+    Create a logger with a given name, level, file name, and mode.
+    
+    :param logger_name: The name of the logger
+    :param level: The level of the logger. This is the minimum level that the logger will log
+    :type level: int
+    :param file_name: The name of the file to which you want to log
+    :param mode: a = append, w = overwrite, defaults to a
+    :type mode: str (optional)
+    :return: A logger object.
+    """
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
 
@@ -25,4 +36,12 @@ def setup_logger(logger_name=APP_LOGGER_NAME, level: int = LOGGERLEVEL, file_nam
 
 
 def get_logger(module_name):
+    """
+    Create a child logger for the given module name
+    
+    :param module_name: The name of the module that will be used to identify the log messages
+    :return: A logger object.
+    """
     return logging.getLogger(APP_LOGGER_NAME).getChild(module_name)
+
+setup_logger()

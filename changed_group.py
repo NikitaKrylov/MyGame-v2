@@ -14,7 +14,7 @@ class CustomGroup(Group):
             if hasattr(sprite, 'draw'):
                 sprite.draw(surface, *args, **kwargs)
 
-
+# The Groups class is a container for all the groups in the game.
 class Groups:
     def __init__(self):
         self.enemyGroup = CustomGroup()

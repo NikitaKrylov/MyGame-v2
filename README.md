@@ -1,18 +1,17 @@
 <h1 align="center">Spaceship game</h1>
 
 ![python-version](https://img.shields.io/badge/python-3.9.6-brightgreen, "python-version")
-![pygame-version](https://img.shields.io/pypi/pyversions/pygame?color=yellow&label=pygame, "pygame-version")
+![pygame-version](https://img.shields.io/pypi/pyversions/pygame?color=yellow&label=pygame "pygame-version")
+[![](https://img.shields.io/badge/documented%20by-AI%20Doc%20Writer-blue)](https://github.com/mintlify/vscode-docs)
 
 ## Introduction
 
 It`s my first python project with pygame library which I have ever done.
 It was created in summer of 2021.
 
-
 ## Project discription
 
 Some discription
-
 
 ## Installation
 
@@ -24,11 +23,9 @@ Do it with this command:
 pip install -r requirements.txt
 ```
 
-
 ## Usage
 
 Just run the main.py file
-
 
 ## Control
 

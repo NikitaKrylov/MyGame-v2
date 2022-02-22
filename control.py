@@ -49,6 +49,9 @@ class ControlImplementation:
         return 'Базовая реализация функций управления'
 
 
+# The BaseController class is an interface that defines the methods that a controller must implement. 
+# used to enforce the implementation of an interface. 
+# a base class for other controllers
 class BaseController:  # Interface
     __implementation: ControlImplementation = None
     config = None
@@ -123,6 +126,7 @@ class BaseController:  # Interface
         return 'Управляющая логика'
 
 
+# The JoystickControle class is a controller class that uses the joystick to control the player
 class JoystickControle(BaseController):
     name = 'joystick'
     ball_threshold = 0.25
@@ -238,6 +242,9 @@ class JoystickControle(BaseController):
             pass
 
 
+# The keyboard controller is a class that inherits from the BaseController class. 
+# used to control the player's movement and weapon using the keyboard. 
+# It also has a method that allows the player to use the mouse to execute the weapon.
 class KeyboardControle(BaseController):
     name = 'keyboard'
 

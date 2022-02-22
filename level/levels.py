@@ -1,12 +1,23 @@
 import pygame as pg
 from logger.logger import get_logger
-from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFactory
+from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFactory, StrikerEnemyFactory
 from changed_group import Groups
 from background import BackgroundManager
 from timer import Timer
 log = get_logger(__name__)
 
 
+# The base level class is the parent class of all levels. 
+# It has a list of factories, a background class, and a mediator. 
+# It has a start method that creates a background and a spawn method that creates objects. 
+# It has a close method that closes the level. 
+# It has a restart method that restarts the level. 
+# It has a update method that updates the level. 
+# It has a chackDone method that checks if the level is done. 
+# It has a Win method that checks if the level is won. 
+# It has a property that returns the level's description. 
+# It has a property that returns if the level is won. 
+# It has a __str__ method that returns the level's name
 class BaseLevel:
     factories = []
     mediator = None
@@ -59,6 +70,12 @@ class BaseLevel:
         return self.__class__.__name__
 
 
+# The Level1 class is a subclass of BaseLevel. 
+# It has a list of factories, which are used to create objects. 
+# The factories are created in the start method. 
+# The update method checks if it's time to create an object from the factory. 
+# The chackDone method checks if the level is done. 
+# The Win method is called when the level is done.
 class Level1(BaseLevel):
     factories = []
     background_class = BackgroundManager
@@ -149,5 +166,22 @@ class AsteroidWaves(BaseLevel):
     def chackDone(self, *args, **kwargs):
         if self.asteroidFactory.information.killed > 200:
             self.__isWin
-            # self.aplication.close()
         return super().chackDone(*args, **kwargs)
+
+
+class StrikerField(BaseLevel):
+    factories = []
+    background_class = BackgroundManager
+
+    def start(self):
+        self.strikerFactory = StrikerEnemyFactory(
+            display_size=self.aplication.display_size, group=self.grops.enemyGroup)
+        self.factories.append(self.strikerFactory)
+        return super().start()
+
+    def update(self, *args, **kwargs):
+        now = Timer.get_ticks()
+        if self.strikerFactory.count() < 1:
+            self.strikerFactory.createObject()
+
+        return super().update(*args, **kwargs)

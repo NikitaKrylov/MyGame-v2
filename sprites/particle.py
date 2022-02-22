@@ -4,6 +4,7 @@ from animation import Animator
 from animation import StaticMovement, Animator
 import random
 
+# A particle is a sprite that has a size, a speed, a color, and a direction.
 class Particle(Sprite):
     def __init__(self, pos, size, speed, color: list, vector, life_size=None,  size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup):
         super().__init__(*groups)
@@ -52,6 +53,7 @@ class Particle(Sprite):
 
 
 
+# This is a particle that deals damage to the player
 class ParticleShell(Particle):
     def __init__(self, pos, size, speed, color: list, vector, damage, life_size=None, size_rate=None, speed_rate=None, life_time=None, shape='square', *groups: AbstractGroup, **kwargs):
         super().__init__(pos, size, speed, color, vector, life_size=life_size,

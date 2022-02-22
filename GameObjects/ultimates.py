@@ -2,8 +2,7 @@ from sprites.shell import *
 from settings import *
 import pygame as pg
 from timer import Timer
-from pygame.sprite import AbstractGroup
-from .prefabs import AimingPoint, InvisibleEffect
+from .prefabs import AimingPoint, InvisibleEffect, RageEffect
 
 # ------------------ULTIMATE--------------------------
 
@@ -38,7 +37,7 @@ class IUltimate:
         if now - self.updatingTime['last'] > self.updatingTime['cooldawn']:
             return True
         return False
-    
+
     def UpdateExecuteTime(self):
         self.updatingTime['last'] = Timer.get_ticks()
 
@@ -92,6 +91,7 @@ class Striker(IUltimate):
         self.BoolDeselectFubnc()
         return super()._use(player_instance, *args, **kwargs)
 
+
 # ----------------------EFFECTS---------------------------
 
 
@@ -143,7 +143,7 @@ class InvisibleEffectSender(IEffectSender):
         if self.instance is None:
             self.instance = self.prefab(
                 player_instance=player_instance,
-                duration=self.duration, 
+                duration=self.duration,
                 _effect_func=player_instance.SetGodMode,)
             self.instance.AddfiniteEvent(self.BoolDeselectFubnc)
             self.instance.Use()
@@ -151,3 +151,9 @@ class InvisibleEffectSender(IEffectSender):
             self.BoolDeselectFubnc()
 
         return super()._use(player_instance, *args, **kwargs)
+
+
+class RageEffectSender(IEffectSender):
+    instance: Sprite = None
+    prefab = RageEffect
+    duration: int = 4000

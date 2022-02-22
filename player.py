@@ -13,6 +13,8 @@ from GameObjects.prefabs import IEffect
 log = logger.get_logger(__name__)
 
 
+# The player class is the main character of the game. It has abilities, weapons, and a set of
+# animations
 class Player(Sprite):
     mediator = None
 
@@ -37,7 +39,7 @@ class Player(Sprite):
         self.equipment = Equipment(self.shellGroup, self.particle_group)
         self.display_size = display_size
 
-        self.Effects = Effects()
+        self.effectsGroup = EffectsGroup()
 
         self.images = {
             "default": [pg.image.load(
@@ -60,7 +62,7 @@ class Player(Sprite):
         ]
         self.direction = pg.Vector2(0.0, 0.0)
 
-    def spawn(self, dispaly_size):  # -> spawn pos
+    def spawn(self, dispaly_size):  
         return (dispaly_size[0] / 2, dispaly_size[1] / 2)
 
     def updatePosition(self, x_update=None, y_update=None):
@@ -131,7 +133,7 @@ class Player(Sprite):
 
     def update(self, *args, **kwargs):
         """Updating all player states"""
-        self.Effects.update()
+        self.effectsGroup.update()
         self.updatePosition()
         self.updateActingImage(threshold=.35)
         self.animation.update(rate=80, frames_len=len(
@@ -142,7 +144,7 @@ class Player(Sprite):
             self.acting_images[self.animation.getIteration], self.rect)
         self.health.draw(dispaly, border_radius=self.rect.height //
                          2, border_top_right_radius=self.rect.height//2)
-        self.Effects.draw(dispaly)
+        self.effectsGroup.draw(dispaly)
 
     def executeWeapon(self):
         if self.equipment.isUltimateSelected:
@@ -209,7 +211,7 @@ class Player(Sprite):
             self.AddForce(*args, **kwargs)
 
     def AddEffect(self, effect):
-        self.Effects.add(effect)
+        self.effectsGroup.add(effect)
 
     def kill(self):
         return super().kill()
@@ -222,7 +224,7 @@ class Player(Sprite):
                       self.shellGroup, self.particle_group)
 
 
-class Effects(CustomGroup):
+class EffectsGroup(CustomGroup):
     def __init__(self, *sprites: Tuple[IEffect]):
         super().__init__(*sprites)
 
@@ -231,15 +233,4 @@ class Effects(CustomGroup):
             pass
         return super().empty()
 
-    # def __init__(self, *instances: Tuple[IEffect]):
-    #     self.__effects: List[IEffect] = list(instances)
-
-    # def Update(self, player_instance, *args, **kwargs):
-    #     try:
-    #         for ef in self.__effects:
-    #             ef.Use(player_instance, *args, **kwargs)
-    #     except:
-    #         log.warning("effect using doesnt work!")
-
-    # def RemoveEffects(self):
-    #     self.__effects.clear()
+    

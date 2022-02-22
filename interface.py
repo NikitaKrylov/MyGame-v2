@@ -4,8 +4,9 @@ import pygame.gfxdraw
 from settings import IMAGES, MEDIA
 
 
+# It's a health bar
 class HealthBar:
-    def __init__(self, pos, XP, MAXXP, size, color, *args, **kwargs):
+    def __init__(self, pos, XP, MAXXP, size, color=(240, 45, 45), *args, **kwargs):
         self.color = color
         self.HP = XP
         self.MAX_HP = MAXXP
@@ -47,6 +48,7 @@ class HealthBar:
         self.rectMAX.y = y
 
 
+# This class is used to create a cell in the toolbar.
 class ToolbarCell:
     def __init__(self, images: list, isSelected=False, isUltimate=False, drawTimeDelta: bool = False,  **pos):
         self.images = images
@@ -62,8 +64,6 @@ class ToolbarCell:
         self.drawTimeDelta = drawTimeDelta
 
         if self.drawTimeDelta:
-            # self.font = pg.font.Font(
-            # MEDIA + '\\font\\karmasuture.ttf', int(self.rect.height*0.2))
             self.font = pg.font.SysFont(
                 'Comic Sans MS', int(self.rect.height*0.2))
 
@@ -89,6 +89,7 @@ class ToolbarCell:
             self.image = self.images[0]
 
 
+# The toolbar is a class that displays the player's current weapon and ultimate
 class Toolbar:
     def __init__(self, display_size, player_equipment):
         self.display_size = display_size

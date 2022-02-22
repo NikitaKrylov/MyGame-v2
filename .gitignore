@@ -1,5 +1,6 @@
 /test
 /__pycache__/
+/.vscode/
 to_fix.txt
 TODO.txt
 todo.txt

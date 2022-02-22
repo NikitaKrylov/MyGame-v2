@@ -1,5 +1,4 @@
-from pygame.math import disable_swizzling
-from pygame.transform import rotate
+from typing import Tuple
 from animation import Animator, StaticMovement, FunctionMovement, PointerMovement
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
@@ -15,23 +14,26 @@ def sign(value):
     return 1 if value > 0 else -1
 
 
-class AbstractEnemy(Sprite):  # Sprite Interface
+# The IEnemy class is an interface for all enemies in the game.
+# It defines the basic attributes and methods that all enemies must have.
+class IEnemy(Sprite):
     MAX_HP = 100
     HP = MAX_HP
     DAMAGE = 0
     animation = Animator
     ability = None
+    isDamage = True
+    isBurst = False
 
     def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
         super().__init__(*groups)
-        self.isDamage = True
-        self.isBurst = False
         self.factory = factory
         self.images = images
         self.image = images[0]
         self.rect = self.image.get_rect(center=pos)
         self.rects = [self.rect]
         self.animation = self.animation()
+        self.movement = None
 
         if kwargs.get('burst_images'):
             self.burst_images = kwargs.get('burst_images')
@@ -39,7 +41,7 @@ class AbstractEnemy(Sprite):  # Sprite Interface
             self.particle_group = kwargs.get('particle_group')
 
     def update(self, *args, **kwargs):
-        self.updatePosition()
+        self.updatePosition(*args, **kwargs)
 
     def updatePosition(self, *args, **kwargs):
         pass
@@ -66,7 +68,7 @@ class AbstractEnemy(Sprite):  # Sprite Interface
         return self.HP
 
 
-class Asteroid(AbstractEnemy): 
+class Asteroid(IEnemy):
     MAX_HP = 70
     HP = MAX_HP
     DAMAGE = 10
@@ -144,7 +146,8 @@ class IInertial:
     pass
 
 
-class AbstaractFlightEnemy(AbstractEnemy, IInertial):
+
+class AbstaractFlightEnemy(IEnemy, IInertial):
     speed = 5
     MAX_HP = 250
     HP = MAX_HP
@@ -237,7 +240,7 @@ class FirstFlightEnemy2(AbstaractFlightEnemy):
         return super().update(*args, **kwargs)
 
 
-class StarEnemy(AbstractEnemy, IInertial):
+class StarEnemy(IEnemy, IInertial):
     speed = 1.5
     MAX_HP = 300
     HP = MAX_HP
@@ -337,6 +340,37 @@ class StarEnemy(AbstractEnemy, IInertial):
         return super().draw(display)
 
 
+class StrikerEnemy(IEnemy):
+    _speed = 1
+    MAX_HP = 150
+    HP = MAX_HP
+
+    def __init__(self, images: list, pos: list, factory, *groups: AbstractGroup, **kwargs):
+        super().__init__(images, pos, factory, *groups, **kwargs)
+        self.movement = StaticMovement(pg.Vector2(-1, 0))
+        self.healthbar = HealthBar((self.rect.left, self.rect.top + int(self.rect.height*.22)),
+                                   self.HP, self.MAX_HP, (self.rect.width, int(self.rect.height*.11)))
+
+    def updatePosition(self, *args, **kwargs):
+        self.movement.update(self.rect, self.rects, speed=self._speed)
+
+        if self.rect.left <= 0:
+            self.movement.changeDirection(update_x=1)
+        elif self.rect.right >= kwargs.get('display_size')[0]:
+            self.movement.changeDirection(update_x=-1)
+
+        return super().updatePosition(*args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        self.healthbar.updateHP(self.HP)
+        self.healthbar.update(
+            self.rect.left, self.rect.top - int(self.rect.height*.22))
+        return super().update(*args, **kwargs)
+
+    def draw(self, display):
+        self.healthbar.draw(display)
+        return super().draw(display)
+
 # ---------------------------FACTORIES--------------------------------------
 
 
@@ -433,9 +467,23 @@ class StarEnemyFactory(AbstarctFactory):
         return super().createObject(amount=1, *args, **kwargs)
 
 
+class StrikerEnemyFactory(AbstarctFactory):
+    object = StrikerEnemy
+
+    def __init__(self, display_size, group=None, *args, **kwargs):
+        super().__init__(display_size, group, *args, **kwargs)
+        self.images = [pg.image.load(
+            IMAGES+'\enemy\\striker\\strikerEnemy1.png').convert_alpha()]
+
+    def createObject(self, amount=1, *args, **kwargs):
+        pos = (self.display_size[0]-self.images[0].get_width()-3,
+               int(self.images[0].get_height()*1.5))
+        self.object(
+            self.images, pos, self, self.group)
+        return super().createObject(amount, *args, **kwargs)
+
+
 class FactoryInformation:
     killed: int = 0
     alive: int = 0
     spawned: int = 0
-
-   
