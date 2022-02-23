@@ -5,7 +5,7 @@ import logging
 version = 'ALPHA'
 
 APP_NAME = 'Game'
-LOGGERLEVEL = logging.INFO
+LOGGERLEVEL = logging.DEBUG
 PATH = os.getcwd()
 MEDIA = PATH + '\media'
 IMAGES = MEDIA + '\images'

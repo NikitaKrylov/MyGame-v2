@@ -1,13 +1,16 @@
 from math import sin, pi, cos
+from matplotlib.pyplot import spring
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
 from scipy import rand
 from animation import Animator
 from animation import StaticMovement, Animator
 import random
+
+from logger.logger import get_logger
 from .particle import Particle, ParticleShell
 
-
+log = get_logger(__name__)
 # ----------------------------------BASE SHELL---------------------------------------------
 
 
@@ -25,7 +28,7 @@ class BaseShell(Sprite):
         self.image = images[0]
         self.movement = StaticMovement(pg.Vector2(0.0, -1.0))
         """Изображение, которое должно рисоваться в данный момент,
-        должно быть названо image для нормально работы группы
+        должно быть названо image для нормальной работы группы
         """
         self.rect = self.image.get_rect(center=pos)
         self.rects = [self.rect]
@@ -56,29 +59,53 @@ class BaseShell(Sprite):
         return super().kill()
 
 
+# For the shell to hit the area you need to inherit your shell class from IAreaShell class
+# It has an _area fielad which stores an area size and position
+class IAreaShell:
+    _area: pg.Rect = None
+
+    def GetArea(self):
+        return self._area
+
+    def SetArea(self, rect: pg.Rect):
+        if not isinstance(rect, pg.Rect):
+            return log.error("given argement 'rect' must be Rect class")
+        self._area = rect
+
+    def CollideGroup(self, group: AbstractGroup):
+        collide_list = []
+
+        for sprite in group.sprites():
+            for rect in sprite.rects:
+                if self.GetArea().colliderect(rect):
+                    collide_list.append(sprite)
+                    continue
+
+        return collide_list
+
+    def __repr__(self):
+        return f' AreaShell - {self._area}'
+
 # ----------------------------------PLAYER SHELL---------------------------------------------
 
 
-class Strike(BaseShell):
+class Strike(BaseShell, IAreaShell):
     _damage = 300
     _speed = 0
+    _area = pg.Rect(0, 0, 300, 300)
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
+        self.GetArea().center = pos
         self.movement.direction = pg.Vector2(0, 0)
 
-    def draw(self, display):
-        pass
-
-    def update(self, *args, **kwargs):
-        self.animation.update(rate=200, frames_len=2,
-                              repeat=False, finiteFunction=super().kill)
-        return super().update(*args, **kwargs)
+    def getDamage(self):
+        return self._damage
 
     def kill(self):
         colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0),
                   (217, 114, 17), (245, 96, 10), (255, 30, 0)]
-        for i in range(70):
+        for _ in range(70):
             alpha = random.random() * 2 * pi
             pos = [int(self.rect.centerx + self.rect.width*0.2 * cos(alpha)),
                    int(self.rect.centery + self.rect.height*0.2 * sin(alpha))]
@@ -95,7 +122,7 @@ class Strike(BaseShell):
                 speed_rate=-random.uniform(.05, .3),
                 shape='square'))
 
-        for i in range(200):
+        for _ in range(200):
             alpha = random.random() * 2 * pi
             pos = [int(self.rect.centerx + self.rect.width/2 * cos(alpha)),
                    int(self.rect.centery + self.rect.height/2 * sin(alpha))]
@@ -168,14 +195,25 @@ class RedShell(BaseShell):
         return super().kill()
 
 
-class Rocket(BaseShell):
+class Rocket(BaseShell, IAreaShell):
     _speed = 5
     _damage = 120
+    _area = pg.Rect(0, 0, 150, 150)
 
     def __init__(self, images: list, pos, particle_group, *groups: AbstractGroup, **kwargs):
         super().__init__(images, pos, particle_group, *groups, **kwargs)
+        self.GetArea().center = pos
+
+    def draw(self, display):
+        # pg.draw.rect(display, (255, 255, 0), self.GetArea())
+        # for i in self.rects:
+        #     pg.draw.rect(display, (0, 255, 10), i)
+        # return super().draw(display)
+        pass
 
     def update(self, *args, **kwargs):
+        self.GetArea().center = self.rect.center
+
         colors = [(190, 192, 194), (164, 165, 166),
                   (206, 206, 214), (129, 129, 130)]
         for i in range(2):
@@ -191,6 +229,9 @@ class Rocket(BaseShell):
                 speed_rate=-0.3,
                 shape='circle'))
         return super().update(*args, **kwargs)
+
+    def getDamage(self):
+        return self._damage
 
     def kill(self):
         colors = [(255, 0, 0), (255, 140, 0), (255, 90, 0)]

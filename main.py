@@ -355,7 +355,7 @@ class Aplication:
         self.player = Player(self.display_size, self,
                              self.groups.playerShell, self.groups.Particles)
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
-        self.levelManager.SetLevel("StrikerField")
+        self.levelManager.SetLevel("Level1")
         self.levelManager.Start()
         self._actingStrategy = self.gameStrategy
 

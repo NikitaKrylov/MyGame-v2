@@ -23,8 +23,8 @@ class Equipment:
         self.isUltimateSelected = False
 
         self.AddWeapon(LiteGun, RocketLauncher, BurnedLauncher)
-        # self.AddUltimate(Striker)
-        self.AddUltimate(InvisibleEffectSender)
+        self.AddUltimate(Striker)
+        # self.AddUltimate(InvisibleEffectSender)
 
     def BoolSelectUltimate(self):
         """set isUltimateSelected - True"""

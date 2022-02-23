@@ -1,6 +1,8 @@
+from pygame import Rect
 import pygame as pg
-from pygame.sprite import Group
+from pygame.sprite import Group, Sprite, AbstractGroup
 from sprites.enemy import AbstaractFlightEnemy, IInertial
+from sprites.shell import IAreaShell
 
 
 class CustomGroup(Group):
@@ -15,6 +17,8 @@ class CustomGroup(Group):
                 sprite.draw(surface, *args, **kwargs)
 
 # The Groups class is a container for all the groups in the game.
+
+
 class Groups:
     def __init__(self):
         self.enemyGroup = CustomGroup()
@@ -32,11 +36,21 @@ class Groups:
     def collide(self, player):
         # enemy and shell collision
         for enemy in self.enemyGroup:
-            player_shell = spritecollide(enemy, self.playerShell)
-            if player_shell:
-                enemy.damage(player_shell.getDamage())
+            for shell in self.playerShell.sprites():
+                if isinstance(shell, IAreaShell):
+                    # collision between shell and group of enemy
+                    if spritecollide(shell, self.enemyGroup):
+                        collide_list = shell.CollideGroup(self.enemyGroup)
+                        [sprite.damage(shell.getDamage()) for sprite in collide_list]
+                        shell.kill()
 
-        # player and enemy collision
+                else:
+                    # collision between a shel and an enemy
+                    sprite = twospritecollide(shell, enemy)  # -> enemy
+                    if sprite is not None:
+                        sprite.damage(shell.getDamage())
+
+        # collision between player and enemy
         enemy_sprite = spritecollide(player, self.enemyGroup)
 
         if enemy_sprite:
