@@ -23,8 +23,8 @@ class Equipment:
         self.isUltimateSelected = False
 
         self.AddWeapon(LiteGun, RocketLauncher, BurnedLauncher)
-        self.AddUltimate(Striker)
-        # self.AddUltimate(InvisibleEffectSender)
+        # self.AddUltimate(Striker)
+        self.AddUltimate(InvisibleEffectSender)
 
     def BoolSelectUltimate(self):
         """set isUltimateSelected - True"""
@@ -35,9 +35,11 @@ class Equipment:
         self.isUltimateSelected = False
 
     def SelectUltimate(self, player_instance):
-        if self._ultimate.isExecute:
-            self.BoolSelectUltimate()
-            self._ultimate.Select(self.isUltimateSelected, player_instance)
+        # if self._ultimate.isExecute:
+        #     self.BoolSelectUltimate()
+        #     self._ultimate.Select(self.isUltimateSelected, player_instance)
+        self.isUltimateSelected = not self.isUltimateSelected
+        self._ultimate.Select(self.isUltimateSelected, player_instance)
 
     def SelectWeapon(self):
         pass
@@ -77,7 +79,7 @@ class Equipment:
 
     def AddUltimate(self, prefabs: IUltimate):
         self._ultimate = prefabs(
-            group=self._group, particle_group=self._particle_group, BoolDeselectFubnc=self.BoolDiselectUltimate)
+            group=self._group, particle_group=self._particle_group, BoolDeselectFunc=self.BoolDiselectUltimate)
 
     def countWeapons(self):
         return len(self._weapon_equipment)

@@ -207,8 +207,6 @@ class Aplication:
     ticks = 0
 
     def __init__(self, controllerType: str = 'keyboard', *args, **kwargs):
-        pg.init()
-        pg.font.init()
         user32 = ctypes.windll.user32
         self.clock = pg.time.Clock()
 
@@ -397,6 +395,8 @@ class Aplication:
 
 if __name__ == '__main__':
     import logger
+    pg.init()
+    pg.font.init()
     log = logger.setup_logger()
     aplication = Aplication()
     aplication.start()

@@ -12,8 +12,8 @@ class IUltimate:
     prefab = None
     label_image = None
 
-    def __init__(self, group, particle_group, BoolDeselectFubnc=None):
-        self.BoolDeselectFubnc = BoolDeselectFubnc
+    def __init__(self, group, particle_group, BoolDeselectFunc=None):
+        self.BoolDeselectFunc = BoolDeselectFunc
         self.group = group
         self.particle_group = particle_group
         self.updatingTime = {
@@ -30,6 +30,7 @@ class IUltimate:
     def _use(self, player_instance, *args, **kwargs):
         """main calling use function"""
         self.UpdateExecuteTime()
+        self.BoolDeselectFunc()
 
     @property
     def isExecute(self):
@@ -49,13 +50,13 @@ class IUltimate:
 
 
 class Striker(IUltimate):
-    pointer = AimingPoint
-    instance: AimingPoint = None
+    pointer_prefab = AimingPoint
+    pointer: AimingPoint = None
     prefab = Strike
     label_image = None
 
-    def __init__(self, group, particle_group, BoolDeselectFubnc=None):
-        super().__init__(group, particle_group, BoolDeselectFubnc)
+    def __init__(self, group, particle_group, BoolDeselectFunc=None):
+        super().__init__(group, particle_group, BoolDeselectFunc)
         self.image = pg.image.load(
             IMAGES+"\\game_objects\\strike_point.png").convert_alpha()
         self.label_image = pg.image.load(
@@ -66,13 +67,13 @@ class Striker(IUltimate):
         }
 
     def Select(self, isUsed, player_instance=None, *args, **kwargs):
-        if not isUsed and self.instance is not None:
-            self.instance.kill()
-            self.instance = None
+        if not isUsed and self.pointer is not None:
+            self.pointer.kill()
+            self.pointer = None
 
-        elif isUsed and self.instance is None:
-            self.instance = self.__class__.pointer(self.image)
-            self.particle_group.add(self.instance)
+        elif isUsed and self.pointer is None:
+            self.pointer = self.__class__.pointer_prefab(self.image)
+            self.particle_group.add(self.pointer)
 
         return super().Select(isUsed, player_instance,  *args, **kwargs)
 
@@ -85,10 +86,11 @@ class Striker(IUltimate):
     def _use(self, player_instance=None, *args, **kwargs):
         image = pg.Surface((100, 100))
         image.fill((255, 90, 20))
-        obj = self.prefab([image], self.instance.rect.center,
+        obj = self.prefab([image], self.pointer.rect.center,
                           self.particle_group)
         self.group.add(obj)
-        self.BoolDeselectFubnc()
+        self.pointer.kill()
+        self.pointer = None
         return super()._use(player_instance, *args, **kwargs)
 
 
@@ -113,13 +115,8 @@ class IEffectSender(IUltimate):
         return super()._use(player_instance, *args, **kwargs)
 
     @property
-    def TimeDelta(self):
-        if self.instance is not None and self.instance.alive():
-            return self.instance.sTimer.TimeDelta if hasattr(self.instance, "sTimer") else 0
-
-        delta = (self.updatingTime['last'] +
-                 self.updatingTime['cooldawn']) - Timer.get_ticks()
-        return delta if delta >= 0 else 0
+    def DeltaDuration(self):
+        return self.instance.sTimer.TimeDelta if hasattr(self.instance, "sTimer") else 0
 
 
 class InvisibleEffectSender(IEffectSender):
@@ -127,8 +124,8 @@ class InvisibleEffectSender(IEffectSender):
     prefab = InvisibleEffect
     duration: int = 4000
 
-    def __init__(self, group, particle_group, BoolDeselectFubnc=None):
-        super().__init__(group, particle_group, BoolDeselectFubnc)
+    def __init__(self, group, particle_group, BoolDeselectFunc=None):
+        super().__init__(group, particle_group, BoolDeselectFunc)
         self.updatingTime = {
             'last': 0,
             'cooldawn': 6000
@@ -145,10 +142,9 @@ class InvisibleEffectSender(IEffectSender):
                 player_instance=player_instance,
                 duration=self.duration,
                 _effect_func=player_instance.SetGodMode,)
-            self.instance.AddfiniteEvent(self.BoolDeselectFubnc)
+            self.instance.AddfiniteEvent(self.BoolDeselectFunc)
             self.instance.Use()
             player_instance.AddEffect(self.instance)
-            self.BoolDeselectFubnc()
 
         return super()._use(player_instance, *args, **kwargs)
 
