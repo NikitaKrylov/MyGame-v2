@@ -2,10 +2,10 @@ from typing import Tuple
 from animation import Animator, StaticMovement, FunctionMovement, PointerMovement
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
-from settings import IMAGES
+from settings import IMAGES, ENEMY_HEALTHBAR_COLOR
 import random
 import math
-from interface import HealthBar
+from gui.interface import HealthBar
 from GameObjects.weapons import DubleGunEnemy, SingleRedGunEnemy, StarGun
 from AI import WanderingAI
 
@@ -158,7 +158,7 @@ class AbstaractFlightEnemy(IEnemy, IInertial):
         self.rects = [pg.Rect(self.rect.x, self.rect.y, self.rect.width, self.rect.height*0.55),
                       pg.Rect(self.rect.x+self.rect.width/3, self.rect.y, self.rect.width//3, self.rect.height)]
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
-                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.09], (240, 45, 45))
+                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.09], ENEMY_HEALTHBAR_COLOR)
         self.movement = None
         self.weapon = SingleRedGunEnemy(
             self.groups()[0], kwargs.get('particle_group'))
@@ -251,7 +251,7 @@ class StarEnemy(IEnemy, IInertial):
         self.rects = [images[0].get_rect(center=pos)]
         self.rot_speed = .8
         self.healthBar = HealthBar([self.rect.left, self.rect.top - self.rect.width*0.3],
-                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], (240, 45, 45))
+                                   self.HP, self.MAX_HP, [self.rect.width, self.rect.height*0.11], ENEMY_HEALTHBAR_COLOR)
         self.movement = PointerMovement(pg.Vector2(1, 0))
         self.weapon = StarGun(self.groups()[0], kwargs.get('particle_group'))
         self.brain = WanderingAI(self.updateState1)

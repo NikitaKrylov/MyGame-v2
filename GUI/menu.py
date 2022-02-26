@@ -8,6 +8,8 @@ from .surface import ImageSurface, ColoredSurface, Text, BaseSurface
 from .button import ImageButton, TextToggleButton
 
 # This class is the base class for all menus. It contains all the basic functions that all menus share
+
+
 class BaseMenu:
     def __init__(self, mediator, display_size):
         self.aplication = mediator
@@ -73,14 +75,14 @@ class GameMenu(BaseMenu):
 class Menu(GameMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-        surface_image = pg.image.load(IMAGES + '\menu\Menu2.png')
+        surface_image = pg.image.load('media\images\menu\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
-        label_image = pg.image.load(IMAGES + '\menu\Menu.png')
-        continue_image = pg.image.load(IMAGES + '\menu\Continue.png')
-        restart_image = pg.image.load(IMAGES + '\menu\Restart.png')
-        leave_image = pg.image.load(IMAGES + '\menu\Leave.png')
-        settings_image = pg.image.load(IMAGES + '\\menu\\Settings.png')
+        label_image = pg.image.load('media\images\menu\Menu.png')
+        continue_image = pg.image.load('media\images\menu\Continue.png')
+        restart_image = pg.image.load('media\images\menu\Restart.png')
+        leave_image = pg.image.load('media\images\menu\Leave.png')
+        settings_image = pg.image.load('media\images\menu\Settings.png')
 
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
@@ -224,7 +226,7 @@ class SettingsMenu(AbstractAplicationMenu):
             [self.surface.rect.centerx, self.surface.rect.centery], toggle_controller_type_image1, onClickImage=toggle_controller_type_image2, func=self.aplication.changeControllerToggle, font=font, center=True)
         self.toggle_FPS = TextToggleButton(
             [self.surface.rect.centerx, self.surface.rect.centery+toggle_controller_type_image1.get_height()*2], toggle_FPS_image1, onClickImage=toggle_FPS_image2, func=self.aplication.showFPS, font=font, center=True)
-        
+
         # Grid(self.display_size, 120, 100, self.toggle_controller_type, self.toggle_FPS).Set()
 
         self.btnGroup.add(self.toggle_controller_type, self.toggle_FPS)

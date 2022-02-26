@@ -3,6 +3,7 @@ from player import Player
 import json
 import os
 from logger import get_logger
+from settings import CONTROL_CONFIG
 log = get_logger(__name__)
 
 
@@ -49,8 +50,8 @@ class ControlImplementation:
         return 'Базовая реализация функций управления'
 
 
-# The BaseController class is an interface that defines the methods that a controller must implement. 
-# used to enforce the implementation of an interface. 
+# The BaseController class is an interface that defines the methods that a controller must implement.
+# used to enforce the implementation of an interface.
 # a base class for other controllers
 class BaseController:  # Interface
     __implementation: ControlImplementation = None
@@ -59,7 +60,7 @@ class BaseController:  # Interface
 
     def __init__(self, controlIMPL: ControlImplementation, *args, **kwargs):
         self.__implementation = controlIMPL
-        self.config = self.load_config(os.getcwd()+'\control_config.json')
+        self.config = self.load_config()
 
     def cursor_set_visible(self):
         pg.mouse.set_visible(True)
@@ -67,9 +68,11 @@ class BaseController:  # Interface
     def cursor_set_invisible(self):
         pg.mouse.set_visible(False)
 
-    def load_config(self, path=None):
+    def load_config(self, path=CONTROL_CONFIG):
         with open(path, 'r') as file:
             _config = json.load(file)
+            if _config is not None:
+                log.info("controll config was loaded")
 
         return _config
 
@@ -242,8 +245,8 @@ class JoystickControle(BaseController):
             pass
 
 
-# The keyboard controller is a class that inherits from the BaseController class. 
-# used to control the player's movement and weapon using the keyboard. 
+# The keyboard controller is a class that inherits from the BaseController class.
+# used to control the player's movement and weapon using the keyboard.
 # It also has a method that allows the player to use the mouse to execute the weapon.
 class KeyboardControle(BaseController):
     name = 'keyboard'
@@ -267,9 +270,9 @@ class KeyboardControle(BaseController):
             player.decreaseAccel(0)
         else:
             if scancode[pg.K_a]:
-                player.direction.x = -1
+                player.movement.direction.x = -1
             if scancode[pg.K_d]:
-                player.direction.x = 1
+                player.movement.direction.x = 1
 
             # управляет изменением ускоренной скорости
             player.increaseAccel(0)
@@ -280,9 +283,9 @@ class KeyboardControle(BaseController):
             player.decreaseAccel(1)
         else:
             if scancode[pg.K_w]:
-                player.direction.y = -1
+                player.movement.direction.y = -1
             if scancode[pg.K_s]:
-                player.direction.y = 1
+                player.movement.direction.y = 1
 
             # управляет изменением ускоренной скорости
             player.increaseAccel(1)

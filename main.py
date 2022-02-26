@@ -8,7 +8,7 @@ from level.levels import BaseLevel
 from level.levelManager import LevelManager
 from gui.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu, InventoryMenu, LevelManagerMenu
 from gui.surface import Text
-from interface import Toolbar
+from gui.interface import Toolbar
 from changed_group import Groups
 from timer import Timer
 
@@ -350,7 +350,7 @@ class Aplication:
     def startGame(self, *args, **kwargs):
         log.info('start level')
 
-        self.player = Player(self.display_size, self,
+        self.player = Player(self.display_size,
                              self.groups.playerShell, self.groups.Particles)
         self.toolbar = Toolbar(self.display_size, self.player.equipment)
         self.levelManager.SetLevel("Level1")

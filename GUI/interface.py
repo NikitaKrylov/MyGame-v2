@@ -1,12 +1,12 @@
 import pygame as pg
 import pygame.gfxdraw
 
-from settings import IMAGES, MEDIA
+from settings import IMAGES, MEDIA, ENEMY_HEALTHBAR_COLOR
 
 
 # It's a health bar
 class HealthBar:
-    def __init__(self, pos, XP, MAXXP, size, color=(240, 45, 45), *args, **kwargs):
+    def __init__(self, pos, XP, MAXXP, size, color=ENEMY_HEALTHBAR_COLOR, *args, **kwargs):
         self.color = color
         self.HP = XP
         self.MAX_HP = MAXXP
