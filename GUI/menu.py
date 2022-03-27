@@ -93,7 +93,7 @@ class Menu(GameMenu):
         self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                     continue_image.get_height()*6.4], settings_image.convert_alpha(), center=True, func=self.aplication.showSettings)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   continue_image.get_height()*8.1], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+                                   continue_image.get_height()*8.1], restart_image.convert_alpha(), center=True, func=self.aplication.restartGame)
         self.leave = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+continue_image.get_height()*10], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
 
@@ -115,7 +115,7 @@ class FinaleMenu(BaseMenu):
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restart)
+                                   exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restartGame)
         self.leave = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+leave_image.get_height()*6.45], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
         self.exit = ImageButton(
@@ -159,10 +159,24 @@ class InventoryMenu(GameMenu):
         surface = pg.image.load(IMAGES + '\\menu\\backgroundMenu.png')
         self.surface = ImageSurface(
             (self.width//2, self.height//2), surface, center=True)
-        self.label = Text((self.width//2, int(self.surface.rect.top+self.surface.rect.height*0.2)),
+        self.label = Text((self.width//2, int(self.surface.rect.top+self.surface.rect.height*0.15)),
                           "Inventory", (255, 255, 255), Font(MEDIA + '\\font\\karmasuture.ttf', 36), True)
+        self.ultimates_label = Text((int(self.surface.rect.left * 1.5), self.label.rect.bottom + self.label.rect.height*2),
+                                    "Ultimates: ", (255, 255, 255), Font(MEDIA + '\\font\\karmasuture.ttf', 36), False)
 
-        self.backgroundPiecesGroup.add(self.surface, self.label)
+        firstImage = pg.image.load(IMAGES + "\\game_objects\\strike_point.png")
+        self.firstImageBtn = ImageButton((int(self.ultimates_label.rect.right * 1.2),
+                                         self.ultimates_label.rect.centery - firstImage.get_height()//2), firstImage, func=self.aplication.player.equipment.setStriker)
+
+        secondImage = pg.image.load(
+            IMAGES + "\\game_objects\\invisible_area.png")
+        self.secondImageBtn = ImageButton((int(self.firstImageBtn.rect.right * 1.2),
+                                          self.ultimates_label.rect.centery - secondImage.get_height()//2), secondImage, func=self.aplication.player.equipment.setInvisibleEffectSender)
+
+        self.backgroundPiecesGroup.add(
+            self.surface, self.label, self.ultimates_label)
+        self.btnGroup.add(self.firstImageBtn, self.secondImageBtn)
+        # print("menu - ",str(self.aplication.player.equipment.__hash__()))
 
 
 """---------------------------APLICATION MENU--------------------------------"""
@@ -196,7 +210,7 @@ class EnterMenu(AbstractAplicationMenu):
         settings_image = pg.image.load(IMAGES + '\\menu\\Settings.png')
 
         self.start = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                 exit_image.get_height()*3], start_image, center=True, func=self.aplication.startGame)
+                                 exit_image.get_height()*3], start_image, center=True, func=self.aplication.runGame)
         self.change_level = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*5.5], change_level_image, center=True, func=self.aplication.showLevelManager)
         self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height(

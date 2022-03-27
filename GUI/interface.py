@@ -149,7 +149,6 @@ class ToolbarCell:
 class EquipmentDrawer(Sprite):
     def __init__(self, equipment_instance):
         super().__init__()
-        print("Hello world")
         self.equipment = equipment_instance
         images = [pg.image.load(
             IMAGES + f'\menu\\toolbar_section_{i}.png').convert_alpha() for i in range(1, 5)]

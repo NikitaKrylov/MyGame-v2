@@ -7,14 +7,14 @@ log = get_logger(__name__)
 
 def hasattribute(name: str = None):
     def decorator(func):
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self, *args):
             if name is not None:
                 if not hasattr(self, name):
                     log.error(
                         f"'{self.__class__.__name__}' object has no attribute {name}")
                     return
             try:
-                result = func(self, *args, **kwargs)
+                result = func(self, *args)
             except AttributeError as exp:
                 log.error(exp)
             else:
@@ -27,7 +27,7 @@ class IButton:
     def __init__(self, func=None):
         self.func = func
 
-    def execute(self):
+    def execute(self):        
         if self.func is not None:
             self.func()
 
@@ -53,24 +53,27 @@ class IHoveredButton(IButton):
 
 
 class ColoredButton(ColoredSurface, IHoveredButton):
-    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None, **kwargs):
-        super().__init__(pos, size, center, color, border_radius, **kwargs)
+    def __init__(self, pos: list, size: list, center: bool = False, color=None, border_radius=0, func=None):
+        super().__init__(pos, size, center, color, border_radius)
         super(IHoveredButton, self).__init__(func)
 
 
 class ImageButton(ImageSurface, IHoveredButton):
-    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, **kwargs):
-        super().__init__(pos, image, size, center, **kwargs)
+    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None):
+        super().__init__(pos, image, size, center)
         super(IHoveredButton, self).__init__(func)
         self.scaled_surface = self.scale(self.image, 1.1)
+        
+    
+
 
     def draw(self, display):
         return IHoveredButton.draw(self, display)
 
 
 class ToggleButton(ImageSurface, IButton):
-    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, onClickImage=None, **kwargs):
-        super().__init__(pos, image, size, center, **kwargs)
+    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, onClickImage=None):
+        super().__init__(pos, image, size, center)
         self.func = func
 
         self.state = False
@@ -78,9 +81,9 @@ class ToggleButton(ImageSurface, IButton):
         self.onClickImage = onClickImage if onClickImage is not None else self.image
         self.defaultImage = self.image
 
-    def update(self, *args, **kwargs):
+    def update(self, *args):
         self.rect = self.image.get_rect(center=self.rect.center)
-        return super().update(*args, **kwargs)
+        return super().update(*args)
 
     def execute(self):
         self.state = not self.state
@@ -106,8 +109,8 @@ class ToggleButton(ImageSurface, IButton):
 
 
 class TextToggleButton(ToggleButton):
-    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, onClickImage=None, font=None, **kwargs):
-        super().__init__(pos, image, size, center, func, onClickImage, **kwargs)
+    def __init__(self, pos: list, image, size: list = None, center: bool = False, func=None, onClickImage=None, font=None):
+        super().__init__(pos, image, size, center, func, onClickImage)
         self.font = font
 
     def changeImage(self, image=None, text=None):

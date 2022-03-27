@@ -20,6 +20,7 @@ class IUltimate:
             'last': 0,
             'cooldawn': 0
         }
+        self.UpdateExecuteTime()
 
     def Select(self, isUsed, player_instance=None, *args, **kwargs):
         """Select ultimate"""
@@ -66,19 +67,17 @@ class Striker(IUltimate):
             IMAGES+"\\game_objects\\strike_point.png").convert_alpha()
         self.label_image = pg.image.load(
             IMAGES+"\\menu\\labels\\strike_point.png").convert_alpha()
-        self.updatingTime = {
-            'last': 0,
-            'cooldawn': 6000
-        }
+        self.updatingTime['cooldawn'] = 6000
 
     def Select(self, isUsed, player_instance=None, *args, **kwargs):
-        if not isUsed and self.pointer is not None:
-            self.pointer.kill()
-            self.pointer = None
+        if self.isExecute:
+            if not isUsed and self.pointer is not None:
+                self.pointer.kill()
+                self.pointer = None
 
-        elif isUsed and self.pointer is None:
-            self.pointer = self.__class__.pointer_prefab(self.image)
-            self.particle_group.add(self.pointer)
+            elif isUsed and self.pointer is None:
+                self.pointer = self.__class__.pointer_prefab(self.image)
+                self.particle_group.add(self.pointer)
 
         return super().Select(isUsed, player_instance,  *args, **kwargs)
 
@@ -151,10 +150,7 @@ class InvisibleEffectSender(IEffectSender):
 
     def __init__(self, group, particle_group, BoolDeselectFunc=None):
         super().__init__(group, particle_group, BoolDeselectFunc)
-        self.updatingTime = {
-            'last': 0,
-            'cooldawn': 3000 + self.__class__.duration
-        }
+        self.updatingTime['cooldawn'] = 3000 + self.__class__.duration
         self.label_image = pg.image.load(
             IMAGES+"\\menu\\labels\\invisible_area.png").convert_alpha()
 
@@ -172,7 +168,7 @@ class RageEffectSender(IEffectSender):
     instance: Sprite = None
     prefab = RageEffect
     duration: int = 4000
-    
+
     def CreateEffect(self, player_instance):
         instance = RageEffectSender.prefab(
             player_instance=player_instance,

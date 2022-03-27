@@ -13,11 +13,28 @@ class Equipment:
         self.weaponIndex = 0
         self._weapon_equipment: List[IWeapon] = []
         self._heal_equipment = []
-        self._ultimate: IUltimate = None
+        self.__ultimate: IUltimate = None
         self.isUltimateSelected = False
 
         self.AddWeapon(LiteGun, RocketLauncher, BurnedLauncher)
-        # self.AddUltimate(Striker)
+        # self.AddUltimate(InvisibleEffectSender)
+        self.setInvisibleEffectSender()
+        # self.setStriker()
+        # print("init - ", str(self.__hash__()))
+
+    @property
+    def _ultimate(self):
+        return self.__ultimate
+
+    @_ultimate.setter
+    def _ultimate(self, value):
+        self.__ultimate = value
+
+    def setStriker(self):
+        self.AddUltimate(Striker)
+
+
+    def setInvisibleEffectSender(self):
         self.AddUltimate(InvisibleEffectSender)
 
     def BoolSelectUltimate(self):

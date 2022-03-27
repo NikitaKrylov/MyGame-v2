@@ -73,7 +73,6 @@ class Groups:
     def update(*args, **kwargs):
         for _group in Groups.GetGroups():
             _group.update(*args, **kwargs)
-        # print(self.Background)
 
     @staticmethod
     def draw(display, *args, **kwargs):
