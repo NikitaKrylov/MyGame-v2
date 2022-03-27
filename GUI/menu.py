@@ -93,7 +93,7 @@ class Menu(GameMenu):
         self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
                                     continue_image.get_height()*6.4], settings_image.convert_alpha(), center=True, func=self.aplication.showSettings)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   continue_image.get_height()*8.1], restart_image.convert_alpha(), center=True, func=self.aplication.restartGame)
+                                   continue_image.get_height()*8.1], restart_image.convert_alpha(), center=True, func=self.aplication.onRestartGame)
         self.leave = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+continue_image.get_height()*10], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
 
@@ -115,11 +115,11 @@ class FinaleMenu(BaseMenu):
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)
         self.restart = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                   exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.restartGame)
+                                   exit_image.get_height()*5.5], restart_image.convert_alpha(), center=True, func=self.aplication.onRestartGame)
         self.leave = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+leave_image.get_height()*6.45], leave_image.convert_alpha(), center=True, func=self.aplication.leaveToMenu)
         self.exit = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*8.5], exit_image.convert_alpha(), center=True, func=self.aplication.onClose)
 
         self.backgroundPiecesGroup.add(self.surface)
         self.btnGroup.add(self.restart,  self.leave)
@@ -210,13 +210,13 @@ class EnterMenu(AbstractAplicationMenu):
         settings_image = pg.image.load(IMAGES + '\\menu\\Settings.png')
 
         self.start = ImageButton([self.surface.rect.centerx, self.surface.rect.top +
-                                 exit_image.get_height()*3], start_image, center=True, func=self.aplication.runGame)
+                                 exit_image.get_height()*3], start_image, center=True, func=self.aplication.onCreateGame)
         self.change_level = ImageButton(
             [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*5.5], change_level_image, center=True, func=self.aplication.showLevelManager)
         self.settings = ImageButton([self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height(
         )*8], settings_image, center=True, func=self.aplication.showSettings)
         self.exit = ImageButton(
-            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.close)
+            [self.surface.rect.centerx, self.surface.rect.top+exit_image.get_height()*10.5], exit_image.convert_alpha(), center=True, func=self.aplication.onClose)
 
         self.btnGroup.add(self.start, self.change_level,
                           self.settings, self.exit)

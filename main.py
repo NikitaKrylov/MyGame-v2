@@ -186,14 +186,14 @@ class Aplication:
         JoystickControle.name: JoystickControle
     }
     controleRealizationIndex = 0
-    menuStrategy: BaseStrategy 
-    gameStrategy: BaseStrategy 
-    dieMenuStrategy: BaseStrategy 
-    winMenuStrategy: BaseStrategy 
-    guiMenuStrategy: BaseStrategy 
-    settingsMenuStrategy: BaseStrategy 
-    inventoryStrategy: BaseStrategy 
-    levelManagerStrategy: BaseStrategy 
+    menuStrategy: BaseStrategy
+    gameStrategy: BaseStrategy
+    dieMenuStrategy: BaseStrategy
+    winMenuStrategy: BaseStrategy
+    guiMenuStrategy: BaseStrategy
+    settingsMenuStrategy: BaseStrategy
+    inventoryStrategy: BaseStrategy
+    levelManagerStrategy: BaseStrategy
 
     _actingStrategy = None
 
@@ -205,9 +205,11 @@ class Aplication:
     _lastStrategy = None
     __run = True
     ticks = 0
-    
 
     def __init__(self, controllerType: str = 'keyboard', *args, **kwargs):
+        self.onStart(controllerType)
+
+    def onStart(self, controllerType, *args, **kwargs):  # 1
         user32 = ctypes.windll.user32
         self.clock = pg.time.Clock()
 
@@ -217,14 +219,46 @@ class Aplication:
         self.display_size = [int(0.4*self.window_size[0]),
                              int(0.9*self.window_size[1])]
         self.display = pg.display.set_mode(self.display_size)
-        self.controller = self.controleRealization[controllerType](ControlImplementation(self, *args, **kwargs))
+        self.controller = self.controleRealization[controllerType](
+            ControlImplementation(self, *args, **kwargs))
 
         self.groups = Groups
         self.player = self.createPlayer()
         self.levelManager = LevelManager(self, self.groups)
 
         self.createStrategies()
-        
+
+    def onCreateGame(self):  # 2
+        self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
+        self.levelManager.SetLevel("Level1")
+        self.levelManager.Start()
+        self._actingStrategy = self.gameStrategy
+
+    def onRestartGame(self):  # 3
+        self.game_timer.reset()
+        self.player.restart()
+        self.createStrategies()
+        self.groups.restart()
+        self.levelManager.Restart()
+        self.levelManager.Start()
+        self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
+        self.showMenu(value=False)
+
+    def onQuitGame(self):  # 4
+        self.game_timer.reset()
+        self.createStrategies()
+        self.levelManager.Reset()
+        self.groups.restart()
+        self.player.restart()
+        self.isPlayerDie = False
+
+    def onClose(self):  # 5
+        log.info('close app')
+        self.__run = False
+        self.onQuitGame()
+        pg.quit()
+        sys.exit()
+
     def createStrategies(self):
         self.menuStrategy = MenuStrategy(self)
         self.dieMenuStrategy = DieMenuStrategy(self)
@@ -232,9 +266,9 @@ class Aplication:
         self.guiMenuStrategy = EnterMenuStrategy(self)
         self.winMenuStrategy = WinMenuStrategy(self)
         self.settingsMenuStrategy = SettingsMenuStrategy(self)
-        self.inventoryStrategy =InventoryStrategy(self)
+        self.inventoryStrategy = InventoryStrategy(self)
         self.levelManagerStrategy = LevelManagerStrategy(self)
-        
+
         self._actingStrategy = self.guiMenuStrategy
         self._lastStrategy = self._actingStrategy
 
@@ -248,11 +282,11 @@ class Aplication:
 
             for event in pg.event.get():
                 self._actingStrategy.eventListen(event)
-                
+
                 if event.type == pg.MOUSEBUTTONDOWN:
                     if event.button == 3:
                         print(self.player.equipment._ultimate)
-                        
+
             self._actingStrategy.update()
             self._actingStrategy.draw(self.display)
 
@@ -265,40 +299,6 @@ class Aplication:
     def createPlayer(self):
         return Player(self.display_size,
                       self.groups.playerShell, self.groups.Particles)
-
-    def runGame(self, *args, **kwargs):
-        log.info('run game')
-        self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
-        self.levelManager.SetLevel("Level1")
-        self.levelManager.Start()
-        self._actingStrategy = self.gameStrategy
-
-    def quitGame(self):
-        self.game_timer.reset()
-        self.createStrategies()
-        self.levelManager.Reset()
-        self.groups.restart()
-        self.player.restart()
-        self.isPlayerDie = False
-
-    def restartGame(self):
-        log.info("restart level")
-        self.clock = pg.time.Clock()
-        self.game_timer.reset()
-        self.player.restart()
-        self.createStrategies()
-        self.groups.restart()
-        self.levelManager.Restart()
-        self.levelManager.Start()
-        self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
-        self.showMenu(value=False)
-
-    def close(self):
-        log.info('close app')
-        self.__run = False
-        self.quitGame()
-        pg.quit()
-        sys.exit()
 
     def drawFPS(self, text: Text):
         text.draw(self.display)
@@ -396,7 +396,7 @@ class Aplication:
 
     def leaveToMenu(self):
         self._actingStrategy = self.guiMenuStrategy
-        self.quitGame()
+        self.onQuitGame()
 
     def changeLevel(self, name: str):
         self.groups.Background.empty()
