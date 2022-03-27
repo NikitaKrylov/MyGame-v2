@@ -1,9 +1,7 @@
-from animation import Animator
 import pygame as pg
 from pygame.sprite import AbstractGroup, Sprite
-from timer import STimer, Timer
+from timer import STimer
 from pygame import Color, gfxdraw
-from settings import IMAGES
 # ----------Ultimate prefabs------------------
 
 
@@ -73,7 +71,6 @@ class IEffect(Sprite):
 
 
 class InvisibleEffect(IEffect):
-    duration = 3000
 
     def _apply(self):
         if self.player_instance is not None:

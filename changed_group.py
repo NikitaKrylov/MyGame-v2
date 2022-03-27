@@ -1,4 +1,4 @@
-from pygame import Rect
+from typing import List
 import pygame as pg
 from pygame.sprite import Group, Sprite, AbstractGroup
 from sprites.enemy import AbstaractFlightEnemy, IInertial
@@ -16,32 +16,39 @@ class CustomGroup(Group):
             if hasattr(sprite, 'draw'):
                 sprite.draw(surface, *args, **kwargs)
 
-# The Groups class is a container for all the groups in the game.
+# The Static Groups class is a container for all the groups in the game.
 
 
 class Groups:
-    def __init__(self):
-        self.enemyGroup = CustomGroup()
-        self.playerShell = CustomGroup()
-        self.objectsGroup = Group()
-        self.Particles = CustomGroup()
-        self.Background = CustomGroup()
-        self._groups = [
-            self.Background,
-            self.enemyGroup,
-            self.playerShell,
-            self.objectsGroup,
-            self.Particles]
+    enemyGroup = CustomGroup()
+    playerShell = CustomGroup()
+    objectsGroup = Group()
+    Particles = CustomGroup()
+    Background = CustomGroup()
+    Interface = CustomGroup()
+    _groups: List[AbstractGroup] = [
+        Background,
+        enemyGroup,
+        playerShell,
+        objectsGroup,
+        Particles,
+        Interface]
 
-    def collide(self, player):
+    @staticmethod
+    def GetGroups():
+        return Groups._groups
+
+    @staticmethod
+    def collide(player):
         # enemy and shell collision
-        for enemy in self.enemyGroup:
-            for shell in self.playerShell.sprites():
+        for enemy in Groups.enemyGroup:
+            for shell in Groups.playerShell.sprites():
                 if isinstance(shell, IAreaShell):
                     # collision between shell and group of enemy
-                    if spritecollide(shell, self.enemyGroup):
-                        collide_list = shell.CollideGroup(self.enemyGroup)
-                        [sprite.damage(shell.getDamage()) for sprite in collide_list]
+                    if spritecollide(shell, Groups.enemyGroup):
+                        collide_list = shell.CollideGroup(Groups.enemyGroup)
+                        [sprite.damage(shell.getDamage())
+                         for sprite in collide_list]
                         shell.kill()
 
                 else:
@@ -51,7 +58,7 @@ class Groups:
                         sprite.damage(shell.getDamage())
 
         # collision between player and enemy
-        enemy_sprite = spritecollide(player, self.enemyGroup)
+        enemy_sprite = spritecollide(player, Groups.enemyGroup)
 
         if enemy_sprite:
             if not player.isGodMod:
@@ -62,23 +69,27 @@ class Groups:
                         force=enemy_sprite.rect.height*1.1,
                         enemy_rect=enemy_sprite.rect)
 
-    def update(self, *args, **kwargs):
-        for _group in self._groups:
+    @staticmethod
+    def update(*args, **kwargs):
+        for _group in Groups.GetGroups():
             _group.update(*args, **kwargs)
         # print(self.Background)
 
-    def draw(self, display, *args, **kwargs):
-        for _group in self._groups:
+    @staticmethod
+    def draw(display, *args, **kwargs):
+        for _group in Groups.GetGroups():
             _group.draw(display)
 
-    def count(self):
+    @staticmethod
+    def count():
         _counter = 0
-        for _group in self._groups:
+        for _group in Groups.GetGroups():
             _counter += len(_group.sprites())
         return _counter
 
-    def restart(self):
-        for group in self._groups:
+    @staticmethod
+    def restart():
+        for group in Groups.GetGroups():
             group.empty()
 
 

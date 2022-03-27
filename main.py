@@ -1,14 +1,13 @@
 import pygame as pg
 from pygame.font import SysFont
+from gui.interface import EquipmentDrawer
 from player import Player
 from control import ControlImplementation, JoystickControle, KeyboardControle
 import sys
 import ctypes
-from level.levels import BaseLevel
 from level.levelManager import LevelManager
 from gui.menu import EnterMenu, Menu, DieMenu, WinMenu, SettingsMenu, InventoryMenu, LevelManagerMenu
 from gui.surface import Text
-from gui.interface import Toolbar
 from changed_group import Groups
 from timer import Timer
 
@@ -51,7 +50,7 @@ class GameStrategy(BaseStrategy):
         self.aplication.controller.changePlayerDirection(
             self.aplication.player)
         self.aplication.controller.update()
-        self.aplication.toolbar.update()
+        # self.aplication.toolbar.update()
         self.aplication.groups.collide(self.aplication.player)
         self.aplication.player.update()
 
@@ -70,12 +69,14 @@ class GameStrategy(BaseStrategy):
         display.fill((10, 9, 15))
         self.aplication.groups.draw(display)
         self.aplication.player.draw(display)
-        self.aplication.toolbar.draw(display)
+        # self.aplication.toolbar.draw(display)
 
     def eventListen(self, event):
         self.aplication.controller.executeWeapon(
             self.aplication.player, event)
         self.aplication.controller.changeWeapon(
+            self.aplication.player, event)
+        self.aplication.controller.changeUltimate(
             self.aplication.player, event)
         self.aplication.controller.selectUltimate(
             self.aplication.player, event)
@@ -219,7 +220,7 @@ class Aplication:
         self.controller = self.controleRealization[controllerType](
             ControlImplementation(self, *args, **kwargs))
 
-        self.groups = Groups()
+        self.groups = Groups
         self.levelManager = LevelManager(self, self.groups)
 
         self.menuStrategy = self.menuStrategy(self)
@@ -347,23 +348,22 @@ class Aplication:
     def backToLastStrategy(self):
         self._actingStrategy = self._lastStrategy
 
+    """Нужно нормально реализовать методы startGame, quitGame и close"""
+
     def startGame(self, *args, **kwargs):
         log.info('start level')
-
         self.player = Player(self.display_size,
                              self.groups.playerShell, self.groups.Particles)
-        self.toolbar = Toolbar(self.display_size, self.player.equipment)
+        self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
         self.levelManager.SetLevel("Level1")
         self.levelManager.Start()
         self._actingStrategy = self.gameStrategy
 
     def quitGame(self):
         self.levelManager.Reset()
-        self.player = None
+        self.groups.restart()
+        self.player.restart()
         self.game_timer.reset()
-        self.toolbar = None
-        self.groups = None
-        self.isMenu = False
         self.isPlayerDie = False
 
     def close(self):
@@ -381,14 +381,13 @@ class Aplication:
 
     def restart(self):
         log.info("restart level")
-        pg.init()
 
         self.clock = pg.time.Clock()
         self.groups.restart()
         self.levelManager.Restart()
         self.levelManager.Start()
         self.player.restart()
-        self.toolbar = Toolbar(self.display_size, self.player.equipment)
+        self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
         self.game_timer.reset()
         self.showMenu(value=False)
 

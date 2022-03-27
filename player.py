@@ -1,4 +1,3 @@
-from cmath import rect
 from typing import List, Tuple
 from animation import Animator
 from GameObjects.equipment import Equipment
@@ -8,8 +7,9 @@ from changed_group import CustomGroup
 from settings import IMAGES, PLAYER_HEALTHBAR_COLOR, PLAYER_HEALTHBAR_BACKGROUND_COLOR
 from gui.interface import HealthBar
 import logger
-from timer import Timer
 from GameObjects.prefabs import IEffect
+from changed_group import Groups
+from gui.interface import EquipmentDrawer
 
 log = logger.get_logger(__name__)
 
@@ -35,6 +35,7 @@ class Player(Sprite):
         self.particle_group = particle_group
 
         self.equipment = Equipment(self.shellGroup, self.particle_group)
+        EquipmentDrawer(self.equipment).add(Groups.Interface)
         self.movement = MovementLogic(display_size, self.max_speed, self.accel)
         self.animation = Animator()
         self.effectsGroup = EffectsGroup()
@@ -77,6 +78,9 @@ class Player(Sprite):
 
     def changeWeapon(self, value=None, update=None):
         return self.equipment.SelectObject(value=value, update=update)
+
+    def changeUltimate(self):
+        print("change")
 
     def selectUltimate(self):
         self.equipment.SelectUltimate(self)

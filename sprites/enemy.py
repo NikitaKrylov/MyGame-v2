@@ -1,4 +1,3 @@
-from typing import Tuple
 from animation import Animator, StaticMovement, FunctionMovement, PointerMovement
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup
@@ -6,7 +5,7 @@ from settings import IMAGES, ENEMY_HEALTHBAR_COLOR
 import random
 import math
 from gui.interface import HealthBar
-from GameObjects.weapons import DubleGunEnemy, SingleRedGunEnemy, StarGun
+from GameObjects.weapons import SingleRedGunEnemy, StarGun
 from AI import WanderingAI
 
 

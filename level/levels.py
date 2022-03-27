@@ -1,4 +1,3 @@
-import pygame as pg
 from logger.logger import get_logger
 from sprites.enemy import AsteroidFactory, FirstFlightEnemyFactory, StarEnemyFactory, StrikerEnemyFactory
 from changed_group import Groups

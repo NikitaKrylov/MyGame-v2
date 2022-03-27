@@ -10,6 +10,7 @@
             "keyboard" : [49, 57]
             
         },
+        "changeUltimate":[114],
         "back":[27],
         "select_ultimate":113
     },
@@ -20,6 +21,7 @@
         },
         "showMenu":[5,6],
         "changeWeapon" : [9, 10],
+        "changeUltimate":[],
         "apply" : 0,
         "back" : 1,
         "select_ultimate":3

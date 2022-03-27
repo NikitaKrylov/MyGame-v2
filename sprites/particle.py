@@ -1,8 +1,5 @@
 import pygame
 from pygame.sprite import Sprite, AbstractGroup
-from animation import Animator
-from animation import StaticMovement, Animator
-import random
 
 # A particle is a sprite that has a size, a speed, a color, and a direction.
 class Particle(Sprite):

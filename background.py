@@ -1,10 +1,10 @@
-from turtle import Vec2D
 import pygame as pg
 from pygame.sprite import Sprite, AbstractGroup, Group
 from changed_group import CustomGroup
 from settings import IMAGES
 import random
 from logger import get_logger
+from animation import StaticMovement
 log = get_logger(__name__)
 
 
@@ -132,9 +132,10 @@ class BackgroundSurface(Sprite):
         self.rect = self.image.get_rect(topleft=topleft)
         self.speed = speed
         self.direction = direction
+        self.movement = StaticMovement(pg.Vector2(0, 1))
 
     def update(self, *args, **kwargs):
-        self.rect.topleft += self.direction * self.speed
+        self.rect, _ = self.movement.update(self.rect, [], speed=self.speed)
         return super().update(*args, **kwargs)
 
     def draw(self, display):

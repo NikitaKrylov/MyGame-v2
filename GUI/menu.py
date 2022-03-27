@@ -75,14 +75,14 @@ class GameMenu(BaseMenu):
 class Menu(GameMenu):
     def __init__(self, mediator, display_size):
         super().__init__(mediator, display_size)
-        surface_image = pg.image.load('media\images\menu\Menu2.png')
+        surface_image = pg.image.load(IMAGES + '\\menu\\Menu2.png')
         surface_image = pg.transform.scale(surface_image, (int(
             surface_image.get_width()*0.8), int(surface_image.get_height()*0.8)))
-        label_image = pg.image.load('media\images\menu\Menu.png')
-        continue_image = pg.image.load('media\images\menu\Continue.png')
-        restart_image = pg.image.load('media\images\menu\Restart.png')
-        leave_image = pg.image.load('media\images\menu\Leave.png')
-        settings_image = pg.image.load('media\images\menu\Settings.png')
+        label_image = pg.image.load(IMAGES + '\\menu\\Menu.png')
+        continue_image = pg.image.load(IMAGES + '\\menu\\Continue.png')
+        restart_image = pg.image.load(IMAGES + '\\menu\\Restart.png')
+        leave_image = pg.image.load(IMAGES + '\\menu\\Leave.png')
+        settings_image = pg.image.load(IMAGES + '\\menu\\Settings.png')
 
         self.surface = ImageSurface(
             [self.width/2, self.height/2], surface_image.convert_alpha(), center=True)

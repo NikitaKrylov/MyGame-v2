@@ -1,7 +1,7 @@
 import pygame as pg
-import pygame.gfxdraw
+from pygame.sprite import Sprite
 
-from settings import IMAGES, MEDIA, ENEMY_HEALTHBAR_COLOR
+from settings import IMAGES, MEDIA, ENEMY_HEALTHBAR_COLOR, DISPLAY_SIZE
 
 
 # It's a health bar
@@ -90,56 +90,108 @@ class ToolbarCell:
 
 
 # The toolbar is a class that displays the player's current weapon and ultimate
-class Toolbar:
-    def __init__(self, display_size, player_equipment):
-        self.display_size = display_size
-        self.equipment = player_equipment
+# class Toolbar(Sprite):
+#     def __init__(self, display_size, player_equipment):
+#         super().__init__()
+#         self.display_size = display_size
+#         self.equipment = player_equipment
 
+#         images = [pg.image.load(
+#             IMAGES + f'\menu\\toolbar_section_{i}.png').convert_alpha() for i in range(1, 5)]
+
+#         self.cells = [ToolbarCell(images=images[:2], center=[0, self.display_size[1]*.95], drawTimeDelta=True)
+#                       for i in range(self.equipment.countWeapons())]
+#         self.special_cell = ToolbarCell(
+#             images=images[-2:], bottomright=[0, self.cells[0].rect.bottom], isUltimate=True, drawTimeDelta=True)
+
+#         margin = self.cells[0].rect.width // 2
+#         self.special_cell.rect.right = display_size[0] - margin*2
+#         last_pos = self.special_cell.rect.left - margin
+#         for cell in self.cells:
+#             cell.rect.right = last_pos
+#             last_pos -= cell.rect.width + margin
+#         self.cells.reverse()
+
+#     def draw(self, display):
+#         for i in range(len(self.cells)):
+#             self.cells[i].draw(
+#                 display,
+#                 label=self.equipment._weapon_equipment[i].label_image,
+#                 timeDelta=self.equipment._weapon_equipment[i].TimeDelta)
+
+#         if self.equipment._ultimate:
+#             self.special_cell.draw(
+#                 display,
+#                 label=self.equipment._ultimate.label_image,
+#                 timeDelta=self.equipment._ultimate.TimeDelta)
+
+#     def update(self, *args, **kwargs):
+#         self.special_cell.update()
+
+#         if self.equipment.isUltimateSelected:
+#             self.special_cell.isSelected = True
+#             for cell in self.cells:
+#                 cell.isSelected = False
+#                 cell.update()
+#             return
+#         else:
+#             self.special_cell.isSelected = False
+
+#         for i in range(len(self.cells)):
+#             if self.equipment.weaponIndex == i:
+#                 self.cells[i].isSelected = True
+#             else:
+#                 self.cells[i].isSelected = False
+
+#             self.cells[i].update(*args, **kwargs)
+
+
+class EquipmentDrawer(Sprite):
+    def __init__(self, equipment_instance):
+        super().__init__()
+        print("Hello world")
+        self.equipment = equipment_instance
         images = [pg.image.load(
             IMAGES + f'\menu\\toolbar_section_{i}.png').convert_alpha() for i in range(1, 5)]
 
-        self.cells = [ToolbarCell(images=images[:2], center=[0, self.display_size[1]*.95], drawTimeDelta=True)
-                      for i in range(self.equipment.countWeapons())]
-        self.special_cell = ToolbarCell(
-            images=images[-2:], bottomright=[0, self.cells[0].rect.bottom], isUltimate=True, drawTimeDelta=True)
+        self.weaponCells = [ToolbarCell(images=images[:2], center=[0, DISPLAY_SIZE[1]*.95], drawTimeDelta=True)
+                            for i in range(self.equipment.countWeapons())]
+        self.ultimateCell = ToolbarCell(images=images[-2:], bottomright=[
+                                        0, self.weaponCells[0].rect.bottom], isUltimate=True, drawTimeDelta=True)
 
-        margin = self.cells[0].rect.width // 2
-        self.special_cell.rect.right = display_size[0] - margin*2
-        last_pos = self.special_cell.rect.left - margin
-        for cell in self.cells:
+        margin = self.weaponCells[0].rect.width // 2
+        self.ultimateCell.rect.right = DISPLAY_SIZE[0] - margin*2
+        last_pos = self.ultimateCell.rect.left - margin
+        for cell in self.weaponCells:
             cell.rect.right = last_pos
             last_pos -= cell.rect.width + margin
-        self.cells.reverse()
+        self.weaponCells.reverse()
 
     def draw(self, display):
-        for i in range(len(self.cells)):
-            self.cells[i].draw(
+        for i in range(self.equipment.countWeapons()):
+            self.weaponCells[i].draw(
                 display,
                 label=self.equipment._weapon_equipment[i].label_image,
                 timeDelta=self.equipment._weapon_equipment[i].TimeDelta)
 
-        if self.equipment._ultimate:
-            self.special_cell.draw(
-                display,
-                label=self.equipment._ultimate.label_image,
-                timeDelta=self.equipment._ultimate.TimeDelta)
+        self.ultimateCell.draw(display,
+                               label=self.equipment._ultimate.label_image,
+                               timeDelta=self.equipment._ultimate.TimeDelta)
 
     def update(self, *args, **kwargs):
-        self.special_cell.update()
-
         if self.equipment.isUltimateSelected:
-            self.special_cell.isSelected = True
-            for cell in self.cells:
+            self.ultimateCell.isSelected = True
+            for cell in self.weaponCells:
                 cell.isSelected = False
                 cell.update()
             return
         else:
-            self.special_cell.isSelected = False
+            self.ultimateCell.isSelected = False
 
-        for i in range(len(self.cells)):
+        for i in range(len(self.weaponCells)):
             if self.equipment.weaponIndex == i:
-                self.cells[i].isSelected = True
+                self.weaponCells[i].isSelected = True
             else:
-                self.cells[i].isSelected = False
+                self.weaponCells[i].isSelected = False
 
-            self.cells[i].update(*args, **kwargs)
+            self.weaponCells[i].update(*args, **kwargs)

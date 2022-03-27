@@ -39,6 +39,10 @@ class IUltimate:
             return True
         return False
 
+    @property
+    def isSelectable(self):
+        return self.isExecute
+
     def UpdateExecuteTime(self):
         self.updatingTime['last'] = Timer.get_ticks()
 
@@ -46,6 +50,7 @@ class IUltimate:
     def TimeDelta(self):
         delta = (self.updatingTime['last'] +
                  self.updatingTime['cooldawn']) - Timer.get_ticks()
+
         return delta if delta >= 0 else 0
 
 
@@ -83,6 +88,10 @@ class Striker(IUltimate):
 
         return super().Use(player_instance=None, *args, **kwargs)
 
+    @property
+    def isSelectable(self):
+        return self.isExecute
+
     def _use(self, player_instance=None, *args, **kwargs):
         image = pg.Surface((100, 100))
         image.fill((255, 90, 20))
@@ -105,18 +114,34 @@ class IEffectSender(IUltimate):
     def Select(self, isUsed, player_instance=None, *args, **kwargs):
         if isUsed:
             self._use(player_instance, *args, **kwargs)
-
         return super().Select(isUsed, player_instance, *args, **kwargs)
 
     def Use(self, player_instance, *args, **kwargs):
         return super().Use(player_instance, *args, **kwargs)
 
     def _use(self, player_instance, *args, **kwargs):
+        """create effect object, add effect to player
+        or kill and set to None effect instance """
+        if self.instance is not None and not self.instance.alive():
+            self.instance = None
+
+        if self.instance is None:
+            self.instance = self.CreateEffect(player_instance)
+            player_instance.AddEffect(self.instance)
         return super()._use(player_instance, *args, **kwargs)
+
+    def CreateEffect(self, player_instance):
+        pass
 
     @property
     def DeltaDuration(self):
         return self.instance.sTimer.TimeDelta if hasattr(self.instance, "sTimer") else 0
+
+    @property
+    def TimeDelta(self):
+        if self.instance is not None and self.instance.alive():
+            return self.DeltaDuration
+        return super().TimeDelta
 
 
 class InvisibleEffectSender(IEffectSender):
@@ -128,28 +153,29 @@ class InvisibleEffectSender(IEffectSender):
         super().__init__(group, particle_group, BoolDeselectFunc)
         self.updatingTime = {
             'last': 0,
-            'cooldawn': 6000
+            'cooldawn': 3000 + self.__class__.duration
         }
         self.label_image = pg.image.load(
             IMAGES+"\\menu\\labels\\invisible_area.png").convert_alpha()
 
-    def _use(self, player_instance, *args, **kwargs):
-        if self.instance is not None and not self.instance.alive():
-            self.instance = None
-
-        if self.instance is None:
-            self.instance = self.prefab(
-                player_instance=player_instance,
-                duration=self.duration,
-                _effect_func=player_instance.SetGodMode,)
-            self.instance.AddfiniteEvent(self.BoolDeselectFunc)
-            self.instance.Use()
-            player_instance.AddEffect(self.instance)
-
-        return super()._use(player_instance, *args, **kwargs)
+    def CreateEffect(self, player_instance):
+        instance = self.prefab(
+            player_instance=player_instance,
+            duration=self.duration,
+            _effect_func=player_instance.SetGodMode,)
+        instance.AddfiniteEvent(self.BoolDeselectFunc)
+        instance.Use()
+        return instance
 
 
 class RageEffectSender(IEffectSender):
     instance: Sprite = None
     prefab = RageEffect
     duration: int = 4000
+    
+    def CreateEffect(self, player_instance):
+        instance = RageEffectSender.prefab(
+            player_instance=player_instance,
+            duration=RageEffect.duration,
+            _effect_func=None)
+        return instance

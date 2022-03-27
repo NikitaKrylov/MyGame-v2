@@ -1,15 +1,9 @@
-
-import pygame as pg
-from typing import Union, Tuple, List, Sequence
-from pygame.sprite import Sprite, AbstractGroup
-from sprites.shell import BaseShell, BurnedShell, FirstShell, RedEnemyShell, Rocket, RedShell, StarEnemyShell, Strike
-from settings import IMAGES
-from timer import Timer
+from typing import Tuple, List
+from pygame.sprite import AbstractGroup
 from GameObjects.weapons import RocketLauncher, LiteGun, BurnedLauncher, IWeapon
 from GameObjects.ultimates import IUltimate, Striker, InvisibleEffectSender
-
-
 # -----------------------------
+
 
 class Equipment:
     def __init__(self, group: AbstractGroup, particle_group: AbstractGroup):
@@ -35,11 +29,9 @@ class Equipment:
         self.isUltimateSelected = False
 
     def SelectUltimate(self, player_instance):
-        # if self._ultimate.isExecute:
-        #     self.BoolSelectUltimate()
-        #     self._ultimate.Select(self.isUltimateSelected, player_instance)
-        self.isUltimateSelected = not self.isUltimateSelected
-        self._ultimate.Select(self.isUltimateSelected, player_instance)
+        if self._ultimate.isSelectable:
+            self.isUltimateSelected = not self.isUltimateSelected
+            self._ultimate.Select(self.isUltimateSelected, player_instance)
 
     def SelectWeapon(self):
         pass

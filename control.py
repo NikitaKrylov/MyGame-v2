@@ -1,7 +1,6 @@
 import pygame as pg
 from player import Player
 import json
-import os
 from logger import get_logger
 from settings import CONTROL_CONFIG
 log = get_logger(__name__)
@@ -27,6 +26,9 @@ class ControlImplementation:
 
     def executeWeapon(self, player):
         return player.executeWeapon()
+
+    def changeUltimate(self, player):
+        return player.changeUltimate()
 
     def changeWeapon(self, player, update=None, value=None):
         return player.changeWeapon(value=value, update=update)
@@ -98,6 +100,9 @@ class BaseController:  # Interface
     def executeWeapon(self, player):
         """call player execiteWeapon"""
         return self.__implementation.executeWeapon(player)
+
+    def changeUltimate(self, player, event):
+        return self.__implementation.changeUltimate(player)
 
     def selectUltimate(self, player):
         return self.__implementation.selectUltimate(player)
@@ -260,6 +265,10 @@ class KeyboardControle(BaseController):
     def update(self):
         self.cursor_set_visible()
 
+    @staticmethod
+    def GetPressedByIndex(index):
+        return pg.key.get_pressed()[index]
+
     def changePlayerDirection(self, player: Player, *args, **kwargs):
         """Update player direction by axis"""
         scancode = pg.key.get_pressed()
@@ -319,6 +328,10 @@ class KeyboardControle(BaseController):
                     _update_value = -1
 
                 return super().changeWeapon(player=player, update=_update_value)
+
+    def changeUltimate(self, player, event):
+        if KeyboardControle.GetPressedByIndex(self.config["changeUltimate"][0]):
+            return super().changeUltimate(player, event)
 
     def menuExecute(self, event, *args, **kwargs):
         if event.type == pg.MOUSEBUTTONDOWN:
