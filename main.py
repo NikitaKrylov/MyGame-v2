@@ -31,9 +31,7 @@ class BaseStrategy:
     def eventListen(self, event):
         """update aplication function with event attributs"""
         if event.type == pg.QUIT:
-            log.info('close app')
-            pg.quit()
-            sys.exit()
+            self.aplication.onClose()
 
     @property
     def type(self):
@@ -210,6 +208,7 @@ class Aplication:
         self.onStart(controllerType)
 
     def onStart(self, controllerType, *args, **kwargs):  # 1
+        log.info("Start app")
         user32 = ctypes.windll.user32
         self.clock = pg.time.Clock()
 
@@ -229,12 +228,14 @@ class Aplication:
         self.createStrategies()
 
     def onCreateGame(self):  # 2
+        log.info("Create game")
         self.groups.Interface.add(EquipmentDrawer(self.player.equipment))
         self.levelManager.SetLevel("Level1")
         self.levelManager.Start()
         self._actingStrategy = self.gameStrategy
 
     def onRestartGame(self):  # 3
+        log.info("Restart game")
         self.game_timer.reset()
         self.player.restart()
         self.createStrategies()
@@ -245,6 +246,7 @@ class Aplication:
         self.showMenu(value=False)
 
     def onQuitGame(self):  # 4
+        log.info("Close game")
         self.game_timer.reset()
         self.createStrategies()
         self.levelManager.Reset()
@@ -253,9 +255,8 @@ class Aplication:
         self.isPlayerDie = False
 
     def onClose(self):  # 5
-        log.info('close app')
+        log.info('Close app')
         self.__run = False
-        self.onQuitGame()
         pg.quit()
         sys.exit()
 
@@ -274,7 +275,6 @@ class Aplication:
 
     def start(self):
         """main aplicatiodn start function"""
-        log.info('start app')
         fontFPS = Text((self.display_size[0]*0.9, 20), str(
             int(self.clock.get_fps())),  (0, 255, 26), SysFont("hooge0553", 36), False)
 
